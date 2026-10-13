@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load ui %}
 {% load static %}
 {% load icons %}
 {% icon "mail" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
@@ -43,42 +44,11 @@
   </div>
 
   <!-- Statistics Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div class="bg-surface rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm text-body-soft">Total Patients</h3>
-        <span class="h-4 w-4 text-brand-700 inline-flex items-center justify-center">{% icon "users"%}</span>
-      </div>
-      <div class="text-2xl">{{ kpi_total_patients }}</div>
-      <p class="text-xs text-body-soft mt-1">Patients assignés</p>
-    </div>
-
-    <div class="bg-surface rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm text-body-soft">Infirmiers Actives</h3>
-        <span class="h-4 w-4 text-stable inline-flex items-center justify-center">{% icon "activity" %}</span>
-      </div>
-      <div class="text-2xl">{{ kpi_active_nurses }}</div>
-      <p class="text-xs text-body-soft mt-1">Actifs maintenant</p>
-    </div>
-
-    <div class="bg-surface rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm text-body-soft">Sessions Planifiées</h3>
-        <span class="h-4 w-4 text-indigo-600 inline-flex items-center justify-center">{% icon "clock" %}</span>
-      </div>
-      <div class="text-2xl">{{ kpi_scheduled_sessions }}</div>
-      <p class="text-xs text-body-soft mt-1">À venir</p>
-    </div>
-
-    <div class="bg-surface rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm text-body-soft">Total infirmier</h3>
-        <span class="h-4 w-4 text-purple-600 inline-flex items-center justify-center">{% icon "users" %}</span>
-      </div>
-      <div class="text-2xl">{{ total_nurses }}</div>
-      <p class="text-xs text-body-soft mt-1">infirmiers</p>
-    </div>
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {% ui_stat_card "Infirmiers" total_nurses hint="Inscrits au service" icon="users" %}
+    {% ui_stat_card "En service" kpi_active_nurses hint="Connectés actuellement" icon="activity" tone="ok" %}
+    {% ui_stat_card "Séances aujourd'hui" kpi_sessions_today hint="Toutes machines" icon="calendar" %}
+    {% ui_stat_card "Séances planifiées" kpi_sessions_planned hint="À venir" icon="clock" %}
   </div>
      <!-- Search -->
 <form method="GET" class="bg-surface p-4 rounded-xl border shadow-sm flex gap-4">
@@ -168,43 +138,14 @@
               {{ nurse.email }}
             </a>
           </div>
+          {% if nurse.phone %}
           <div class="flex items-center gap-3 text-sm">
             <span class="h-4 w-4 text-body-faint inline-flex items-center justify-center">{% icon "phone" %}</span>
-            <a href="tel:{{ nurse.phone }}" class="text-body-soft hover:text-blue-600">
+            <a href="tel:{{ nurse.phone }}" class="text-body-soft hover:text-brand-700">
               {{ nurse.phone }}
             </a>
           </div>
-        </div>
-
-        <!-- Assigned Doctors -->
-        <div class="pt-2 border-t">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="h-4 w-4 text-body-faint inline-flex items-center justify-center">{% icon "users" %}</span>
-            <span class="text-sm text-body-soft">Docteurs assignés:</span>
-          </div>
-          <p class="text-sm text-body-soft ml-6">
-            {% if nurse.assignedDoctorsText %}
-                {{ nurse.assignedDoctorsText }}
-            {% else %}
-                Aucun docteur assigné
-            {% endif %}
-          </p>
-        </div>
-
-        <!-- Statistics -->
-        <div class="grid grid-cols-3 gap-3 pt-2 border-t">
-          <div class="text-center">
-            <div class="text-lg text-brand-700">{%if nurse.patientsCount %}{{ nurse.patientsCount }}{% else %}0{% endif %}</div>
-            <div class="text-xs text-body-soft">Patients</div>
-          </div>
-          <div class="text-center">
-            <div class="text-lg text-stable">{%if nurse.activeSessions %}{{ nurse.activeSessions }}{% else %}0{% endif %}</div>
-            <div class="text-xs text-body-soft">Actives</div>
-          </div>
-          <div class="text-center">
-            <div class="text-lg text-indigo-600">{%if nurse.scheduledSessions %}{{ nurse.scheduledSessions }}{% else %}0{% endif %}</div>
-            <div class="text-xs text-body-soft">Planifiées</div>
-          </div>
+          {% endif %}
         </div>
 
 

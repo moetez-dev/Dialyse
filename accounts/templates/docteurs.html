@@ -78,7 +78,7 @@
           {% icon "users" cls="h-4 w-4 text-cyan-600" %}
         </div>
       </div>
-      <p class="text-2xl">0</p>
+      <p class="text-2xl">{{ total_patients }}</p>
       <p class="text-xs text-body-faint mt-1">Sous suivi</p>
     </div>
 
@@ -150,29 +150,13 @@
             {% if doctor.roleLabel == 'Admin' %}Administrateur{% else %}Docteur{% endif %}
           </span>
 
-          {% if doctor.rating %}
-          <span class="flex items-center gap-1 px-2 py-1 bg-surface rounded-lg text-xs">
-            ⭐ {{ doctor.rating }}
-          </span>
-          {% endif %}
         </div>
       </div>
 
 
-      <!-- Stats -->
-      <div class="grid grid-cols-3 text-center py-4 border-t">
-        <div>
-          <div class="text-lg font-semibold">{{ doctor.patientsCount }}</div>
-          <div class="text-xs text-body-faint">Patients</div>
-        </div>
-        <div>
-          <div class="text-lg font-semibold">{{ doctor.sessionsCount }}</div>
-          <div class="text-xs text-body-faint">Séances</div>
-        </div>
-        <div>
-          <div class="text-lg font-semibold">{{ doctor.experienceYears }}</div>
-          <div class="text-xs text-body-faint">Ans exp.</div>
-        </div>
+      <div class="border-t border-line px-4 py-3 text-center">
+        <div class="text-lg font-semibold tabular-nums text-body">{{ doctor.experienceYears }}</div>
+        <div class="text-xs text-body-faint">Années d'expérience</div>
       </div>
 
       <!-- Contact -->
@@ -194,7 +178,7 @@
         <div class="flex items-center gap-2 text-sm">
           {% icon "calendar" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
           <span class="text-body-soft">
-            Membre depuis {{ doctor.memberSince}}
+            Membre depuis {{ doctor.memberSince|date:"F Y" }}
           </span>
         </div>
         {% endif %}

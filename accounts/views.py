@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.db.models import Q
+from patients.models import Patient
 from .models import User , Role , Profile, PasswordResetRequest
 from .decorator import app_login_required, role_required 
 from django.core.files.base import ContentFile
@@ -184,8 +185,8 @@ def nurses_list(request):
             "firstName": n.username,
             "lastName": "",
             "email": n.email,
-            "phone": n.phone_number,
-            "assignedDoctorsText": ", ".join(doctor_names) if doctor_names else "Aucun",
+            "phone": n.phone_number or "",
+            "assignedDoctorsText": ", ".join(doctor_names),
             "patientsCount": 0,
             "activeSessions": 0,
             "scheduledSessions": 0,
@@ -193,19 +194,25 @@ def nurses_list(request):
             "status_label": etat,
             "status_color": "bg-green-100 text-green-800" if n.etat else "bg-red-100 text-red-800",
         })
-    kpi_total_patients = sum(x["patientsCount"] for x in nurses)
-    kpi_active_sessions = sum(x["activeSessions"] for x in nurses)
-    kpi_scheduled_sessions = sum(x["scheduledSessions"] for x in nurses)
-    kpi_avg_load = round(kpi_total_patients / len(nurses)) if nurses else 0
+    # patientsCount / activeSessions / scheduledSessions étaient des zéros
+    # littéraux par infirmier : les cartes dérivées affichaient donc toujours 0.
+    # Il n'existe aucune relation infirmier → patient dans le schéma, donc ces
+    # chiffres ne sont pas calculables par personne. On affiche ce qui a un sens
+    # à l'échelle du service plutôt que des zéros.
+    from seances.models import Seance
+
+    kpi_sessions_today = Seance.objects.filter(
+        session_date=timezone.localdate()
+    ).count()
+    kpi_sessions_planned = Seance.objects.filter(status="planifiée").count()
+
     context = {
         "nurses": nurses,
-        "kpi_total_patients": kpi_total_patients,
-        "kpi_active_sessions": kpi_active_sessions,
-        "kpi_scheduled_sessions": kpi_scheduled_sessions,
-        "kpi_avg_load": kpi_avg_load,
         "current_user": current_user,
         "kpi_active_nurses": kpi_active_nurses,
         "total_nurses": total_nurses.count(),
+        "kpi_sessions_today": kpi_sessions_today,
+        "kpi_sessions_planned": kpi_sessions_planned,
     }
 
     return render(request, "nurses.html", context)
@@ -260,12 +267,8 @@ def docteurs_list(request):
         profile = profile_qs.filter(user=d).first()
         experience_years=profile.experience if profile and profile.experience else 0
        
-        member_since = ""
         etat = "Actif" if d.etat else "Inactif"
-
-        if join_date:
-            
-            member_since = join_date.strftime("%B %Y")
+        member_since = join_date  # formaté dans le gabarit, donc localisé
 
         speciality = d.specialite or "Généraliste"
 
@@ -274,9 +277,7 @@ def docteurs_list(request):
             "fullName": f"Dr.{d.username}",
             "speciality": speciality,
             "roleLabel": d.role.name,
-            "rating": 4.8,
-            "patientsCount": getattr(d, "patients_count", 0),
-            "sessionsCount": 0,
+
             "experienceYears": experience_years,
             "email": d.email,
             "phone": d.phone_number,
@@ -292,6 +293,7 @@ def docteurs_list(request):
         "total_doctors": total_doctors.count(),
         "isadmin_count": isadmin_count,
         "isActif_count": isActif_count,
+        "total_patients": Patient.objects.count(),
     }
 
     return render(request, "docteurs.html", context)

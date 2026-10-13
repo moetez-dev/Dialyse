@@ -1,98 +1,60 @@
 {% extends "base.html" %}
+{% load ui %}
+
+{% block title %}Historique des séances — Dialyse Manager{% endblock %}
 
 {% block content %}
 
-<div class="p-6">
+{% ui_page_header "Historique des séances" subtitle="Séances passées, avec leurs moyennes et les alertes survenues" %}{% endui_page_header %}
 
-    <h1 class="text-2xl font-bold mb-6">
-        Historique des séances
-    </h1>
+<div class="overflow-x-auto rounded-card border border-line bg-surface">
+  <table class="w-full text-left text-sm">
+    <thead class="border-b border-line bg-surface-sunken text-xs text-body-soft">
+      <tr>
+        <th scope="col" class="px-4 py-3 font-medium">Patient</th>
+        <th scope="col" class="px-4 py-3 font-medium">Machine</th>
+        <th scope="col" class="px-4 py-3 font-medium">Début</th>
+        <th scope="col" class="px-4 py-3 font-medium">Fin</th>
+        <th scope="col" class="px-4 py-3 text-right font-medium">Durée</th>
+        <th scope="col" class="px-4 py-3 text-right font-medium">Alertes</th>
+        <th scope="col" class="px-4 py-3 text-right font-medium">PA moy.</th>
+        <th scope="col" class="px-4 py-3 text-right font-medium">Qb moy.</th>
+        <th scope="col" class="px-4 py-3 text-right font-medium">UF moy.</th>
+      </tr>
+    </thead>
 
+    <tbody class="divide-y divide-line">
+      {% for seance in seances %}
+        <tr class="hover:bg-surface-sunken">
+          <td class="px-4 py-3 font-medium text-body">{{ seance.patient }}</td>
+          <td class="px-4 py-3 text-body-soft">{{ seance.machine }}</td>
+          <td class="px-4 py-3 tabular-nums text-body-soft">{{ seance.start_datetime|date:"d/m/Y H:i"|default:"—" }}</td>
+          <td class="px-4 py-3 tabular-nums text-body-soft">{{ seance.end_datetime|date:"d/m/Y H:i"|default:"—" }}</td>
+          <td class="px-4 py-3 text-right tabular-nums text-body-soft">{{ seance.duration }} h</td>
 
-    <div class="overflow-x-auto bg-surface rounded-xl shadow">
+          <td class="px-4 py-3 text-right">
+            {% if seance.nb_alertes %}
+              <span class="inline-flex items-center rounded-full bg-critical-soft px-2 py-0.5 text-xs font-medium text-critical tabular-nums">
+                {{ seance.nb_alertes }}
+              </span>
+            {% else %}
+              <span class="text-xs text-body-faint">—</span>
+            {% endif %}
+          </td>
 
-        <table class="min-w-full">
-
-            <thead class="bg-surface-sunken">
-
-                <tr>
-                    <th class="px-4 py-3">Patient</th>
-                    <th class="px-4 py-3">Machine</th>
-                    <th class="px-4 py-3">Début</th>
-                    <th class="px-4 py-3">Fin</th>
-                    <th class="px-4 py-3">Durée</th>
-                    <th class="px-4 py-3">Alertes</th>
-                    <th class="px-4 py-3">Moyenne PA</th>
-                    <th class="px-4 py-3">Moyenne Qb</th>
-                    <th class="px-4 py-3">Moyenne UF</th>
-                </tr>
-
-            </thead>
-
-
-            <tbody>
-
-            {% for seance in seances %}
-
-                <tr class="border-b">
-
-                    <td class="px-4 py-3">
-                        {{ seance.patient }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        {{ seance.machine }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        {{ seance.start_datetime|default:"-" }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        {{ seance.end_datetime|default:"-" }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        {{ seance.duration }} h
-                    </td>
-
-                    <td class="px-4 py-3">
-                        {{ seance.nb_alertes }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        {{ seance.avg_pa|floatformat:2|default:"-" }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        {{ seance.avg_qb|floatformat:2|default:"-" }}
-                    </td>
-
-                    <td class="px-4 py-3">
-                        {{ seance.avg_uf|floatformat:2|default:"-" }}
-                    </td>
-
-                </tr>
-
-
-            {% empty %}
-
-                <tr>
-                    <td colspan="9" class="text-center py-6">
-                        Aucune séance trouvée
-                    </td>
-                </tr>
-
-            {% endfor %}
-
-
-            </tbody>
-
-        </table>
-
-    </div>
-
+          <td class="px-4 py-3 text-right tabular-nums text-body-soft">{{ seance.avg_pa|floatformat:1|default:"—" }}</td>
+          <td class="px-4 py-3 text-right tabular-nums text-body-soft">{{ seance.avg_qb|floatformat:1|default:"—" }}</td>
+          <td class="px-4 py-3 text-right tabular-nums text-body-soft">{{ seance.avg_uf|floatformat:1|default:"—" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="9" class="px-4 py-10">
+            {% ui_empty_state "Aucune séance enregistrée" body="Les séances terminées apparaîtront ici avec leurs moyennes et leurs alertes." icon="calendar" %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
-
 
 {% endblock %}

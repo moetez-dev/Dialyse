@@ -178,9 +178,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# L'interface est entièrement en français : sans cela, Django formatait les
+# dates en anglais (« Oct. 4, 2026, 8 a.m. ») au milieu de libellés français.
+LANGUAGE_CODE = 'fr-fr'
 
-TIME_ZONE = 'UTC'
+# Les horaires affichés aux soignants doivent être locaux ; configurable
+# pour ne pas décaler les données existantes sans décision explicite.
+TIME_ZONE = os.environ.get("DJANGO_TIME_ZONE", "UTC")
 
 USE_I18N = True
 
