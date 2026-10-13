@@ -13,7 +13,7 @@ import sys
 BASE = "http://localhost:8000"
 
 # Clés de session par rôle. Les créer avec :
-#   docker compose exec web python manage.py shell -c "..."
+#   docker compose exec api python manage.py shell -c "..."
 # (voir scripts/README ou le commentaire en bas de ce fichier)
 ROLES = {
     "Admin": os.environ.get("SID_ADMIN", ""),

@@ -14,8 +14,10 @@ from datetime import datetime, timezone
 
 sys.stdout.reconfigure(encoding='utf-8')
 
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+DJANGO_ROOT = os.path.join(REPO_ROOT, "app", "api", "django")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "PFA.settings")
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, DJANGO_ROOT)
 import django
 django.setup()
 

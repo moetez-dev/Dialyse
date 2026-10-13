@@ -18,8 +18,14 @@ from datetime import datetime, timezone
 
 sys.stdout.reconfigure(encoding='utf-8')
 
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+DJANGO_ROOT = os.path.join(REPO_ROOT, "app", "api", "django")
+AI_ROOT = os.path.join(REPO_ROOT, "app", "api", "ai")
+MQTT_ROOT = os.path.join(REPO_ROOT, "app", "api", "mqtt")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "PFA.settings")
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, DJANGO_ROOT)
+sys.path.insert(0, AI_ROOT)
+sys.path.insert(0, MQTT_ROOT)
 import django
 django.setup()
 

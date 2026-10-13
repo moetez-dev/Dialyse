@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
-  <rect fill="#0f1420" width="800" height="450"/>
-  <rect x="340" y="80" width="120" height="220" rx="16" fill="none" stroke="#2563EB" stroke-width="2"/>
-  <rect x="355" y="100" width="90" height="160" rx="4" fill="#1e293b"/>
-  <text x="400" y="360" fill="#64748b" font-family="system-ui" font-size="14" text-anchor="middle">Flutter</text>
-</svg>

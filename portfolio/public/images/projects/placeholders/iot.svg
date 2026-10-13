@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
-  <rect fill="#0f1420" width="800" height="450"/>
-  <circle cx="400" cy="200" r="40" fill="none" stroke="#2563EB" stroke-width="2"/>
-  <circle cx="280" cy="280" r="24" fill="none" stroke="#334155" stroke-width="2"/>
-  <circle cx="520" cy="280" r="24" fill="none" stroke="#334155" stroke-width="2"/>
-  <path d="M360 220 L304 260 M440 220 L496 260" stroke="#2563EB" stroke-width="1.5" opacity="0.6"/>
-  <text x="400" y="360" fill="#64748b" font-family="system-ui" font-size="14" text-anchor="middle">IoT</text>
-</svg>

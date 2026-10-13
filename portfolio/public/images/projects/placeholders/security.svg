@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
-  <rect fill="#0f1420" width="800" height="450"/>
-  <path d="M400 100 L480 140 V210 C480 260 400 300 400 300 C400 300 320 260 320 210 V140 Z" fill="none" stroke="#2563EB" stroke-width="2"/>
-  <text x="400" y="360" fill="#64748b" font-family="system-ui" font-size="14" text-anchor="middle">Security</text>
-</svg>

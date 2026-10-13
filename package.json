@@ -2,10 +2,10 @@
   "name": "dialyse-manager",
   "version": "1.0.0",
   "private": true,
-  "description": "Tailwind CSS build for the Dialyse Manager Django templates",
+  "description": "Temporary Tailwind CSS build for Django pages awaiting Next.js migration",
   "scripts": {
-    "css:build": "tailwindcss -i ./static/css/src/app.css -o ./static/css/index.css --minify",
-    "css:watch": "tailwindcss -i ./static/css/src/app.css -o ./static/css/index.css --watch"
+    "css:build": "tailwindcss -i ./app/web/public/static/css/src/app.css -o ./app/web/public/static/css/index.css --minify",
+    "css:watch": "tailwindcss -i ./app/web/public/static/css/src/app.css -o ./app/web/public/static/css/index.css --watch"
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.1.3",

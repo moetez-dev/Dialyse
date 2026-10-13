@@ -1,0 +1,218 @@
+/* ---------------------------------------------------------------------------
+ * Dialyse Manager — Tailwind source.
+ *
+ * Build:  npm run css:build        (one-off, minified)
+ *         npm run css:watch        (rebuild on save)
+ *         docker compose up css    (watcher in the stack)
+ *
+ * Output goes to app/web/public/static/css/index.css for legacy Django pages.
+ * Never edit app/web/public/static/css/index.css by hand — it is generated.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+/* Class-based dark mode: the <html> element carries `.dark`. */
+@custom-variant dark (&:is(.dark *));
+
+/* Sources for the Django screens kept during incremental Next.js migration. */
+@source "../../../../../api/django/templates";
+@source "../../../../../api/django/accounts/templates";
+@source "../../../../../api/django/monitoring/templates";
+@source "../../../../../api/django/patients/templates";
+@source "../../../../../api/django/seances/templates";
+@source "../../../../../api/django/machines/templates";
+@source "../../../../../api/django/core";
+@source "../../js";
+
+/* ---------------------------------------------------------------------------
+ * Design tokens — clinical & calm.
+ *
+ * Deep teal carries identity and primary actions; slate carries structure.
+ * Status colours are reserved exclusively for clinical state (a patient's
+ * parameters), never for decoration, so that red on screen always means
+ * something is wrong with a patient.
+ * ------------------------------------------------------------------------- */
+@theme {
+  /* Brand — teal */
+  --color-brand-50: #eefbf9;
+  --color-brand-100: #d5f5f0;
+  --color-brand-200: #afeae3;
+  --color-brand-300: #7ad8d0;
+  --color-brand-400: #43bdb6;
+  --color-brand-500: #26a19c;
+  --color-brand-600: #1a817f;
+  --color-brand-700: #176867;
+  --color-brand-800: #175354;
+  --color-brand-900: #164546;
+  --color-brand-950: #06282a;
+
+  /* Structure — slate, slightly cooled */
+  --color-ink-50: #f6f8fa;
+  --color-ink-100: #eceff3;
+  --color-ink-200: #d5dbe3;
+  --color-ink-300: #b0bbc9;
+  --color-ink-400: #8495a9;
+  --color-ink-500: #65778e;
+  --color-ink-600: #506075;
+  --color-ink-700: #424e5f;
+  --color-ink-800: #3a4351;
+  --color-ink-900: #343b46;
+  --color-ink-950: #1d222b;
+
+  /* Clinical status — reserved for patient/machine state */
+  --color-critical: #c81e3a;
+  --color-critical-soft: #fdeaed;
+  --color-warning: #b45309;
+  --color-warning-soft: #fdf3e3;
+  --color-stable: #0f7a52;
+  --color-stable-soft: #e7f6ef;
+  --color-idle: #65778e;
+  --color-idle-soft: #eceff3;
+
+  /* Semantic surfaces (light values; dark overrides below) */
+  --color-canvas: #f6f8fa;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #eceff3;
+  --color-surface-hover: #e3e8ee;
+  --color-line: #d5dbe3;
+  --color-line-strong: #b0bbc9;
+  --color-body: #343b46;
+  --color-body-soft: #506075;
+  --color-body-faint: #65778e;
+
+  /* Chart series — distinguishable in both themes and for common CVD */
+  --color-chart-1: #1a817f;
+  --color-chart-2: #2f6fb5;
+  --color-chart-3: #9a5bb8;
+  --color-chart-4: #b45309;
+  --color-chart-5: #0f7a52;
+  --color-chart-6: #c81e3a;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Source Serif 4", ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  --radius-card: 0.75rem;
+
+  /* Height of the fixed navbar — the sidebar offsets itself by this instead of
+     the hardcoded top-[57px] it used before. */
+  --spacing-navbar: 3.5rem;
+}
+
+/* Dark theme: re-point the semantic surface tokens. Brand and status hues are
+   lifted slightly so they keep their meaning against a dark canvas. */
+@layer base {
+  .dark {
+    --color-canvas: #11161d;
+    --color-surface: #182029;
+    --color-surface-sunken: #11161d;
+    --color-surface-hover: #222c38;
+    --color-line: #2b3744;
+    --color-line-strong: #3d4c5c;
+    --color-body: #e6ebf1;
+    --color-body-soft: #b0bbc9;
+    --color-body-faint: #8495a9;
+
+    --color-critical: #f1798c;
+    --color-critical-soft: #3a1b22;
+    --color-warning: #e0a352;
+    --color-warning-soft: #392a16;
+    --color-stable: #4cc38f;
+    --color-stable-soft: #11312a;
+    --color-idle: #8495a9;
+    --color-idle-soft: #232d38;
+
+    --color-chart-1: #43bdb6;
+    --color-chart-2: #6ea8e8;
+    --color-chart-3: #c08ae0;
+    --color-chart-4: #e0a352;
+    --color-chart-5: #4cc38f;
+    --color-chart-6: #f1798c;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Visible focus for keyboard users — clinical software gets operated fast,
+     often without a mouse. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* While a user is forced through the first-login password change, the whole nav
+   is inert. Previously injected as an inline <style> ahead of <!doctype html>. */
+@layer components {
+  .disabled-link {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Couche de compatibilité — TEMPORAIRE.
+ *
+ * Les écrans pas encore migrés écrivent des couleurs littérales (bg-white,
+ * text-gray-700, border-gray-200…). Ces classes ne basculent pas en thème
+ * sombre : sans ce correctif, une carte blanche avec du texte gris clair reste
+ * illisible sur fond sombre.
+ *
+ * Portée à `.legacy-theme`, posé uniquement sur le <body> de base.html : la page
+ * d'accueil et les pages d'authentification, déjà migrées, n'y touchent pas
+ * (leur `bg-white` sur fond teal doit rester blanc).
+ *
+ * À SUPPRIMER écran par écran : quand un gabarit n'utilise plus que les jetons
+ * sémantiques (bg-surface, text-body…), il ne dépend plus de ce bloc. Quand
+ * `grep -rl "bg-white\|text-gray-" ` ne renvoie plus rien, supprimer ce bloc
+ * et la classe legacy-theme.
+ * ------------------------------------------------------------------------- */
+@layer utilities {
+  .dark .legacy-theme .bg-white { background-color: var(--color-surface); }
+  .dark .legacy-theme .bg-gray-50 { background-color: var(--color-surface-sunken); }
+  .dark .legacy-theme .bg-gray-100 { background-color: var(--color-surface-sunken); }
+
+  .dark .legacy-theme .text-gray-900,
+  .dark .legacy-theme .text-gray-800 { color: var(--color-body); }
+  .dark .legacy-theme .text-gray-700,
+  .dark .legacy-theme .text-gray-600 { color: var(--color-body-soft); }
+  .dark .legacy-theme .text-gray-500,
+  .dark .legacy-theme .text-gray-400 { color: var(--color-body-faint); }
+  .dark .legacy-theme .text-black { color: var(--color-body); }
+
+  .dark .legacy-theme .border,
+  .dark .legacy-theme .border-gray-100,
+  .dark .legacy-theme .border-gray-200,
+  .dark .legacy-theme .border-gray-300 { border-color: var(--color-line); }
+  .dark .legacy-theme .divide-gray-100 > * + *,
+  .dark .legacy-theme .divide-gray-200 > * + * { border-color: var(--color-line); }
+
+  .dark .legacy-theme .hover\:bg-gray-50:hover,
+  .dark .legacy-theme .hover\:bg-gray-100:hover { background-color: var(--color-surface-hover); }
+
+  /* Fonds de statut pâles : illisibles tels quels sur fond sombre. */
+  .dark .legacy-theme .bg-red-50 { background-color: var(--color-critical-soft); }
+  .dark .legacy-theme .bg-yellow-50 { background-color: var(--color-warning-soft); }
+  .dark .legacy-theme .bg-green-50 { background-color: var(--color-stable-soft); }
+  .dark .legacy-theme .bg-blue-50 { background-color: var(--color-brand-950); }
+}

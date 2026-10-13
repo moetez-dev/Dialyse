@@ -10,13 +10,15 @@ db.sqlite3
 .DS_Store
 .idea/
 .vscode/
-mobile/.dart_tool/
-mobile/build/
-mobile/.flutter-plugins-dependencies
+app/mobile/.dart_tool/
+app/mobile/build/
+app/mobile/.flutter-plugins-dependencies
 offline_buffer.db
 
 # Node / Tailwind build
 node_modules/
+app/web/node_modules/
+app/web/.next/
 
 # Local dev credentials (never commit)
 .dev-credentials

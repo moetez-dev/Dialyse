@@ -6,6 +6,11 @@ env/
 .git/
 .gitignore
 .github/
+.env
+.dev-credentials
+db.sqlite3
+offline_buffer.db
+media/
 
 __pycache__/
 *.py[cod]
@@ -14,7 +19,11 @@ __pycache__/
 .mypy_cache/
 
 # Flutter app: not part of the backend image
-mobile/
+app/mobile/
+
+# Generated Next.js output and dependencies
+app/web/node_modules/
+app/web/.next/
 
 # Local state (bind-mounted by compose instead)
 *.log
@@ -23,7 +32,5 @@ mobile/
 .vscode/
 offline_buffer.db
 
-docker-compose*.yml
-Dockerfile
 .dockerignore
 node_modules/

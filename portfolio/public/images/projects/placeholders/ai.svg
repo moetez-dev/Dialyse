@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
-  <rect fill="#0f1420" width="800" height="450"/>
-  <rect x="300" y="130" width="200" height="140" rx="8" fill="none" stroke="#2563EB" stroke-width="2"/>
-  <circle cx="350" cy="180" r="20" fill="none" stroke="#64748b"/>
-  <path d="M390 170 L470 170 L450 210 L410 210 Z" fill="none" stroke="#64748b"/>
-  <text x="400" y="360" fill="#64748b" font-family="system-ui" font-size="14" text-anchor="middle">Vision / AI</text>
-</svg>

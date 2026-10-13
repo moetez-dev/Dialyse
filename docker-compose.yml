@@ -1,21 +1,37 @@
 # Dialyse — local development stack.
-#
-#   docker compose up -d              web + broker + AI service + MQTT listener
-#   docker compose up -d web          Django only (dashboard at http://localhost:8000)
-#   docker compose logs -f listener   follow the MQTT pipeline
-#
-# The project directory is bind-mounted into every Python service, so edits on the
-# host take effect immediately and db.sqlite3 / media/ stay on the host.
+#   docker compose up -d            Next.js web + Django API + pipeline
+#   docker compose up -d api        Django API and legacy pages only
+#   docker compose logs -f listener follow MQTT ingestion
 
 services:
   web:
-    build: .
-    image: dialyse-backend
+    image: node:24-alpine
     container_name: dialyse-web
+    working_dir: /workspace/app/web
+    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --hostname 0.0.0.0"
+    environment:
+      DJANGO_API_ORIGIN: http://api:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app/web:/workspace/app/web
+      - web-node-modules:/workspace/app/web/node_modules
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: app/api/Dockerfile
+    image: dialyse-backend
+    container_name: dialyse-api
+    working_dir: /workspace/app/api/django
     command: python manage.py runserver 0.0.0.0:8000
     environment:
       RUN_MIGRATIONS: "1"
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,web,0.0.0.0"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,api,web,0.0.0.0"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
       MQTT_BROKER: mqtt
       AI_SERVICE_URL: http://ai:8001/analyze/
     env_file:
@@ -23,7 +39,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - .:/workspace
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/"]
       interval: 10s
@@ -32,20 +48,21 @@ services:
       start_period: 20s
 
   ai:
-    build: .
+    build:
+      context: .
+      dockerfile: app/api/Dockerfile
     image: dialyse-backend
     container_name: dialyse-ai
+    working_dir: /workspace/app/api/ai
     command: python -m uvicorn qwen_api:app --host 0.0.0.0 --port 8001
     environment:
-      # Vision model runs on the host (or anywhere reachable); the service falls
-      # back to empty readings when it is unavailable.
       OLLAMA_URL: http://host.docker.internal:11434/api/generate
     env_file:
       - .env
     ports:
       - "8001:8001"
     volumes:
-      - .:/app
+      - .:/workspace
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
@@ -55,16 +72,14 @@ services:
       retries: 5
       start_period: 10s
 
-  # Rebuilds static/css/index.css whenever a template or the CSS source changes.
   css:
     image: node:24-alpine
-    container_name: dialyse-css
-    working_dir: /app
+    container_name: dialyse-legacy-css
+    working_dir: /workspace
     command: sh -c "npm install --no-audit --no-fund && npm run css:watch"
     volumes:
-      - .:/app
-      - css-node-modules:/app/node_modules
-    # Tailwind's --watch treats stdin EOF as "stop", so it needs a TTY held open.
+      - .:/workspace
+      - legacy-css-node-modules:/workspace/node_modules
     stdin_open: true
     tty: true
 
@@ -80,29 +95,32 @@ services:
       - mosquitto-data:/mosquitto/data
 
   listener:
-    build: .
+    build:
+      context: .
+      dockerfile: app/api/Dockerfile
     image: dialyse-backend
     container_name: dialyse-listener
+    working_dir: /workspace/app/api/mqtt
     command: python mqtt_listener.py
     environment:
       WAIT_FOR_DB: "1"
       MQTT_BROKER: mqtt
       MQTT_PORT: "1883"
       AI_SERVICE_URL: http://ai:8001/analyze/
-      # Reach an n8n instance running on the host, if there is one.
       N8N_CRITICAL_RISK_WEBHOOK_URL: http://host.docker.internal:5678/webhook/dialysis-critical-risk
     env_file:
       - .env
     volumes:
-      - .:/app
+      - .:/workspace
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      web:
+      api:
         condition: service_healthy
       mqtt:
         condition: service_started
 
 volumes:
   mosquitto-data:
-  css-node-modules:
+  web-node-modules:
+  legacy-css-node-modules:

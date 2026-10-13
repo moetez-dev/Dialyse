@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Signale les classes utilisées dans les templates mais absentes du CSS compilé.
 
-Ce projet a vécu avec un static/css/index.css figé, généré une fois puis jamais
+Ce projet a vécu avec un app/web/public/static/css/index.css figé, généré une fois puis jamais
 reconstruit : un tiers des classes des templates ne produisait plus aucun style.
 Ce script empêche la situation de revenir.
 
@@ -18,7 +18,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SKIP_DIRS = {".venv", "node_modules", "mobile", "archive", "portfolio", ".git"}
+SKIP_DIRS = {".venv", "node_modules", "mobile", "archive", ".git"}
 
 # Accroches JS, classes d'impression et marqueurs Tailwind sans style propre.
 IGNORE = {
@@ -50,7 +50,7 @@ def used_classes():
 
 
 def main():
-    css_path = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "static/css/index.css"
+    css_path = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "app/web/public/static/css/index.css"
     if not css_path.exists():
         print(f"feuille introuvable : {css_path}")
         print("lancez d'abord : npm run css:build")
