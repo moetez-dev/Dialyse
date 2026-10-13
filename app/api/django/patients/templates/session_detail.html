@@ -258,6 +258,18 @@ new Chart(document.getElementById('chartHeparin'), {
   options: chartDefaults
 });
 
+// Les messages d'alerte et leurs horodatages viennent de la base : écrits
+// tels quels dans innerHTML, un message contenant du balisage s'exécuterait.
+function esc(value) {
+    if (value === null || value === undefined) return "";
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
 // Alertes
 const section = document.getElementById('alerts-section');
 if (alertsData.length === 0) {
@@ -278,8 +290,8 @@ if (alertsData.length === 0) {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
       </svg>
       <div class="flex-1">
-        <p class="text-sm">${a.message}</p>
-        <p class="text-xs text-body-faint mt-1">${a.timestamp}</p>
+        <p class="text-sm">${esc(a.message)}</p>
+        <p class="text-xs text-body-faint mt-1">${esc(a.timestamp)}</p>
       </div>
       <span class="text-xs px-2 py-1 rounded ${isCrit ? 'bg-critical-soft text-critical' : 'bg-warning-soft text-warning'}">
         ${isCrit ? 'Critique' : 'Avertissement'}

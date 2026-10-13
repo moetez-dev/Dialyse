@@ -538,23 +538,26 @@
 
 
 
-            document.getElementById("qb").innerHTML = m.Qb ?? "--";
+            document.getElementById("qb").textContent = m.Qb ?? "--";
 
-            document.getElementById("pa").innerHTML = m.PA ?? "--";
+            document.getElementById("pa").textContent = m.PA ?? "--";
 
-            document.getElementById("ptm").innerHTML = m.PTM ?? "--";
+            document.getElementById("ptm").textContent = m.PTM ?? "--";
 
-            document.getElementById("pv").innerHTML = m.PV ?? "--";
+            document.getElementById("pv").textContent = m.PV ?? "--";
 
-            document.getElementById("uf").innerHTML = m.UF ?? "--";
+            document.getElementById("uf").textContent = m.UF ?? "--";
 
 
 
-            document.getElementById("machine").innerHTML = m.machine ?? "--";
+            // L'identifiant d'un générateur est du texte libre saisi au formulaire :
+            // écrit en innerHTML, un nom contenant du balisage s'exécutait pour
+            // quiconque ouvrait le tableau de bord.
+            document.getElementById("machine").textContent = m.machine ?? "--";
             const statusElement = document.getElementById("machine-status");
             const statusBox = document.getElementById("status-box");
 
-            statusElement.innerHTML = ({CRITICAL:"Critique",WARNING:"À surveiller",NORMAL:"Normal"})[m.status] ?? "—";
+            statusElement.textContent = ({CRITICAL:"Critique",WARNING:"À surveiller",NORMAL:"Normal"})[m.status] ?? "—";
 
             statusElement.className = "font-semibold";
 

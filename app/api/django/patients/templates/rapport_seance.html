@@ -348,6 +348,19 @@
       options: defaults
     });
 
+    // Les messages d'alerte et leurs horodatages viennent de la base :
+    // écrits tels quels dans innerHTML, un message contenant du balisage
+    // s'exécuterait.
+    function esc(value) {
+        if (value === null || value === undefined) return "";
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
     // ── Alertes ─────────────────────────────────────────
     const section = document.getElementById('alerts-section');
     if (!alertsData || alertsData.length === 0) {
@@ -369,8 +382,8 @@
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
           </svg>
           <div class="flex-1">
-            <p class="text-sm">${a.message}</p>
-            <p class="text-xs text-gray-400 mt-0.5">${a.timestamp}</p>
+            <p class="text-sm">${esc(a.message)}</p>
+            <p class="text-xs text-gray-400 mt-0.5">${esc(a.timestamp)}</p>
           </div>
           <span class="text-xs px-2 py-0.5 rounded-full ${isCrit ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}">
             ${isCrit ? 'Critique' : 'Avertissement'}
