@@ -3,107 +3,196 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
 import { apiRequest } from './api';
+import { Icon } from './icons';
+import { capabilities, navFor } from './navigation';
 
-const groups = [
-  { label: 'SOINS', links: [
-    ['Surveillance', '/monitoring/surveillance/'],
-    ['Tableau de bord', '/monitoring/dashboard/'],
-    ['Séances', '/seances/'],
-    ['Historique des séances', '/monitoring/seances-history/'],
-    ['Alertes', '/monitoring/alerts-history/'],
-  ] },
-  { label: 'RÉFÉRENTIEL', links: [
-    ['Patients', '/patients/'],
-    ['Générateurs', '/machines/'],
-    ['Appareils de lecture', '/machines/raspi/'],
-  ] },
-  { label: 'ÉQUIPE', links: [
-    ['Docteurs', '/docteurs/'],
-    ['Infirmiers', '/nurses/'],
-  ] },
-];
+function ThemeToggle() {
+  const [dark, setDark] = useState(false);
 
-function canSeeLink(role, href) {
-  const normalized = (role || '').trim().toLowerCase();
-  if (href === '/monitoring/dashboard/') return normalized === 'admin';
-  if (href === '/machines/') return ['admin', 'infirmier'].includes(normalized);
-  if (href === '/machines/raspi/') return normalized === 'admin';
-  if (href === '/docteurs/') return normalized === 'admin';
-  if (href === '/nurses/') return ['admin', 'docteur'].includes(normalized);
-  return true;
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains('dark'));
+  }, []);
+
+  function toggle() {
+    const next = !dark;
+    document.documentElement.classList.toggle('dark', next);
+    try {
+      localStorage.setItem('theme', next ? 'dark' : 'light');
+    } catch {
+      /* navigation privée : le thème ne survivra pas au rechargement */
+    }
+    setDark(next);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label="Changer de thème"
+      className="grid h-9 w-9 place-items-center rounded-lg text-body-soft hover:bg-surface-sunken hover:text-body"
+    >
+      <Icon name={dark ? 'sun' : 'moon'} />
+    </button>
+  );
 }
 
 export function WorkspaceShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    let alive = true;
+    let cancelled = false;
     apiRequest('/api/profile/')
       .then((payload) => {
-        if (!alive) return;
-        setUser(payload.data);
-        if (payload.data?.first_login && pathname !== '/profile') {
-          router.replace('/profile/');
-        } else if (pathname === '/monitoring/dashboard' && (payload.data?.role || '').trim().toLowerCase() !== 'admin') {
-          router.replace('/error/');
-        }
+        if (!cancelled) setUser(payload.data || payload.user || payload);
       })
-      .catch((error) => {
-        if (alive && error.status === 401) router.replace('/connexion/');
+      .catch(() => {
+        if (!cancelled) router.replace('/connexion');
       })
-      .finally(() => alive && setReady(true));
-    return () => { alive = false; };
-  }, [pathname, router]);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  // Le volet se referme à chaque navigation sur petit écran.
+  useEffect(() => setSidebarOpen(false), [pathname]);
+
+  const caps = capabilities(user);
+  const groups = navFor(user);
 
   async function logout() {
     try {
       await apiRequest('/api/logout/', { method: 'POST' });
-    } finally {
-      router.replace('/connexion/');
-      router.refresh();
+    } catch {
+      /* la session est de toute façon abandonnée côté client */
     }
+    router.replace('/connexion');
   }
 
-  if (!ready || !user) {
-    return <main className="workspace-loading"><span className="spinner" /> Chargement de votre espace…</main>;
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-canvas">
+        <p className="text-sm text-body-faint">Chargement…</p>
+      </div>
+    );
   }
 
   return (
-    <div className="workspace">
-      <aside className="sidebar">
-        <Link className="sidebar-brand" href="/">
-          <span className="brand-mark brand-mark-small">D</span>
-          <span><strong>Dialyse</strong><small>MANAGER</small></span>
-        </Link>
-        <nav aria-label="Navigation principale">
-          {groups.map((group) => (
-            <div className="nav-group" key={group.label}>
-              <p>{group.label}</p>
-              {group.links.filter(([, href]) => canSeeLink(user.role, href)).map(([label, href]) => (
-                <Link className={pathname === href.replace(/\/$/, '') ? 'nav-link nav-link-active' : 'nav-link'} href={href} key={href}>
-                  <span className="nav-dot" aria-hidden="true" />{label}
+    <div className="min-h-screen bg-canvas text-body">
+      <header className="sticky top-0 z-40 h-navbar border-b border-line bg-surface">
+        <div className="flex h-full items-center gap-3 px-4">
+          {groups.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((open) => !open)}
+              aria-label="Ouvrir la navigation"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-body-soft hover:bg-surface-sunken hover:text-body lg:hidden"
+            >
+              <Icon name="menu" className="h-5 w-5" />
+            </button>
+          )}
+
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-700 text-white">
+              <Icon name="activity" />
+            </span>
+            <span className="font-serif text-[17px] font-semibold tracking-tight text-body">
+              Dialyse&nbsp;Manager
+            </span>
+          </Link>
+
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+
+            {user && (
+              <>
+                <Link
+                  href="/profil"
+                  className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-sunken"
+                >
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-sunken text-body-soft">
+                    <Icon name="user" className="h-4 w-4" />
+                  </span>
+                  <span className="hidden text-left leading-tight sm:block">
+                    <span className="block text-sm font-medium text-body">{user.username}</span>
+                    <span className="block text-xs text-body-faint">{caps.roleLabel}</span>
+                  </span>
                 </Link>
-              ))}
-            </div>
-          ))}
-        </nav>
-        <div className="sidebar-user">
-          <div className="avatar">{(user.username || 'U').slice(0, 1).toUpperCase()}</div>
-          <div className="sidebar-user-copy"><strong>{user.username}</strong><span>{user.role}</span></div>
-          <button className="logout-button" type="button" onClick={logout} aria-label="Se déconnecter">↗</button>
+
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-body-soft hover:bg-surface-sunken hover:text-body"
+                >
+                  <Icon name="log-out" className="h-4 w-4" />
+                  <span className="hidden sm:inline">Déconnexion</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </aside>
-      <main className="workspace-main">
-        <header className="topbar">
-          <div><span className="topbar-kicker">ESPACE DE SOINS</span><strong>{user.username}</strong></div>
-          <span className="connection-pill"><i /> Connecté</span>
-        </header>
-        <div className="page-content">{children}</div>
-      </main>
+      </header>
+
+      <div className="flex">
+        {groups.length > 0 && (
+          <>
+            <aside
+              className={`fixed left-0 top-navbar z-30 h-[calc(100vh-var(--spacing-navbar))] w-64 shrink-0
+                          overflow-y-auto border-r border-line bg-surface transition-transform duration-300
+                          lg:sticky lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            >
+              <nav className="space-y-6 p-4" aria-label="Navigation principale">
+                {groups.map((group) => (
+                  <div key={group.group}>
+                    <p className="px-3 pb-2 text-xs font-medium tracking-wide text-body-faint">
+                      {group.group}
+                    </p>
+                    <ul className="space-y-0.5">
+                      {group.items.map((item) => {
+                        const active =
+                          pathname === item.href || pathname.startsWith(`${item.href}/`);
+                        return (
+                          <li key={item.href}>
+                            <Link
+                              href={item.href}
+                              aria-current={active ? 'page' : undefined}
+                              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                                active
+                                  ? 'bg-brand-50 font-medium text-brand-800 dark:bg-brand-950 dark:text-brand-200'
+                                  : 'text-body-soft hover:bg-surface-sunken hover:text-body'
+                              }`}
+                            >
+                              <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
+                              <span className="truncate">{item.label}</span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </nav>
+            </aside>
+
+            {sidebarOpen && (
+              <div
+                className="fixed inset-0 z-20 bg-ink-950/40 lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+            )}
+          </>
+        )}
+
+        <main className="min-w-0 flex-1 p-4 lg:p-6">{children}</main>
+      </div>
     </div>
   );
 }
