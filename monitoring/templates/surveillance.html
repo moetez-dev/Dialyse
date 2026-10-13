@@ -10,198 +10,64 @@ Surveillance en temps réel
 
 <div class="space-y-6">
 
-<!-- ================= HEADER ================= -->
+<div class="flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <h1 class="font-serif text-2xl tracking-tight text-body">Surveillance en temps réel</h1>
+    <p id="last-update" class="mt-1 text-sm text-body-soft">Dernière mise à jour : —</p>
+  </div>
 
-<div class="flex items-center justify-between">
+  <div id="feed-state"
+       class="flex items-center gap-2 rounded-lg border border-stable/30 bg-stable-soft px-3 py-1.5 text-sm font-medium text-stable">
+    <span class="relative flex h-2 w-2">
+      <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-stable opacity-60 motion-reduce:hidden"></span>
+      <span class="relative inline-flex h-2 w-2 rounded-full bg-stable"></span>
+    </span>
+    Flux actif
+  </div>
+</div>
 
-    <div>
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+  <div class="rounded-card border border-line bg-surface p-4">
+    <p class="text-sm text-body-soft">Séances en cours</p>
+    <p id="sessions-count" class="mt-2 text-2xl font-semibold tabular-nums text-body">0</p>
+  </div>
+  <div class="rounded-card border border-line bg-surface p-4">
+    <p class="text-sm text-body-soft">Machines actives</p>
+    <p id="machines-count" class="mt-2 text-2xl font-semibold tabular-nums text-body">0</p>
+  </div>
+  <div class="rounded-card border border-line bg-surface p-4">
+    <p class="text-sm text-body-soft">Alertes critiques</p>
+    <p id="critical-alerts" class="mt-2 text-2xl font-semibold tabular-nums text-critical">0</p>
+  </div>
+  <div class="rounded-card border border-line bg-surface p-4">
+    <p class="text-sm text-body-soft">Avertissements</p>
+    <p id="warning-alerts" class="mt-2 text-2xl font-semibold tabular-nums text-warning">0</p>
+  </div>
+  <div class="rounded-card border border-line bg-surface p-4">
+    <p class="text-sm text-body-soft">Patients stables</p>
+    <p id="stable-patients" class="mt-2 text-2xl font-semibold tabular-nums text-stable">0</p>
+  </div>
+</div>
 
-        <h2 class="text-2xl font-bold">
-            Surveillance en Temps Réel
-        </h2>
+<div class="grid gap-6 xl:grid-cols-3">
 
-        <p
-            id="last-update"
-            class="text-sm text-gray-500 mt-1">
+  <section class="xl:col-span-2">
+    <h2 class="mb-4 font-medium text-body">Postes en surveillance</h2>
+    <div id="sessions-container" class="grid gap-4 lg:grid-cols-2"></div>
+  </section>
 
-            Dernière mise à jour : --
-
-        </p>
-
+  <section>
+    <div class="mb-4 flex items-center justify-between gap-3">
+      <h2 class="font-medium text-body">Alertes</h2>
+      <button id="stopAlarm" type="button"
+              class="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-body-soft
+                     hover:bg-surface-sunken hover:text-body">
+        Couper l'alarme
+      </button>
     </div>
 
-    <div class="
-        flex
-        items-center
-        gap-2
-        bg-green-50
-        border
-        border-green-300
-        rounded-xl
-        px-4
-        py-2">
-
-        <div class="
-            w-3
-            h-3
-            rounded-full
-            bg-green-500
-            animate-pulse">
-        </div>
-
-        <span class="font-semibold text-green-700">
-
-            Connexion active
-
-        </span>
-
-    </div>
-
-</div>
-
-<!-- ================= KPIs ================= -->
-
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5">
-
-<div class="bg-white rounded-xl shadow border p-5">
-
-    <p class="text-gray-500 text-sm">
-        Sessions actives
-    </p>
-
-    <h2
-        id="sessions-count"
-        class="text-3xl font-bold mt-2">
-
-        0
-
-    </h2>
-
-</div>
-
-<div class="bg-white rounded-xl shadow border p-5">
-
-    <p class="text-gray-500 text-sm">
-        Machines
-    </p>
-
-    <h2
-        id="machines-count"
-        class="text-3xl font-bold mt-2">
-
-        0
-
-    </h2>
-
-</div>
-
-<div class="bg-white rounded-xl shadow border p-5">
-
-    <p class="text-gray-500 text-sm">
-        Alertes critiques
-    </p>
-
-    <h2
-        id="critical-alerts"
-        class="text-3xl font-bold text-red-600 mt-2">
-
-        0
-
-    </h2>
-
-</div>
-
-<div class="bg-white rounded-xl shadow border p-5">
-
-    <p class="text-gray-500 text-sm">
-        Avertissements
-    </p>
-
-    <h2
-        id="warning-alerts"
-        class="text-3xl font-bold text-yellow-500 mt-2">
-
-        0
-
-    </h2>
-
-</div>
-
-<div class="bg-white rounded-xl shadow border p-5">
-
-    <p class="text-gray-500 text-sm">
-        Patients stables
-    </p>
-
-    <h2
-        id="stable-patients"
-        class="text-3xl font-bold text-green-600 mt-2">
-
-        0
-
-    </h2>
-
-</div>
-
-</div>
-
-<!-- ================= CONTENT ================= -->
-
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-<!-- LEFT -->
-
-<div class="xl:col-span-2">
-
-<h2 class="font-bold text-xl mb-4">
-
-Patients en surveillance
-
-</h2>
-
-<div
-    id="sessions-container"
-    class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-</div>
-
-</div>
-
-<!-- RIGHT -->
-
-<div>
-
-<div class="flex items-center justify-between mb-4">
-
-<h2 class="font-bold text-xl">
-
-Alertes
-
-</h2>
-
-<button
-    id="stopAlarm"
-    class="
-    bg-red-600
-    text-white
-    px-4
-    py-2
-    rounded-lg
-    hover:bg-red-700">
-
-🔇 Stop Alarme
-
-</button>
-
-</div>
-
-<div
-    id="alerts-container"
-    class="space-y-4">
-
-</div>
-
-</div>
+    <div id="alerts-container" class="space-y-3"></div>
+  </section>
 
 </div>
 
@@ -246,11 +112,21 @@ function loadLiveData(){
 let alerts = data.alerts || [];
 
 
-if(data.measurements && data.measurements.length > 0){
+// Les mesures arrivent triées du plus récent au plus ancien et il y en a
+// plusieurs par séance : sans regroupement, le même patient apparaissait
+// autant de fois qu'il avait de relevés. On garde la plus récente par séance.
+if (data.measurements && data.measurements.length > 0) {
+    const seen = new Set();
     data.measurements.forEach(m => {
+        const key = m.seance_id || m.machine_id || m.machine;
+        if (seen.has(key)) return;
+        seen.add(key);
         sessions.push({
-            patient: m.patient || "Patient Dialyse",
-            machine: m.machine || m.machine_id || "M001",
+            seance_id: m.seance_id,
+            patient: m.patient || "Patient",
+            machine: m.machine || m.machine_id || "—",
+            status: m.status || "NORMAL",
+            timestamp: m.timestamp,
             Qb: m.Debit_sang,
             PA: m.PA,
             PTM: m.PTM,
@@ -308,54 +184,75 @@ if(data.measurements && data.measurements.length > 0){
         let sessionContainer = document.getElementById("sessions-container");
         sessionContainer.innerHTML = "";
 
-        if(sessions.length === 0){
+        const STATUS_STYLE = {
+            CRITICAL: { card: "border-critical/40 ring-1 ring-critical/15",
+                        pill: "bg-critical-soft text-critical", label: "Critique" },
+            WARNING:  { card: "border-warning/40",
+                        pill: "bg-warning-soft text-warning", label: "À surveiller" },
+            NORMAL:   { card: "border-line",
+                        pill: "bg-stable-soft text-stable", label: "Stable" },
+        };
+
+        const param = (label, value, unit) => `
+            <div>
+              <dt class="text-xs text-body-faint">${label}</dt>
+              <dd class="tabular-nums text-body">${value ?? "—"}${value == null ? "" : `<span class="ml-0.5 text-xs text-body-faint">${unit}</span>`}</dd>
+            </div>`;
+
+        if (sessions.length === 0) {
             sessionContainer.innerHTML = `
-            <div class="bg-white border rounded-xl p-5 text-gray-500">
-                Aucune séance active ou mesure disponible
-            </div>
-            `;
+            <div class="col-span-full flex flex-col items-center rounded-card border border-dashed border-line px-6 py-12 text-center">
+              <p class="font-medium text-body">Aucune séance en cours</p>
+              <p class="mt-1 max-w-sm text-sm leading-relaxed text-body-soft">
+                Les postes apparaîtront ici dès qu'une séance sera démarrée et
+                que le générateur enverra ses premières mesures.
+              </p>
+            </div>`;
         }
 
         sessions.forEach(session => {
+            const st = STATUS_STYLE[session.status] || STATUS_STYLE.NORMAL;
+            const seen = session.timestamp
+                ? new Date(session.timestamp).toLocaleTimeString()
+                : "";
+
             sessionContainer.innerHTML += `
-            <div class="bg-white border rounded-xl shadow p-5">
-                <h3 class="text-lg font-bold mb-1">
-                Patient : ${session.patient}
-                </h3>
-                <p class="text-sm text-gray-600">
-                Machine : <b>${session.machine}</b>
+            <article class="rounded-card border bg-surface p-4 ${st.card}">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="truncate font-medium text-body">${session.patient}</h3>
+                  <p class="mt-0.5 truncate text-xs text-body-faint">${session.machine}</p>
+                </div>
+                <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${st.pill}">
+                  ${st.label}
+                </span>
+              </div>
+
+              <dl class="mt-4 grid grid-cols-3 gap-y-3 text-sm">
+                ${param("Qb", session.Qb, " mL/min")}
+                ${param("PA", session.PA, " mmHg")}
+                ${param("PV", session.PV, " mmHg")}
+                ${param("PTM", session.PTM, " mmHg")}
+                ${param("UF", session.UF, " mL")}
+                ${param("Hép.", session.Heparine, " UI/h")}
+              </dl>
+
+              ${session.image_url ? `
+              <details class="mt-4 border-t border-line pt-3">
+                <summary class="cursor-pointer list-none text-xs text-body-soft hover:text-body">
+                  Voir la capture du générateur
+                </summary>
+                <img src="${session.image_url}" alt="Écran du générateur ${session.machine}"
+                     class="mt-2 w-full rounded-lg border border-line object-cover" loading="lazy">
+                <p class="mt-1.5 flex items-center justify-between text-[11px] text-body-faint">
+                  <span>Source : ${session.source || "AI_OCR"}</span>
+                  <span>${session.status_validation || "VALIDATED"}</span>
                 </p>
-                
-                ${session.image_url ? `
-                <div class="my-3">
-                    <p class="text-xs font-medium text-gray-500 mb-1">Dernière image machine :</p>
-                    <img src="${session.image_url}" alt="Capture machine" class="w-full h-40 object-cover rounded-lg border shadow-sm">
-                    <div class="flex justify-between items-center text-[11px] text-gray-400 mt-1">
-                        <span>Source: ${session.source || 'AI_OCR'}</span>
-                        <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">${session.status_validation || 'VALIDATED'}</span>
-                    </div>
-                </div>
-                ` : ''}
+              </details>` : ""}
 
-                <hr class="my-3">
-
-                <div class="space-y-1.5 text-sm">
-                    <p>Débit sang (Qb) : <b>${session.Qb ?? "--"} mL/min</b></p>
-                    <p>PA : <b>${session.PA ?? "--"} mmHg</b></p>
-                    <p>PTM : <b>${session.PTM ?? "--"} mmHg</b></p>
-                    <p>PV : <b>${session.PV ?? "--"} mmHg</b></p>
-                    <p>Volume UF : <b>${session.UF ?? "--"} mL</b></p>
-                    <p>Taux UF : <b>${session.UF_rate ?? "--"} mL/h</b></p>
-                    <p>Héparine : <b>${session.Heparine ?? "--"} UI/h</b></p>
-                </div>
-            </div>
-            `;
+              ${seen ? `<p class="mt-3 text-[11px] tabular-nums text-body-faint">Dernier relevé ${seen}</p>` : ""}
+            </article>`;
         });
-
-
-
-
-
 
         // ===============================
         // DISPLAY ALERTS
@@ -372,103 +269,56 @@ if(data.measurements && data.measurements.length > 0){
 
 
 
-        alerts.forEach(alert=>{
+        const ALERT_STYLE = {
+            crit: { box: "border-critical/30 bg-critical-soft", label: "text-critical", text: "Critique" },
+            warn: { box: "border-warning/30 bg-warning-soft", label: "text-warning", text: "Avertissement" },
+            info: { box: "border-line bg-surface", label: "text-body-soft", text: "Information" },
+        };
+        // Le niveau est écrit tantôt HIGH/MEDIUM, tantôt RED/YELLOW selon le
+        // producteur de l'alerte : les deux vocabulaires sont acceptés ici.
+        const alertStyle = a => {
+            const lvl = (a.niveau || "").trim().toUpperCase();
+            if (["HIGH", "RED", "CRITIQUE"].includes(lvl)) return ALERT_STYLE.crit;
+            if (["MEDIUM", "YELLOW", "ALERTE"].includes(lvl)) return ALERT_STYLE.warn;
+            return ALERT_STYLE.info;
+        };
 
+        if (alerts.length === 0) {
+            alertContainer.innerHTML = `
+            <div class="rounded-card border border-dashed border-line px-4 py-8 text-center">
+              <p class="text-sm font-medium text-body">Aucune alerte en cours</p>
+              <p class="mt-1 text-xs leading-relaxed text-body-soft">
+                Tous les paramètres suivis sont dans leurs limites.
+              </p>
+            </div>`;
+        }
+
+        alerts.forEach(alert => {
 
             notifyAlert(alert);
 
-
-
-            let color =
-            "border-yellow-300 bg-yellow-50";
-
-
-            let text =
-            "text-yellow-700";
-
-
-
-            if(alert.niveau === "HIGH"){
-
-
-                color =
-                "border-red-400 bg-red-50";
-
-
-                text =
-                "text-red-700";
-
-
-            }
-
-
+            const st = alertStyle(alert);
+            const acknowledged = (alert.status || "NEW") !== "NEW";
 
             alertContainer.innerHTML += `
+            <article class="rounded-card border p-3.5 ${st.box}">
+              <div class="flex items-baseline justify-between gap-3">
+                <span class="text-xs font-medium ${st.label}">${st.text}</span>
+                <span class="shrink-0 text-xs tabular-nums text-body-faint">${formatAlertTime(alert)}</span>
+              </div>
 
+              <p class="mt-1.5 text-sm leading-relaxed text-body">${cleanAlertMessage(alert.message)}</p>
 
-            <div class="
-            ${color}
-            border-2
-            rounded-xl
-            p-4">
+              ${alert.machine ? `<p class="mt-1 text-xs text-body-faint">${alert.machine}</p>` : ""}
 
-
-                <div class="
-                flex
-                justify-between">
-
-
-                    <b class="${text}">
-                    ${alert.niveau}
-                    </b>
-
-
-
-                    <span class="
-                    text-xs
-                    text-gray-500">
-
-                    ${formatAlertTime(alert)}
-
-                    </span>
-
-
-                </div>
-
-
-
-                <p class="mt-2">
-
-                ${alert.message}
-
-                </p>
-
-
-
-                <button
-onclick="ackAlert('${alert.id}')"
-class="
-mt-3
-px-3
-py-1
-text-xs
-bg-white
-border
-rounded
-hover:bg-gray-100
-">
-
-Acquitter
-
-</button>
-
-
-            </div>
-
-
-            `;
-
-
+              ${acknowledged
+                ? `<p class="mt-2.5 text-xs text-body-faint">Acquittée</p>`
+                : `<button type="button" onclick="ackAlert('${alert.id}')"
+                     class="mt-2.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs
+                            font-medium text-body hover:bg-surface-sunken">
+                     Acquitter
+                   </button>`}
+            </article>`;
         });
 
 
@@ -498,10 +348,7 @@ Acquitter
 function notifyAlert(alert){
 
 
-    const key =
-    alert.niveau +
-    alert.message +
-    alert.time;
+    const key = alert.id || (alert.niveau + alert.message + alert.timestamp);
 
 
 
@@ -518,32 +365,26 @@ function notifyAlert(alert){
 
 
 
-    if(alert.niveau === "HIGH"){
+    const level = (alert.niveau || "").trim().toUpperCase();
+
+    if (["HIGH", "RED", "CRITIQUE"].includes(level)) {
 
 
         startAlarm();
 
 
 
-        showPopup(
-            "🚨 Alerte critique",
-            alert.message,
-            "red"
-        );
+        showPopup("Alerte critique", alert.message, "critical");
 
 
     }
 
 
 
-    else if(alert.niveau === "MEDIUM"){
+    else if (["MEDIUM", "YELLOW", "ALERTE"].includes(level)) {
 
 
-        showPopup(
-            "⚠️ Attention",
-            alert.message,
-            "yellow"
-        );
+        showPopup("Avertissement", alert.message, "warning");
 
 
     }
@@ -553,11 +394,7 @@ function notifyAlert(alert){
     else{
 
 
-        showPopup(
-            "ℹ️ Information",
-            alert.message,
-            "blue"
-        );
+        showPopup("Information", alert.message, "info");
 
 
     }
@@ -648,97 +485,61 @@ function(){
 // ===============================
 
 
-function showPopup(
-    title,
-    message,
-    color
-){
+// Les classes étaient construites par concaténation (`border-${color}-500`) :
+// le scanner Tailwind ne les voit pas, donc la bordure n'avait aucune couleur.
+// Les variantes sont désormais des chaînes statiques.
+const POPUP_TONES = {
+    critical: "border-critical/40 bg-critical-soft",
+    warning: "border-warning/40 bg-warning-soft",
+    info: "border-line bg-surface",
+};
+const POPUP_TITLE_TONES = {
+    critical: "text-critical",
+    warning: "text-warning",
+    info: "text-body",
+};
 
+function showPopup(title, message, tone = "info") {
 
+    const box = document.createElement("div");
+    // Décalé sous la barre de navigation : la fenêtre recouvrait le menu
+    // utilisateur et le bouton de déconnexion.
+    box.className =
+        "fixed right-4 top-[calc(var(--spacing-navbar)+1rem)] z-50 w-80 max-w-[calc(100vw-2rem)] " +
+        "rounded-card border p-4 shadow-lg " +
+        (POPUP_TONES[tone] || POPUP_TONES.info);
+    box.setAttribute("role", "alert");
 
-    const box =
-    document.createElement(
-        "div"
-    );
+    const heading = document.createElement("p");
+    heading.className = "pr-6 text-sm font-medium " + (POPUP_TITLE_TONES[tone] || POPUP_TITLE_TONES.info);
+    heading.textContent = title;
 
+    const body = document.createElement("p");
+    body.className = "mt-1.5 text-sm leading-relaxed text-body";
+    body.textContent = cleanAlertMessage(message);
 
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "absolute right-2 top-2 rounded px-1.5 text-body-faint hover:text-body";
+    close.setAttribute("aria-label", "Fermer");
+    close.textContent = "\u00d7";
+    close.addEventListener("click", () => box.remove());
 
-    box.className = `
-
-    fixed
-
-    top-5
-
-    right-5
-
-    z-50
-
-    bg-white
-
-    border-2
-
-    border-${color}-500
-
-    shadow-xl
-
-    rounded-xl
-
-    p-5
-
-    w-80
-
-    `;
-
-
-
-
-    box.innerHTML = `
-
-
-    <h3 class="
-    font-bold
-    text-${color}-600">
-
-
-        ${title}
-
-
-    </h3>
-
-
-
-    <p class="
-    mt-2
-    text-sm">
-
-
-        ${message}
-
-
-    </p>
-
-
-
-    `;
-
-
-
+    box.append(close, heading, body);
     document.body.appendChild(box);
 
-
-
-
-    setTimeout(()=>{
-
-
-        box.remove();
-
-
-    },5000);
-
-
-
+    setTimeout(() => box.remove(), 8000);
 }
+
+// Les messages stockés commencent par un emoji et le niveau ("🔴 CRITIQUE — ")
+// que la pastille affiche déjà juste à côté.
+function cleanAlertMessage(message) {
+    return (message || "")
+        .replace(/^[^\p{L}\d]*\s*/u, "")
+        .replace(/^(CRITIQUE|ALERTE|ATTENTION|INFO)\s*[—:-]\s*/i, "")
+        .trim();
+}
+
 
 
 

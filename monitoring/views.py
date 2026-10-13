@@ -110,6 +110,7 @@ def dashboard(request):
         "kpi_nurses": kpi_nurses,
         "kpi_machines_total": kpi_machines_total,
         "kpi_machines_available": kpi_machines_available,
+        "machines_hint": f"sur {kpi_machines_total} générateurs",
         "kpi_active_users": kpi_active_users,
         "activity_rows": activity_rows,
         # pour garder les valeurs dans dashboard.html

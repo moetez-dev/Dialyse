@@ -19,7 +19,10 @@ SVG = {
 </svg>""",
 
     "layout-dashboard": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+  <rect x="3" y="3" width="7" height="9" rx="1.5" stroke-width="1.5"/>
+  <rect x="14" y="3" width="7" height="5" rx="1.5" stroke-width="1.5"/>
+  <rect x="14" y="12" width="7" height="9" rx="1.5" stroke-width="1.5"/>
+  <rect x="3" y="16" width="7" height="5" rx="1.5" stroke-width="1.5"/>
 </svg>""",
 
     "log-out": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +30,10 @@ SVG = {
 </svg>""",
 
     "stethoscope": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 3v5a4 4 0 008 0V3"/>
+  <path stroke-linecap="round" stroke-width="1.5" d="M4.5 3h3M12.5 3h3"/>
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 12v2a6 6 0 0012 0v-1"/>
+  <circle cx="19" cy="9" r="2" stroke-width="1.5"/>
 </svg>""",
 
     "menu": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +83,9 @@ SVG = {
 </svg>""",
 
     "monitor-heart": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+  <rect x="2" y="4" width="20" height="13" rx="2" stroke-width="1.5"/>
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 11h3l1.5-2.5L13 14l1.5-3H18"/>
+  <path stroke-linecap="round" stroke-width="1.5" d="M9 21h6M12 17v4"/>
 </svg>""",
 
     "droplets": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +93,8 @@ SVG = {
 </svg>""",
 
     "thermometer": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 13.5V5a2 2 0 114 0v8.5a4 4 0 11-4 0z"/>
+  <path stroke-linecap="round" stroke-width="1.5" d="M12 9v6.5"/>
 </svg>""",
 
     "alert-triangle": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
