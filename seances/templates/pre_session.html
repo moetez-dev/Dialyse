@@ -97,7 +97,7 @@
             <input type="number" step="{{ param.step }}"
                    name="{{ param.name }}_min"
                    form="pre-session-form"
-                   value="{{ param.val_min }}"
+                   value="{{ param.val_min|default_if_none:'' }}"
                    class="w-full p-2 text-sm border border-2 rounded-xl
                       border-line bg-surface border-l-green-600">
           </div>
@@ -106,7 +106,7 @@
             <input type="number" step="{{ param.step }}"
                    name="{{ param.name }}_max"
                    form="pre-session-form"
-                   value="{{ param.val_max }}"
+                   value="{{ param.val_max|default_if_none:'' }}"
                    class="w-full p-2 text-sm border border-2 rounded-xl
                       border-line bg-surface border-l-green-600">
           </div>
@@ -125,7 +125,7 @@
             <input type="number" step="{{ param.step }}"
                    name="{{ param.name }}_critical_low"
                    form="pre-session-form"
-                   value="{{ param.val_crit_low }}"
+                   value="{{ param.val_crit_low|default_if_none:'' }}"
                    class="w-full p-2 text-sm border border-2 rounded-xl
                       border-line bg-surface border-l-amber-600">
           </div>
@@ -135,7 +135,7 @@
             <input type="number" step="{{ param.step }}"
                    name="{{ param.name }}_critical_high"
                    form="pre-session-form"
-                   value="{{ param.val_crit_high }}"
+                   value="{{ param.val_crit_high|default_if_none:'' }}"
                    class="w-full p-2 text-sm border border-2 rounded-xl
                       border-line bg-surface border-l-red-600">
           </div>

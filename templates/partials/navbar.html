@@ -2,11 +2,13 @@
 <header class="sticky top-0 z-40 h-navbar border-b border-line bg-surface">
   <div class="flex h-full items-center gap-3 px-4">
 
+    {% if nav_groups %}
     <button type="button" data-sidebar-toggle
             class="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-body-soft hover:bg-surface-sunken hover:text-body lg:hidden"
             aria-label="Ouvrir la navigation" aria-controls="sidebar">
       {% icon "menu" cls="h-5 w-5" %}
     </button>
+    {% endif %}
 
     <a href="{% url 'landing' %}" class="flex items-center gap-2.5">
       <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-700 text-white">

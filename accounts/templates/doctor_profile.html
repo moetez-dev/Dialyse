@@ -73,7 +73,7 @@
             {% icon "file-text" cls="h-6 w-6 text-brand-700 flex-shrink-0 mt-1" %}
             <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-lg mb-3">Bio</h3>
-                <p class="text-base md:text-lg text-body leading-relaxed line-clamp-3">{{ profile.bio }}</p>
+                <p class="text-base md:text-lg text-body leading-relaxed line-clamp-3">{{ profile.bio|default:"Aucune présentation." }}</p>
             </div>
         </div>
     </div>

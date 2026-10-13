@@ -34,7 +34,8 @@
   {% include "partials/navbar.html" %}
 
   <div class="flex">
-    {% include "partials/sidebar.html" %}
+    {# Pas d'entrées accessibles : ne pas laisser une colonne vide. #}
+    {% if nav_groups %}{% include "partials/sidebar.html" %}{% endif %}
 
     <main class="flex-1 min-w-0 p-4 lg:p-6">
       {% include "partials/messages.html" %}

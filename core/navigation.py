@@ -54,6 +54,11 @@ def build_nav(user, request):
     if user is None:
         return []
 
+    # Un rôle non géré par les vues n'a accès à rien : afficher la navigation
+    # lui proposerait sept liens menant tous à un refus d'accès.
+    if not getattr(user, "is_known_role", False):
+        return []
+
     current = request.resolver_match.view_name if request.resolver_match else ""
     # Pendant le changement de mot de passe obligatoire, tout est inerte.
     locked = bool(getattr(user, "first_login", False))

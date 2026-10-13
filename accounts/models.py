@@ -68,6 +68,16 @@ class User(models.Model):
     def is_infirmier(self):
         return self.role_slug == self.INFIRMIER
 
+    @property
+    def is_known_role(self):
+        """Le rôle correspond-il à l'un de ceux que l'application gère ?
+
+        `Role.name` est du texte libre : rien n'empêche de créer un rôle que
+        les vues ne reconnaissent pas. Sans ce garde-fou, un tel utilisateur
+        voyait une navigation complète dont chaque lien menait à un 403.
+        """
+        return self.role_slug in {self.ADMIN, self.DOCTEUR, self.INFIRMIER}
+
     # Capacités : ce que la navigation demande réellement, exprimé par
     # l'intention plutôt que par des comparaisons négatives de rôle.
     @property

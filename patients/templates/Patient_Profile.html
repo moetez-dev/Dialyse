@@ -46,12 +46,12 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-sm text-body-soft mb-1">Prénom</label>
-            <input name="FirstName" value="{{ patient.first_name }}" required
+            <input name="FirstName" value="{{ patient.first_name|default_if_none:'' }}" required
               class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
           </div>
           <div>
             <label class="block text-sm text-body-soft mb-1">Nom</label>
-            <input name="LastName" value="{{ patient.last_name }}" required
+            <input name="LastName" value="{{ patient.last_name|default_if_none:'' }}" required
               class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
           </div>
         </div>
@@ -64,7 +64,7 @@
           </div>
           <div>
             <label class="block text-sm text-body-soft mb-1">Téléphone</label>
-            <input name="phone" value="{{ patient.telephone }}" required
+            <input name="phone" value="{{ patient.telephone|default_if_none:'' }}" required
               class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
           </div>
         </div>
@@ -84,13 +84,13 @@
 
         <div>
           <label class="block text-sm text-body-soft mb-1">Adresse</label>
-          <input name="address" value="{{ patient.adresse }}" required
+          <input name="address" value="{{ patient.adresse|default_if_none:'' }}" required
             class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
           <label class="block text-sm text-body-soft mb-1">Contact d'urgence</label>
-          <input name="contacturgences" value="{{ patient.contact_urgence }}" required
+          <input name="contacturgences" value="{{ patient.contact_urgence|default_if_none:'' }}" required
             class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 

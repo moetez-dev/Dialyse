@@ -38,6 +38,15 @@ def login_view(request):
                 user.save()
                 if user.first_login:
                     return redirect("accounts:profile")
+                if not user.is_known_role:
+                    # Rôle inconnu des vues : l'envoyer vers la surveillance
+                    # produirait un 403 immédiat et inexpliqué.
+                    messages.error(
+                        request,
+                        f"Le rôle « {user.role_label} » n'est associé à aucun "
+                        "accès. Contactez l'administrateur du service.",
+                    )
+                    return redirect("accounts:error")
                 return redirect("monitoring:surveillance")  # redirige vers le dashboard après connexion réussie
             else:
                 auth_error = "Identifiants invalides!"
