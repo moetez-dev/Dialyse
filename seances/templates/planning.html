@@ -14,7 +14,7 @@
       <p class="text-xs md:text-sm text-body-soft mt-1">Gérez le planning des séances de dialyse</p>
     </div>
 
-    <button id="newSessionBtn" type="button"
+    {% if current_user.can_create_session %}<button id="newSessionBtn" type="button"
       class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors"
       style="cursor: pointer;">
       <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
@@ -24,7 +24,7 @@
         <span class="text-brand-700">Nouvelle séance</span>
       </span>
       
-    </button>
+    </button>{% endif %}
   </div>
 
   <!-- Statistics Cards -->

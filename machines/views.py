@@ -106,7 +106,7 @@ def update_status(request, machine_id):
 
 
 @app_login_required
-@role_required("Admin", "Infirmier", "Docteur", redirect_to="accounts:error")
+@role_required("Admin", "Infirmier", redirect_to="accounts:error")
 def configurer_machine(request, machine_id):
     # 1️⃣ Récupération de la machine
     machine = get_object_or_404(Machine, id=machine_id)
@@ -153,6 +153,7 @@ def configurer_machine(request, machine_id):
     return render(request, "configurer_machine.html", context)
 
 @app_login_required
+@role_required("Admin", "Infirmier", redirect_to="accounts:error")
 def details_machine(request, machine_id):
     machine = get_object_or_404(Machine, id=machine_id)
     current_user = request.current_user  # 🔹 pour que le navbar affiche le bon nom
@@ -172,7 +173,7 @@ def details_machine(request, machine_id):
     return render(request, "details_machine.html", context)
 
 @app_login_required
-@role_required("Admin", "Infirmier", "Docteur", redirect_to="accounts:error")
+@role_required("Admin", redirect_to="accounts:error")
 @require_http_methods(["GET"])
 def raspi_management(request):
     current_user = request.current_user

@@ -90,6 +90,20 @@ class User(models.Model):
     def can_manage_nurses(self):
         return not self.is_infirmier
 
+    # Actions : les boutons doivent suivre les mêmes règles que les vues,
+    # sinon on propose une action qui renvoie vers la page d'erreur.
+    @property
+    def can_add_machine(self):
+        return self.is_admin
+
+    @property
+    def can_add_staff(self):
+        return self.is_admin
+
+    @property
+    def can_create_session(self):
+        return self.is_admin or self.is_docteur
+
     def get_specialite(self):
         if self.role and self.role.name == "Docteur":
             return self.specialite
