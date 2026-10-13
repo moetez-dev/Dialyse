@@ -9,6 +9,7 @@ from django.contrib import messages
 import base64
 import uuid
 import random
+import secrets
 import string
 from .reset_utils import make_reset_token , read_reset_token
 from django.contrib.auth.hashers import make_password, check_password
@@ -323,7 +324,7 @@ def ajout_infirmier(request):
         messages.error(request, "Nom et email sont obligatoires.")
         return redirect("accounts:nurses")
     # Mot de passe automatique (8 caractères)
-    password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+    password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
 
     if User.objects.filter(email=email).exists():
         messages.error(request, "Cet email existe déjà.")
@@ -365,7 +366,7 @@ def add_doctor(request):
             return redirect("accounts:docteurs")
 
         # Mot de passe automatique (8 caractères)
-        password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
 
         # Récupérer le rôle Docteur
         role_doctor, _ = Role.objects.get_or_create(name="Docteur")

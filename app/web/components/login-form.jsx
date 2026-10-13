@@ -30,9 +30,13 @@ export function LoginForm() {
         }),
       });
 
+      // Ces écrans sont encore rendus par Django et servis via le proxy ;
+      // les chemins deviendront /profil et /surveillance une fois migrés.
       // À la première connexion, le mot de passe doit être changé avant
       // d'accéder au reste de l'application.
-      router.replace(payload.user?.first_login ? '/profil' : '/surveillance');
+      window.location.assign(
+        payload.user?.first_login ? '/profile/' : '/monitoring/surveillance/',
+      );
     } catch (err) {
       setError(
         err.status === 401

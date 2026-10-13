@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { apiRequest } from './api';
 import { Icon } from './icons';
-import { capabilities, navFor } from './navigation';
+import { canAccessRoute, capabilities, navFor } from './navigation';
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -35,6 +35,31 @@ function ThemeToggle() {
     >
       <Icon name={dark ? 'sun' : 'moon'} />
     </button>
+  );
+}
+
+function AccessDenied({ role }) {
+  return (
+    <div className="mx-auto max-w-lg rounded-card border border-line bg-surface">
+      <header className="flex items-center justify-between border-b border-line px-5 py-4">
+        <h1 className="font-medium text-body">Accès refusé</h1>
+        <span className="rounded-full bg-critical-soft px-2.5 py-0.5 text-xs font-medium text-critical">
+          403
+        </span>
+      </header>
+      <div className="p-5">
+        <p className="text-sm leading-relaxed text-body-soft">
+          Votre compte ({role}) n'a pas accès à cette page. Si vous pensez qu'il
+          s'agit d'une erreur, contactez l'administrateur du service.
+        </p>
+        <Link
+          href="/"
+          className="mt-5 inline-block rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800"
+        >
+          Retour à l'accueil
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -67,6 +92,9 @@ export function WorkspaceShell({ children }) {
 
   const caps = capabilities(user);
   const groups = navFor(user);
+  // Les vues Django refusaient déjà ces chemins ; les pages React ne passent
+  // pas par elles, la règle doit donc être rejouée ici.
+  const allowed = canAccessRoute(user, pathname);
 
   async function logout() {
     try {
@@ -191,7 +219,9 @@ export function WorkspaceShell({ children }) {
           </>
         )}
 
-        <main className="min-w-0 flex-1 p-4 lg:p-6">{children}</main>
+        <main className="min-w-0 flex-1 p-4 lg:p-6">
+          {allowed ? children : <AccessDenied role={caps.roleLabel} />}
+        </main>
       </div>
     </div>
   );

@@ -98,8 +98,40 @@ def api_login_required(view_func):
         except User.DoesNotExist:
             request.session.flush()
             return _json_err("Session expired", status=401)
+        if not _has_role(request.current_user, "Admin", "Docteur", "Infirmier"):
+            return _json_err("Forbidden", status=403)
         return view_func(request, *args, **kwargs)
     return _wrapped
+
+def agent_auth_required(view_func):
+    """Accès réservé aux soignants connectés ou aux appels portant la clé d'API.
+
+    Ces points d'entrée déclenchent la génération de rapports et renvoient des
+    données de séance. Sans garde, un POST anonyme au corps vide retombait sur
+    la séance la plus récente et en produisait le compte rendu.
+    """
+    from functools import wraps
+
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if _edge_api_key_ok(request):
+            return view_func(request, *args, **kwargs)
+
+        _bind_session_from_header(request)
+        user_id = request.session.get("app_user_id")
+        if not user_id:
+            return _json_err("Authentication required", status=401)
+        user = User.objects.select_related("role").filter(id=user_id).first()
+        if user is None:
+            request.session.flush()
+            return _json_err("Session expired", status=401)
+        if not _has_role(user, "Admin", "Docteur", "Infirmier"):
+            return _json_err("Forbidden", status=403)
+        request.current_user = user
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
+
 
 def _has_role(user, *roles):
     if not hasattr(user, "role") or not user.role:
@@ -1366,6 +1398,10 @@ def _measurement_payload(measurement):
 
 @api_login_required
 def api_monitoring(request):
+    # Contient l'activité de connexion de tout le personnel : réservé aux
+    # administrateurs, comme la page /monitoring/ correspondante.
+    if not _has_role(request.current_user, "Admin"):
+        return _json_err("Forbidden", status=403)
     """Mobile counterpart of the /monitoring/ dashboard page.
 
     Reproduces `monitoring/views.py dashboard()`: the KPI cards, the live
@@ -1484,10 +1520,13 @@ def _staff_user_dict(u):
 
 
 def _generate_temp_password(length=8):
-    import random
+    # `random` n'est pas un générateur cryptographique : la suite produite est
+    # prédictible à partir de son état. `secrets` tire de la source système.
+    import secrets
     import string
 
-    return "".join(random.choices(string.ascii_letters + string.digits, k=length))
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(max(length, 16)))
 
 
 @csrf_exempt
@@ -1689,6 +1728,7 @@ def api_nurse_detail(request, nurse_id):
         return _json_err("Nurse not found", status=404)
     return _json_ok(_staff_user_dict(nurse))
 @csrf_exempt
+@agent_auth_required
 def api_ai_analyze(request):
     """
     Analyze dialysis measurements using local Ollama AI.
@@ -1737,6 +1777,7 @@ def api_ai_analyze(request):
 
 
 @csrf_exempt
+@agent_auth_required
 def api_agent_resume_seance(request):
     """
     POST /api/agent/resume-seance/
@@ -1771,6 +1812,7 @@ def api_agent_resume_seance(request):
 
 
 @csrf_exempt
+@agent_auth_required
 def api_agent_superadmin(request):
     """
     POST /api/agent/superadmin/

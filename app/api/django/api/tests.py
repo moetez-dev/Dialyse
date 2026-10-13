@@ -96,11 +96,26 @@ class Phase1ApiTests(TestCase):
         )
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.json()["success"])
+        # /api/monitoring/ expose l'historique de connexion de tout le
+        # personnel (identifiants, e-mails) : réservé à l'administrateur, comme
+        # la page /monitoring/ correspondante. Un docteur doit être refusé.
         res2 = bare.get(
             "/api/monitoring/?sort=-login_at",
             HTTP_X_SESSION_ID=session_id,
         )
-        self.assertEqual(res2.status_code, 200)
+        self.assertEqual(res2.status_code, 403)
+
+        admin_login = Client().post(
+            "/api/login/",
+            data=json.dumps({"username": "admin_test", "password": "password123"}),
+            content_type="application/json",
+        )
+        admin_session = admin_login.json()["sessionid"]
+        res3 = Client().get(
+            "/api/monitoring/?sort=-login_at",
+            HTTP_X_SESSION_ID=admin_session,
+        )
+        self.assertEqual(res3.status_code, 200)
 
     def test_mobile_login_fail(self):
         res = self.client.post(
