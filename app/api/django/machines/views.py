@@ -169,6 +169,9 @@ def details_machine(request, machine_id):
         "raspi": raspi,
         "average_duration": average_duration,
         "recent_sessions": recent_sessions,
+        # L'entretien du parc n'a pas à savoir qui est dialysé sur quelle
+        # machine : l'historique reste visible, les patients non.
+        "show_patients": current_user.can_view_clinical,
     }
     return render(request, "details_machine.html", context)
 

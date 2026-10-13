@@ -16,6 +16,7 @@ class Phase1ApiTests(TestCase):
         self.admin_role = Role.objects.create(name="Admin")
         self.doctor_role = Role.objects.create(name="Docteur")
         self.nurse_role = Role.objects.create(name="Infirmier")
+        self.tech_role = Role.objects.create(name="Technicien")
         self.admin_user = User.objects.create(
             username="admin_test",
             password="password123",
@@ -33,6 +34,12 @@ class Phase1ApiTests(TestCase):
             password="password123",
             role=self.nurse_role,
             email="nurse@test.com",
+        )
+        self.tech_user = User.objects.create(
+            username="tech_test",
+            password="password123",
+            role=self.tech_role,
+            email="tech@test.com",
         )
         self.patient = Patient.objects.create(
             first_name="Ahmed",
@@ -472,6 +479,36 @@ class Phase1ApiTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.machine.refresh_from_db()
         self.assertEqual(self.machine.status, "Maintenance")
+
+    def test_machine_detail_hides_patients_from_technicien(self):
+        """Le parc n'emporte pas le dossier patient.
+
+        Le détail d'un générateur liste ses dernières séances ; ouvrir cet
+        écran au technicien lui montrait le nom des patients dialysés.
+        """
+        self._login(self.tech_user)
+        res = self.client.get(f"/api/machines/{self.machine.id}/")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()["data"]
+        self.assertNotIn("patient", data.get("active_session") or {})
+        for seance in data["recent_sessions"]:
+            self.assertNotIn("patient", seance)
+        # L'historique lui-même reste nécessaire à l'entretien.
+        self.assertIn("recent_sessions", data)
+
+    def test_machine_detail_keeps_patients_for_soignants(self):
+        self._login(self.nurse_user)
+        res = self.client.get(f"/api/machines/{self.machine.id}/")
+        self.assertEqual(res.status_code, 200)
+        for seance in res.json()["data"]["recent_sessions"]:
+            self.assertIn("patient", seance)
+
+    def test_technicien_refused_patient_data(self):
+        """Aucun point d'entrée clinique n'est ouvert au technicien."""
+        self._login(self.tech_user)
+        for path in ("/api/patients/", "/api/doctors/", "/api/nurses/"):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 403)
 
     def test_machine_delete_not_allowed(self):
         self._login(self.admin_user)

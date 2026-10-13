@@ -118,7 +118,9 @@
       {% for session in recent_sessions %}
 <div class="flex justify-between items-center border rounded-lg p-4">
   <div>
-    <p class="font-medium">{{ session.patient }}</p>
+    <p class="font-medium">
+      {% if show_patients %}{{ session.patient }}{% else %}Séance{% endif %}
+    </p>
     <p class="text-sm text-body-faint">{{ session.session_date|date:"d/m/Y" }} • {{ session.duration }}h</p>
   </div>
   <span class="text-xs px-3 py-1 rounded-full

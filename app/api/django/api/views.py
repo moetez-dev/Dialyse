@@ -536,7 +536,13 @@ def _raspi_info(machine):
         return None
 
 
-def _machine_dict(m, *, include_detail=False):
+def _machine_dict(m, *, include_detail=False, with_patients=True):
+    """Sérialise un générateur.
+
+    `with_patients=False` retire l'identité des patients des séances liées :
+    le détail d'un générateur sert aussi à l'entretien du parc, qui n'a pas
+    à connaître qui est dialysé sur quelle machine.
+    """
     data = {
         "id": m.id,
         "machine_id": m.machine_id,
@@ -561,10 +567,11 @@ def _machine_dict(m, *, include_detail=False):
     if active_seance:
         active_session_data = {
             "id": str(active_seance.id),
-            "patient": str(active_seance.patient),
             "session_date": str(active_seance.session_date),
             "status": active_seance.status,
         }
+        if with_patients:
+            active_session_data["patient"] = str(active_seance.patient)
 
     recent = []
     for s in (
@@ -572,13 +579,15 @@ def _machine_dict(m, *, include_detail=False):
         .select_related("patient")
         .order_by("-session_date", "-start_hour")[:5]
     ):
-        recent.append({
+        entry = {
             "id": str(s.id),
             "session_date": str(s.session_date) if s.session_date else None,
             "status": s.status,
-            "patient": str(s.patient) if s.patient else None,
             "duration": s.duration,
-        })
+        }
+        if with_patients:
+            entry["patient"] = str(s.patient) if s.patient else None
+        recent.append(entry)
 
     raspi_options = []
     for r in RaspiDevice.objects.select_related("machine").order_by("raspi_id"):
@@ -686,7 +695,11 @@ def api_machine_detail(request, machine_id):
         if not (getattr(user, "can_manage_machines", False)
                 or getattr(user, "can_view_clinical", False)):
             return _json_err("Forbidden", status=403)
-        return _json_ok(_machine_dict(m, include_detail=True))
+        return _json_ok(_machine_dict(
+            m,
+            include_detail=True,
+            with_patients=getattr(user, "can_view_clinical", False),
+        ))
 
     if request.method in ("PUT", "PATCH"):
         try:
@@ -740,7 +753,11 @@ def api_machine_detail(request, machine_id):
                 raspi.save(update_fields=["machine"])
 
         m.save()
-        return _json_ok(_machine_dict(m, include_detail=True))
+        return _json_ok(_machine_dict(
+            m,
+            include_detail=True,
+            with_patients=getattr(user, "can_view_clinical", False),
+        ))
 
     return _json_err("Method not allowed", status=405)
 
