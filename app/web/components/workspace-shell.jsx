@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { apiRequest } from './api';
 import { Icon } from './icons';
-import { canAccessRoute, capabilities, navFor } from './navigation';
+import { canAccessRoute, capabilities, homeHref, navFor } from './navigation';
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -38,7 +38,7 @@ function ThemeToggle() {
   );
 }
 
-function AccessDenied({ role }) {
+function AccessDenied({ role, home }) {
   return (
     <div className="mx-auto max-w-lg rounded-card border border-line bg-surface">
       <header className="flex items-center justify-between border-b border-line px-5 py-4">
@@ -52,12 +52,20 @@ function AccessDenied({ role }) {
           Votre compte ({role}) n'a pas accès à cette page. Si vous pensez qu'il
           s'agit d'une erreur, contactez l'administrateur du service.
         </p>
-        <Link
-          href="/"
-          className="mt-5 inline-block rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800"
-        >
-          Retour à l'accueil
-        </Link>
+        <div className="mt-5 flex flex-wrap gap-2.5">
+          <a
+            href={home}
+            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800"
+          >
+            Aller à mon premier écran
+          </a>
+          <a
+            href="/profile/"
+            className="rounded-lg border border-line px-4 py-2 text-sm text-body-soft hover:bg-surface-sunken hover:text-body"
+          >
+            Mon profil
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -143,7 +151,7 @@ export function WorkspaceShell({ children }) {
             {user && (
               <>
                 <Link
-                  href="/profil"
+                  href="/profile/"
                   className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-sunken"
                 >
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-sunken text-body-soft">
@@ -185,11 +193,13 @@ export function WorkspaceShell({ children }) {
                     </p>
                     <ul className="space-y-0.5">
                       {group.items.map((item) => {
-                        const active =
-                          pathname === item.href || pathname.startsWith(`${item.href}/`);
+                        const base = item.href.replace(/\/$/, '');
+                        const here = pathname.replace(/\/$/, '');
+                        const active = here === base || here.startsWith(`${base}/`);
+                        const Tag = item.external ? 'a' : Link;
                         return (
                           <li key={item.href}>
-                            <Link
+                            <Tag
                               href={item.href}
                               aria-current={active ? 'page' : undefined}
                               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
@@ -200,7 +210,7 @@ export function WorkspaceShell({ children }) {
                             >
                               <Icon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
                               <span className="truncate">{item.label}</span>
-                            </Link>
+                            </Tag>
                           </li>
                         );
                       })}
@@ -220,7 +230,7 @@ export function WorkspaceShell({ children }) {
         )}
 
         <main className="min-w-0 flex-1 p-4 lg:p-6">
-          {allowed ? children : <AccessDenied role={caps.roleLabel} />}
+          {allowed ? children : <AccessDenied role={caps.roleLabel} home={homeHref(user)} />}
         </main>
       </div>
     </div>

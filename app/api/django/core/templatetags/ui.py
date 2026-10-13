@@ -17,6 +17,8 @@ Usage dans un gabarit :
     {% ui_status seance.status kind="seance" %}
 """
 
+import re
+
 from django import template
 from django.template.loader import render_to_string
 
@@ -197,3 +199,19 @@ def ui_table(content, columns=None, empty=None):
         "ui/table.html",
         {"columns": columns or [], "rows": content, "empty": empty},
     )
+
+
+# Le message enregistré répète déjà la gravité, pictogramme compris :
+# « 🔴 CRITIQUE — Pression artérielle très bas : … ». Affiché à côté de la
+# pastille de niveau, l'information apparaissait trois fois sur la ligne.
+_PREFIXE_GRAVITE = re.compile(
+    r"^[\s\W]*?(CRITIQUE|ALERTE|ATTENTION|INFO)\s*[—:-]\s*",
+    re.IGNORECASE,
+)
+
+
+@register.filter
+def sans_prefixe_gravite(message):
+    """Retire la gravité répétée en tête d'un message d'alerte."""
+    texte = (message or "").strip()
+    return _PREFIXE_GRAVITE.sub("", texte).strip() or texte

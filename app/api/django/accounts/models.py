@@ -43,6 +43,9 @@ class User(models.Model):
     ADMIN = "admin"
     DOCTEUR = "docteur"
     INFIRMIER = "infirmier"
+    # Le technicien entretient le parc : générateurs et appareils de lecture.
+    # Il n'intervient pas dans le soin et ne voit donc aucune donnée patient.
+    TECHNICIEN = "technicien"
 
     @property
     def role_slug(self):
@@ -69,6 +72,10 @@ class User(models.Model):
         return self.role_slug == self.INFIRMIER
 
     @property
+    def is_technicien(self):
+        return self.role_slug == self.TECHNICIEN
+
+    @property
     def is_known_role(self):
         """Le rôle correspond-il à l'un de ceux que l'application gère ?
 
@@ -76,7 +83,8 @@ class User(models.Model):
         les vues ne reconnaissent pas. Sans ce garde-fou, un tel utilisateur
         voyait une navigation complète dont chaque lien menait à un 403.
         """
-        return self.role_slug in {self.ADMIN, self.DOCTEUR, self.INFIRMIER}
+        return self.role_slug in {self.ADMIN, self.DOCTEUR,
+                                  self.INFIRMIER, self.TECHNICIEN}
 
     # Capacités : ce que la navigation demande réellement, exprimé par
     # l'intention plutôt que par des comparaisons négatives de rôle.
@@ -86,11 +94,11 @@ class User(models.Model):
 
     @property
     def can_manage_devices(self):
-        return self.is_admin
+        return self.is_admin or self.is_technicien
 
     @property
     def can_manage_machines(self):
-        return not self.is_docteur
+        return self.is_admin or self.is_infirmier or self.is_technicien
 
     @property
     def can_manage_doctors(self):
@@ -98,13 +106,13 @@ class User(models.Model):
 
     @property
     def can_manage_nurses(self):
-        return not self.is_infirmier
+        return self.is_admin or self.is_docteur
 
     # Actions : les boutons doivent suivre les mêmes règles que les vues,
     # sinon on propose une action qui renvoie vers la page d'erreur.
     @property
     def can_add_machine(self):
-        return self.is_admin
+        return self.is_admin or self.is_technicien
 
     @property
     def can_add_staff(self):
@@ -113,6 +121,15 @@ class User(models.Model):
     @property
     def can_create_session(self):
         return self.is_admin or self.is_docteur
+
+    @property
+    def can_view_clinical(self):
+        """Surveillance, alertes, séances, patients : le soin.
+
+        Sépare le parc matériel du dossier patient, afin que le technicien
+        puisse entretenir les générateurs sans accéder aux données de santé.
+        """
+        return self.is_admin or self.is_docteur or self.is_infirmier
 
     def get_specialite(self):
         if self.role and self.role.name == "Docteur":

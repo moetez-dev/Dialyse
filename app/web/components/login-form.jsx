@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { apiRequest } from './api';
 import { Icon } from './icons';
+import { homeHref } from './navigation';
 import { ThemeToggleStandalone } from './theme-toggle';
 
 export function LoginForm() {
@@ -30,12 +31,12 @@ export function LoginForm() {
         }),
       });
 
-      // Ces écrans sont encore rendus par Django et servis via le proxy ;
-      // les chemins deviendront /profil et /surveillance une fois migrés.
       // À la première connexion, le mot de passe doit être changé avant
-      // d'accéder au reste de l'application.
+      // d'accéder au reste de l'application. Sinon : le premier écran que
+      // son rôle autorise réellement — la surveillance était imposée à
+      // tous, y compris aux rôles qui n'y ont pas accès.
       window.location.assign(
-        payload.user?.first_login ? '/profile/' : '/monitoring/surveillance/',
+        payload.user?.first_login ? '/profile/' : homeHref(payload.user),
       );
     } catch (err) {
       setError(

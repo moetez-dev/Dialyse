@@ -42,7 +42,7 @@
           {% endcomment %}
           <td class="px-4 py-3">{% ui_status alert.niveau kind="alerte" %}</td>
 
-          <td class="px-4 py-3 text-body-soft">{{ alert.message }}</td>
+          <td class="px-4 py-3 text-body-soft">{{ alert.message|sans_prefixe_gravite }}</td>
           <td class="px-4 py-3">{% ui_status alert.status kind="alerte" %}</td>
 
           <td class="px-4 py-3">

@@ -427,7 +427,11 @@ class Phase1ApiTests(TestCase):
         self.assertTrue(Machine.objects.filter(machine_id="M200").exists())
 
     def test_machine_configure_status_and_raspi(self):
-        self._login(self.doctor_user)
+        # Le docteur était utilisé ici, alors que la vue Web
+        # configurer_machine le refuse et que la barre latérale ne lui montre
+        # même pas les générateurs : le test figeait une permission que
+        # l'application n'accorde pas.
+        self._login(self.nurse_user)
         res = self.client.put(
             f"/api/machines/{self.machine.id}/",
             data=json.dumps({
@@ -444,6 +448,30 @@ class Phase1ApiTests(TestCase):
         self.raspi.refresh_from_db()
         self.assertEqual(self.raspi.machine_id, self.machine.id)
         self.assertIn("raspi_options", res.json()["data"])
+
+    def test_machine_configure_refused_to_doctor(self):
+        """Le parc n'est pas du ressort du soin — comme la vue Web."""
+        self._login(self.doctor_user)
+        res = self.client.put(
+            f"/api/machines/{self.machine.id}/",
+            data=json.dumps({"location": "Salle C"}),
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, 403)
+        self.machine.refresh_from_db()
+        self.assertNotEqual(self.machine.location, "Salle C")
+
+    def test_machine_status_allowed_to_doctor(self):
+        """update_status reste ouverte au soin, elle aussi comme le Web."""
+        self._login(self.doctor_user)
+        res = self.client.put(
+            f"/api/machines/{self.machine.id}/",
+            data=json.dumps({"status": "Maintenance"}),
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, 200)
+        self.machine.refresh_from_db()
+        self.assertEqual(self.machine.status, "Maintenance")
 
     def test_machine_delete_not_allowed(self):
         self._login(self.admin_user)

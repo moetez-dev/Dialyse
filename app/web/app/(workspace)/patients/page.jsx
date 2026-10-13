@@ -5,7 +5,6 @@ export const metadata = { title: 'Patients | Dialyse Manager' };
 export default function PatientsPage() {
   return <ResourceList
     title="Patients"
-    eyebrow="RÉFÉRENTIEL"
     description="Dossiers patients et informations de suivi."
     endpoint="/api/patients/"
     columns={[

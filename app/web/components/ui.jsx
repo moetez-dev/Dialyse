@@ -59,8 +59,14 @@ const MACHINE_LABEL = {
   'hors service': 'Hors service', inactive: 'Inactive',
 };
 
-const TONE_MAPS = { seance: SEANCE_TONE, machine: MACHINE_TONE, alerte: ALERTE_TONE };
-const LABEL_MAPS = { seance: {}, machine: MACHINE_LABEL, alerte: ALERTE_LABEL };
+// Les comptes du personnel n'ont que deux états.
+const STAFF_TONE = { actif: 'ok', inactif: 'neutral' };
+
+const TONE_MAPS = {
+  seance: SEANCE_TONE, machine: MACHINE_TONE,
+  alerte: ALERTE_TONE, staff: STAFF_TONE,
+};
+const LABEL_MAPS = { seance: {}, machine: MACHINE_LABEL, alerte: ALERTE_LABEL, staff: {} };
 
 export function toneFor(value, kind = 'seance') {
   const key = (value || '').trim().toLowerCase();

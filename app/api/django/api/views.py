@@ -116,10 +116,39 @@ def api_login_required(view_func):
         except User.DoesNotExist:
             request.session.flush()
             return _json_err("Session expired", status=401)
-        if not _has_role(request.current_user, "Admin", "Docteur", "Infirmier"):
+        if not getattr(request.current_user, "can_view_clinical", False):
             return _json_err("Forbidden", status=403)
         return view_func(request, *args, **kwargs)
     return _wrapped
+
+def api_auth_required(view_func):
+    """Authentification seule, sans contrôle de rôle.
+
+    `api_login_required` refuse les rôles que l'application ne reconnaît pas,
+    ce qui est juste pour les données cliniques mais enfermait ces comptes
+    dehors : la coquille React interroge /api/profile/ sur chaque page et
+    renvoie vers /connexion/ en cas d'échec, si bien qu'un rôle inconnu se
+    connectait avec succès puis était immédiatement rejeté vers l'écran de
+    connexion, en boucle. Son propre profil et la déconnexion doivent rester
+    accessibles à tout compte authentifié.
+    """
+    from functools import wraps
+
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        _bind_session_from_header(request)
+        user_id = request.session.get("app_user_id")
+        if not user_id:
+            return _json_err("Authentication required", status=401)
+        try:
+            request.current_user = User.objects.select_related("role").get(id=user_id)
+        except User.DoesNotExist:
+            request.session.flush()
+            return _json_err("Session expired", status=401)
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
+
 
 def agent_auth_required(view_func):
     """Accès réservé aux soignants connectés ou aux appels portant la clé d'API.
@@ -194,7 +223,7 @@ def mobile_login(request):
         return JsonResponse({"success": False, "message": str(e)}, status=500)
 
 @csrf_exempt
-@api_login_required
+@api_auth_required
 def mobile_logout(request):
     if request.method != "POST":
         return _json_err("POST required", status=405)
@@ -226,7 +255,7 @@ def _user_profile_dict(user):
 
 
 @csrf_exempt
-@api_login_required
+@api_auth_required
 def api_profile(request):
     """GET / PUT profile — mirrors accounts.views.profile (without image upload)."""
     user = request.current_user
@@ -581,13 +610,17 @@ def _machine_kpis():
 
 
 @csrf_exempt
-@api_login_required
+@api_auth_required
 def api_machines(request):
-    """GET list (Admin/Infirmier) + POST create (Admin) — mirrors Web machines/ajout_machine."""
+    """GET list (Admin/Infirmier/Technicien) + POST create (Admin/Technicien).
+
+    Garde l'authentification seule : le parc matériel relève du technicien,
+    que la garde clinique d'`api_login_required` exclut à juste titre.
+    """
     user = request.current_user
 
     if request.method == "GET":
-        if not _has_role(user, "Admin", "Infirmier"):
+        if not getattr(user, "can_manage_machines", False):
             return _json_err("Forbidden", status=403)
         qs = Machine.objects.all().order_by("machine_id")
         search = request.GET.get("search", "").strip()
@@ -613,8 +646,8 @@ def api_machines(request):
         )
 
     if request.method == "POST":
-        if not _has_role(user, "Admin"):
-            return _json_err("Forbidden — Admin only", status=403)
+        if not getattr(user, "can_add_machine", False):
+            return _json_err("Forbidden", status=403)
         try:
             body = json.loads(request.body.decode("utf-8") or "{}")
         except json.JSONDecodeError:
@@ -639,11 +672,9 @@ def api_machines(request):
 
 
 @csrf_exempt
-@api_login_required
+@api_auth_required
 def api_machine_detail(request, machine_id):
-    """GET detail (any auth) / PUT|PATCH configure (Admin/Infirmier/Docteur).
-    No DELETE on Web → 405.
-    """
+    """GET detail / PUT|PATCH configure. No DELETE on Web → 405."""
     try:
         m = Machine.objects.get(id=machine_id)
     except Machine.DoesNotExist:
@@ -652,15 +683,30 @@ def api_machine_detail(request, machine_id):
     user = request.current_user
 
     if request.method == "GET":
+        if not (getattr(user, "can_manage_machines", False)
+                or getattr(user, "can_view_clinical", False)):
+            return _json_err("Forbidden", status=403)
         return _json_ok(_machine_dict(m, include_detail=True))
 
     if request.method in ("PUT", "PATCH"):
-        if not _has_role(user, "Admin", "Infirmier", "Docteur"):
-            return _json_err("Forbidden", status=403)
         try:
             body = json.loads(request.body.decode("utf-8") or "{}")
         except json.JSONDecodeError:
             return _json_err("Invalid JSON")
+
+        # Côté Web, deux vues distinctes : update_status, ouverte au soin, et
+        # configurer_machine, réservée au parc. Ce point d'entrée faisait les
+        # deux sous un seul contrôle plus permissif que le Web — un docteur ne
+        # pouvait pas lister les générateurs mais pouvait en reconfigurer un et
+        # réaffecter son appareil de lecture.
+        CONFIG_FIELDS = {"model", "location", "manufacturer", "raspi_id", "raspi_db_id"}
+        configuring = bool(CONFIG_FIELDS & set(body))
+        if configuring:
+            if not getattr(user, "can_manage_machines", False):
+                return _json_err("Forbidden — configuration du parc", status=403)
+        elif not (getattr(user, "can_manage_machines", False)
+                  or getattr(user, "can_view_clinical", False)):
+            return _json_err("Forbidden", status=403)
 
         new_status = body.get("status")
         if new_status is not None:

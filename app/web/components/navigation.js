@@ -1,31 +1,39 @@
 /* Définition de la navigation, reprise de core/navigation.py côté Django.
    Une entrée n'est affichée que si l'utilisateur possède la capacité associée,
-   afin de ne jamais proposer un lien menant à un refus d'accès. */
+   afin de ne jamais proposer un lien menant à un refus d'accès.
+
+   Les `href` sont les URL réellement servies, et non les URL françaises
+   visées à terme : côté Django la barre latérale passe par reverse(), elle
+   ne pouvait donc pas se tromper, alors que cette copie pointait vers
+   /surveillance/, /alertes/, /infirmiers/… qu'aucune route ne sert — sept
+   des dix liens répondaient 404 pour tous les rôles.
+   `external: true` marque un écran encore rendu par Django : <Link> fait
+   une navigation côté client, qui ne peut pas aboutir hors des routes Next. */
 
 export const NAV = [
   {
     group: 'Soins',
     items: [
-      { label: 'Tableau de bord', href: '/tableau-de-bord', icon: 'layout-dashboard', cap: 'canViewAdminDashboard' },
-      { label: 'Surveillance', href: '/surveillance', icon: 'monitor-heart', cap: null },
-      { label: 'Alertes', href: '/alertes', icon: 'alert-triangle', cap: null },
-      { label: 'Séances', href: '/seances', icon: 'calendar', cap: null },
-      { label: 'Historique des séances', href: '/seances/historique', icon: 'clock', cap: null },
+      { label: 'Tableau de bord', href: '/monitoring/dashboard/', icon: 'layout-dashboard', cap: 'canViewAdminDashboard' },
+      { label: 'Surveillance', clinical: true, href: '/monitoring/surveillance/', icon: 'monitor-heart', cap: null },
+      { label: 'Alertes', clinical: true, href: '/monitoring/alerts-history/', external: true, icon: 'alert-triangle', cap: null },
+      { label: 'Séances', clinical: true, href: '/seances/', external: true, icon: 'calendar', cap: null },
+      { label: 'Historique des séances', clinical: true, href: '/monitoring/seances-history/', external: true, icon: 'clock', cap: null },
     ],
   },
   {
     group: 'Référentiel',
     items: [
-      { label: 'Patients', href: '/patients', icon: 'users', cap: null },
-      { label: 'Machines', href: '/machines', icon: 'waves', cap: 'canManageMachines' },
-      { label: 'Appareils de lecture', href: '/machines/appareils', icon: 'camera', cap: 'canManageDevices' },
+      { label: 'Patients', clinical: true, href: '/patients/', icon: 'users', cap: null },
+      { label: 'Machines', href: '/machines/', icon: 'waves', cap: 'canManageMachines' },
+      { label: 'Appareils de lecture', href: '/machines/raspi/', external: true, icon: 'camera', cap: 'canManageDevices' },
     ],
   },
   {
     group: 'Personnel',
     items: [
-      { label: 'Docteurs', href: '/docteurs', icon: 'stethoscope', cap: 'canManageDoctors' },
-      { label: 'Infirmiers', href: '/infirmiers', icon: 'user', cap: 'canManageNurses' },
+      { label: 'Docteurs', href: '/docteurs/', icon: 'stethoscope', cap: 'canManageDoctors' },
+      { label: 'Infirmiers', href: '/nurses/', icon: 'user', cap: 'canManageNurses' },
     ],
   },
 ];
@@ -33,6 +41,8 @@ export const NAV = [
 const ADMIN = 'admin';
 const DOCTEUR = 'docteur';
 const INFIRMIER = 'infirmier';
+// Le technicien entretient le parc et ne voit aucune donnée patient.
+const TECHNICIEN = 'technicien';
 
 /** Capacités dérivées du rôle, insensibles à la casse comme côté Django. */
 export function capabilities(user) {
@@ -40,6 +50,7 @@ export function capabilities(user) {
   const isAdmin = slug === ADMIN;
   const isDocteur = slug === DOCTEUR;
   const isInfirmier = slug === INFIRMIER;
+  const isTechnicien = slug === TECHNICIEN;
 
   return {
     slug,
@@ -47,16 +58,21 @@ export function capabilities(user) {
     isAdmin,
     isDocteur,
     isInfirmier,
-    // Un rôle hors de ces trois-là n'est reconnu par aucune vue.
-    isKnownRole: [ADMIN, DOCTEUR, INFIRMIER].includes(slug),
+    isTechnicien,
+    // Un rôle hors de ceux-là n'est reconnu par aucune vue.
+    isKnownRole: [ADMIN, DOCTEUR, INFIRMIER, TECHNICIEN].includes(slug),
     canViewAdminDashboard: isAdmin,
-    canManageDevices: isAdmin,
-    canManageMachines: !isDocteur,
+    canManageDevices: isAdmin || isTechnicien,
+    // Capacités énumérées et non écrites en négatif : `!isInfirmier` aurait
+    // accordé au technicien la gestion du personnel soignant.
+    canManageMachines: isAdmin || isInfirmier || isTechnicien,
     canManageDoctors: isAdmin,
-    canManageNurses: !isInfirmier,
-    canAddMachine: isAdmin,
+    canManageNurses: isAdmin || isDocteur,
+    canAddMachine: isAdmin || isTechnicien,
     canAddStaff: isAdmin,
     canCreateSession: isAdmin || isDocteur,
+    // Surveillance, alertes, séances, patients : le soin.
+    canViewClinical: isAdmin || isDocteur || isInfirmier,
   };
 }
 
@@ -66,7 +82,9 @@ export function navFor(user) {
 
   return NAV.map((group) => ({
     group: group.group,
-    items: group.items.filter((item) => !item.cap || caps[item.cap]),
+    items: group.items.filter(
+      (item) => (!item.cap || caps[item.cap]) && (!item.clinical || caps.canViewClinical),
+    ),
   })).filter((group) => group.items.length > 0);
 }
 
@@ -80,6 +98,11 @@ export function navFor(user) {
  * Les règles reprennent exactement celles des vues Django.
  * ------------------------------------------------------------------------- */
 const ROUTE_CAPABILITIES = [
+  [/^\/monitoring\/surveillance/, 'canViewClinical'],
+  [/^\/monitoring\/alerts-history/, 'canViewClinical'],
+  [/^\/monitoring\/seances-history/, 'canViewClinical'],
+  [/^\/seances/, 'canViewClinical'],
+  [/^\/patients/, 'canViewClinical'],
   [/^\/tableau-de-bord/, 'canViewAdminDashboard'],
   [/^\/monitoring\/dashboard/, 'canViewAdminDashboard'],
   [/^\/machines\/appareils/, 'canManageDevices'],
@@ -106,4 +129,14 @@ export function canAccessRoute(user, pathname) {
   if (!caps.isKnownRole) return false;
   const needed = routeCapability(pathname);
   return !needed || Boolean(caps[needed]);
+}
+
+/** Premier écran accessible à cet utilisateur.
+ *
+ *  La connexion renvoyait tout le monde vers la surveillance, y compris les
+ *  rôles qui n'y ont pas accès : le technicien se connectait pour atterrir
+ *  sur un refus d'accès. */
+export function homeHref(user) {
+  const groups = navFor(user);
+  return groups[0]?.items[0]?.href || '/profile/';
 }
