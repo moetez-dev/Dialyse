@@ -17,9 +17,6 @@ from django.urls import reverse
 from django.shortcuts import render
 from accounts.models import UserActivity
 
-# Create your views here.
-# def home(request):
-# return render(request, 'home.html')
 
 def login_view(request):
     auth_error = None

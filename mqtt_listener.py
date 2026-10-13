@@ -102,11 +102,8 @@ def process_and_save_image(machine_id: str, image_bytes: bytes) -> bool:
 
     seance = Seance.objects.filter(machine=machine, status="en cours").first()
     if not seance:
-        print(f"[WARN] Aucune séance 'en cours' pour {machine_id}. Recherche de la séance la plus récente...")
-        seance = Seance.objects.filter(machine=machine).order_by("-session_date").first()
-
-    if not seance:
-        print(f"[ERROR] Aucune séance trouvée pour {machine_id}. Mesure ignorée.")
+        # Ne pas rattacher l'image et ses valeurs à une séance déjà close.
+        print(f"[SKIP] Aucune séance en cours sur {machine_id} : image ignorée.")
         return False
 
     # 5. Persistance dans Django (LiveMeasurement)
@@ -150,10 +147,12 @@ def save_telemetry_measurement(data: dict) -> bool:
 
         seance = Seance.objects.filter(machine=machine, status="en cours").first()
         if not seance:
-            seance = Seance.objects.filter(machine=machine).order_by("-session_date").first()
-
-        if not seance:
-            print(f"[WARN] Aucune séance disponible pour {machine_id}")
+            # Même correctif que l'API : ne jamais rattacher une mesure à une
+            # séance terminée ou annulée, cela corrompt son historique et son
+            # rapport. La mesure est écartée, et on le dit.
+            print(
+                f"[SKIP] Aucune séance en cours sur {machine_id} : mesure ignorée."
+            )
             return False
 
         measurement = LiveMeasurement.objects.create(

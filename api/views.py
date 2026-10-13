@@ -1180,10 +1180,15 @@ def push_measurement(request):
 
         seance = Seance.objects.filter(machine=machine, status="en cours").first()
         if not seance:
-            seance = Seance.objects.filter(machine=machine).order_by("-session_date").first()
-
-        if not seance:
-            return _json_err("No active seance for this machine", status=400)
+            # Avant, on retombait sur la séance la plus récente quel que soit son
+            # statut : une mesure arrivant machine au repos était rattachée en
+            # silence à une séance déjà terminée, faussant son historique et le
+            # rapport généré ensuite. Mieux vaut refuser la mesure.
+            return _json_err(
+                f"Aucune séance en cours sur la machine '{machine_id}'. "
+                "Démarrez la séance avant d'envoyer des mesures.",
+                status=409,
+            )
 
         from monitoring.validation import validate_dialysis_data
         val_res = validate_dialysis_data(data)

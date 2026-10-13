@@ -127,7 +127,7 @@ def dashboard(request):
 def surveillance_view(request):
     current_user = request.current_user
     active_sessions = (
-           Seance.objects.filter(status="En cours")
+           Seance.objects.filter(status="en cours")
           .select_related("patient", "machine")
     )
     return render(request, "surveillance.html", {"current_user": current_user ,"sessions": active_sessions})
@@ -140,7 +140,7 @@ def live_data(request):
     sessions = []
 
     active_seances = Seance.objects.filter(
-        status="En cours"
+        status="en cours"
     ).select_related(
         "patient",
         "machine"

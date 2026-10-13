@@ -246,9 +246,20 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 CORS_ALLOW_METHODS = list(default_methods)
 
-SESSION_COOKIE_SAMESITE = "None"
-CSRF_COOKIE_SAMESITE = "None"
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# Cookies de session.
+#
+# SameSite=None impose Secure, et un cookie Secure n'est pas conservé sur une
+# origine http. Chrome fait une exception pour localhost, mais pas pour une IP
+# de réseau local : servie ainsi, l'application perdait la session sans message.
+# Le client Flutter Web, lui, est cross-origin et a besoin de None+Secure.
+# D'où le réglage par variable d'environnement, avec un défaut sûr en dev.
+CROSS_SITE_COOKIES = os.environ.get(
+    "DJANGO_CROSS_SITE_COOKIES", "False"
+).lower() in ("1", "true", "yes")
+
+SESSION_COOKIE_SAMESITE = "None" if CROSS_SITE_COOKIES else "Lax"
+CSRF_COOKIE_SAMESITE = "None" if CROSS_SITE_COOKIES else "Lax"
+SESSION_COOKIE_SECURE = CROSS_SITE_COOKIES or not DEBUG
+CSRF_COOKIE_SECURE = CROSS_SITE_COOKIES or not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False

@@ -419,8 +419,11 @@ from django.utils import timezone
 from datetime import timedelta
 
 
+@app_login_required
+@role_required("Admin", "Docteur", "Infirmier", redirect_to="accounts:error")
 def search_sessions(request):
-    # Sécurité AJAX
+    # L'en-tête X-Requested-With n'authentifie rien : elle évite seulement les
+    # navigations accidentelles. L'authentification vient des décorateurs.
     if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         return JsonResponse({'error': 'Forbidden'}, status=403)
 

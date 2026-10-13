@@ -24,7 +24,10 @@ def app_login_required(view_func):
         return view_func(request, *args, **kwargs)
     return _wrapped
 
-def role_required(*allowed_roles, redirect_to="accounts:home"):
+# "accounts:home" n'existe pas : tout appel omettant le kwarg levait un
+# NoReverseMatch au moment du refus. Tous les sites d'appel passent déjà
+# "accounts:error", qui devient la valeur par défaut.
+def role_required(*allowed_roles, redirect_to="accounts:error"):
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped(request, *args, **kwargs):
@@ -32,7 +35,7 @@ def role_required(*allowed_roles, redirect_to="accounts:home"):
             if not user:
                 return redirect("accounts:login_view")
 
-            role_name = (user.role.name or "").lower()
+            role_name = user.role_slug
             allowed = {r.lower() for r in allowed_roles}
 
             if role_name not in allowed:
