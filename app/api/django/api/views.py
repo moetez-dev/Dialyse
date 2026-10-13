@@ -57,20 +57,38 @@ def _bind_session_from_header(request):
         request.session = store
 
 
+# Valeurs d'exemple publiées dans .env.example et dans settings.py : les
+# accepter reviendrait à n'avoir aucune authentification sur un déploiement
+# qui a simplement oublié de définir la clé.
+PLACEHOLDER_EDGE_KEYS = {"dev-edge-key-change-me", "change-me", "changeme", "secret"}
+
+
 def _edge_api_key_ok(request):
     """Raspberry Pi / edge clients authenticate with X-Edge-Api-Key."""
+    import secrets
+
     from django.conf import settings
 
     expected = (getattr(settings, "EDGE_API_KEY", None) or "").strip()
-    if not expected:
+    # Clé absente ou laissée à sa valeur d'exemple : on refuse plutôt que
+    # d'ouvrir l'accès à quiconque connaît la chaîne publiée.
+    if not expected or expected.lower() in PLACEHOLDER_EDGE_KEYS:
         return False
+
+    # Uniquement l'en-tête : passé en paramètre d'URL, le secret se retrouve
+    # dans les journaux du serveur, l'historique du navigateur et l'en-tête
+    # Referer des requêtes sortantes.
     provided = (
         request.headers.get("X-Edge-Api-Key")
         or request.META.get("HTTP_X_EDGE_API_KEY")
-        or request.GET.get("api_key")
         or ""
     ).strip()
-    return provided == expected
+    if not provided:
+        return False
+
+    # Comparaison à temps constant : `==` s'arrête au premier octet différent
+    # et laisse mesurer la progression octet par octet.
+    return secrets.compare_digest(provided, expected)
 
 
 def edge_api_key_required(view_func):
