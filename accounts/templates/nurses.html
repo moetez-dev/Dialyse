@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
 {% load icons %}
-{% icon "mail" cls="h-4 w-4 text-gray-400 flex-shrink-0" %}
-{% icon "phone" cls="h-4 w-4 text-gray-400 flex-shrink-0" %}
-{% icon "users" cls="h-4 w-4 text-gray-500 flex-shrink-0" %}
-{% icon "user-plus" cls="h-4 w-4 text-gray-500 flex-shrink-0" %}
-{% icon "user" cls="h-4 w-4 text-gray-500 flex-shrink-0" %}
-{% icon "clock" cls="h-3 w-3 text-gray-500 flex-shrink-0" %}
-{% icon "activity" cls="h-4 w-4 text-green-600 flex-shrink-0" %}
+{% icon "mail" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "phone" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "users" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "user-plus" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "user" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "clock" cls="h-3 w-3 text-body-faint flex-shrink-0" %}
+{% icon "activity" cls="h-4 w-4 text-stable flex-shrink-0" %}
 {% icon "calendar" cls="h-4 w-4 text-indigo-600 flex-shrink-0" %}
 {% block title %}Équipe Infirmière{% endblock %}
 
@@ -17,9 +17,9 @@
   <div class="space-y-2" id="pageMessages">
     {% for message in messages %}
     <div class="p-3 rounded-md
-                  {% if message.tags == 'success' %}bg-green-100 text-green-800{% endif %}
-                  {% if message.tags == 'error' %}bg-red-100 text-red-800{% endif %}
-                  {% if message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% endif %}">
+                  {% if message.tags == 'success' %}bg-stable-soft text-stable{% endif %}
+                  {% if message.tags == 'error' %}bg-critical-soft text-critical{% endif %}
+                  {% if message.tags == 'warning' %}bg-warning-soft text-warning{% endif %}">
       {{ message }}
     </div>
     {% endfor %}
@@ -30,77 +30,77 @@
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
       <h2 class="text-2xl">Équipe Infirmière</h2>
-      <p class="text-sm text-gray-600 mt-1">
+      <p class="text-sm text-body-soft mt-1">
         Gestion des infirmiers et consultation de leurs dossiers
       </p>
     </div>
-    <button type="button" id="openAddNurse" class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors" style="cursor: pointer;">
-      <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">{% icon "user-plus" cls="h-5 w-5 text-blue-600 flex-shrink-0" %}</span>
+    <button type="button" id="openAddNurse" class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors" style="cursor: pointer;">
+      <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">{% icon "user-plus" cls="h-5 w-5 text-brand-700 flex-shrink-0" %}</span>
       <span class="text-sm">
-        <span class="text-blue-700">Ajouter infirmier</span>
+        <span class="text-brand-700">Ajouter infirmier</span>
       </span>
     </button>
   </div>
 
   <!-- Statistics Cards -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div class="bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
+    <div class="bg-surface rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm text-gray-600">Total Patients</h3>
-        <span class="h-4 w-4 text-blue-600 inline-flex items-center justify-center">{% icon "users"%}</span>
+        <h3 class="text-sm text-body-soft">Total Patients</h3>
+        <span class="h-4 w-4 text-brand-700 inline-flex items-center justify-center">{% icon "users"%}</span>
       </div>
       <div class="text-2xl">{{ kpi_total_patients }}</div>
-      <p class="text-xs text-gray-600 mt-1">Patients assignés</p>
+      <p class="text-xs text-body-soft mt-1">Patients assignés</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
+    <div class="bg-surface rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm text-gray-600">Infirmiers Actives</h3>
-        <span class="h-4 w-4 text-green-600 inline-flex items-center justify-center">{% icon "activity" %}</span>
+        <h3 class="text-sm text-body-soft">Infirmiers Actives</h3>
+        <span class="h-4 w-4 text-stable inline-flex items-center justify-center">{% icon "activity" %}</span>
       </div>
       <div class="text-2xl">{{ kpi_active_nurses }}</div>
-      <p class="text-xs text-gray-600 mt-1">Actifs maintenant</p>
+      <p class="text-xs text-body-soft mt-1">Actifs maintenant</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
+    <div class="bg-surface rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm text-gray-600">Sessions Planifiées</h3>
+        <h3 class="text-sm text-body-soft">Sessions Planifiées</h3>
         <span class="h-4 w-4 text-indigo-600 inline-flex items-center justify-center">{% icon "clock" %}</span>
       </div>
       <div class="text-2xl">{{ kpi_scheduled_sessions }}</div>
-      <p class="text-xs text-gray-600 mt-1">À venir</p>
+      <p class="text-xs text-body-soft mt-1">À venir</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
+    <div class="bg-surface rounded-xl shadow-sm border p-4 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm text-gray-600">Total infirmier</h3>
+        <h3 class="text-sm text-body-soft">Total infirmier</h3>
         <span class="h-4 w-4 text-purple-600 inline-flex items-center justify-center">{% icon "users" %}</span>
       </div>
       <div class="text-2xl">{{ total_nurses }}</div>
-      <p class="text-xs text-gray-600 mt-1">infirmiers</p>
+      <p class="text-xs text-body-soft mt-1">infirmiers</p>
     </div>
   </div>
      <!-- Search -->
-<form method="GET" class="bg-white p-4 rounded-xl border shadow-sm flex gap-4">
+<form method="GET" class="bg-surface p-4 rounded-xl border shadow-sm flex gap-4">
   <input name="search" type="text" placeholder="Rechercher un infirmier..."
     value="{{ request.GET.search }}"
-    class="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    class="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
 <select name="status"
-  class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+  class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
   <option value="">Tous les statuts</option>
   <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Actifs</option>
   <option value="inactive" {% if request.GET.status == "inactive" %}selected{% endif %}>Inactifs</option>
 </select>
 
   <button type="submit"
-    class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+    class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors"
     style="cursor: pointer;">
-    <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">
-      {% icon "search" cls="h-5 w-5 text-blue-600 flex-shrink-0" %}
+    <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
+      {% icon "search" cls="h-5 w-5 text-brand-700 flex-shrink-0" %}
     </span>
     <span class="text-sm">
 
-      <span class="text-blue-700" href="#gridNurses">Rechercher</span>
+      <span class="text-brand-700" href="#gridNurses">Rechercher</span>
     </span>
   </button>
 </form>
@@ -112,33 +112,33 @@
 
       {% if request.GET.search or request.GET.status %}
     <!-- Message si l'utilisateur a filtré / cherché -->
-    <div class="col-span-2 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg">
+    <div class="col-span-2 bg-warning-soft border border-yellow-200 text-warning p-4 rounded-lg">
       Aucun résultat trouvé pour votre recherche.
     </div>
 
       {% else %}
     <!-- Message si la base est vide -->
-    <div class="bg-white rounded-xl shadow-sm border p-12 text-center">
+    <div class="bg-surface rounded-xl shadow-sm border p-12 text-center">
       <div class="flex justify-center mb-4">
-        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-          <span class="h-8 w-8 text-gray-400 inline-flex items-center justify-center">{% icon "user" %}</span>
+        <div class="w-16 h-16 bg-surface-sunken rounded-full flex items-center justify-center">
+          <span class="h-8 w-8 text-body-faint inline-flex items-center justify-center">{% icon "user" %}</span>
         </div>
       </div>
       <h3 class="text-lg mb-2">Aucun infirmier enregistré</h3>
-      <p class="text-sm text-gray-600">
+      <p class="text-sm text-body-soft">
         Il n'y a actuellement aucun infirmier dans le système.
       </p>
     </div>
       {% endif %}
   {% endif %}
     {% for nurse in nurses %}
-    <div class="bg-white rounded-xl shadow-sm border hover:shadow-lg transition-all duration-300">
+    <div class="bg-surface rounded-xl shadow-sm border hover:shadow-lg transition-all duration-300">
 
       <!-- Header -->
-      <div class="p-6 border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+      <div class="p-6 border-b bg-surface-sunken">
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+            <div class="w-16 h-16 bg-brand-700 rounded-full flex items-center justify-center">
               <span class="h-8 w-8 text-white inline-flex items-center justify-center">{% icon "user" %}</span>
             </div>
             <div>
@@ -146,10 +146,10 @@
               <span class="px-2 py-0.5 rounded-full text-xs {{ nurse.status_color }}">
                 {{ nurse.status_label }}
               </span>
-              <p class="text-sm text-gray-600 mt-1">Infirmier(ère) diplômé(e)</p>
+              <p class="text-sm text-body-soft mt-1">Infirmier(ère) diplômé(e)</p>
               <div class="flex items-center gap-1 mt-2">
-                <span class="h-3 w-3 text-gray-500 inline-flex items-center justify-center">{% icon "calendar" %}</span>
-                <span class="text-xs text-gray-500">
+                <span class="h-3 w-3 text-body-faint inline-flex items-center justify-center">{% icon "calendar" %}</span>
+                <span class="text-xs text-body-faint">
                   {{ nurse.seniorityLabel }} d'ancienneté
                 </span>
               </div>
@@ -163,14 +163,14 @@
         <!-- Contact Info -->
         <div class="space-y-2">
           <div class="flex items-center gap-3 text-sm">
-            <span class="h-4 w-4 text-gray-400 inline-flex items-center justify-center">{% icon "mail" %}</span>
-            <a href="mailto:{{ nurse.email }}" class="text-blue-600 hover:underline">
+            <span class="h-4 w-4 text-body-faint inline-flex items-center justify-center">{% icon "mail" %}</span>
+            <a href="mailto:{{ nurse.email }}" class="text-brand-700 hover:underline">
               {{ nurse.email }}
             </a>
           </div>
           <div class="flex items-center gap-3 text-sm">
-            <span class="h-4 w-4 text-gray-400 inline-flex items-center justify-center">{% icon "phone" %}</span>
-            <a href="tel:{{ nurse.phone }}" class="text-gray-700 hover:text-blue-600">
+            <span class="h-4 w-4 text-body-faint inline-flex items-center justify-center">{% icon "phone" %}</span>
+            <a href="tel:{{ nurse.phone }}" class="text-body-soft hover:text-blue-600">
               {{ nurse.phone }}
             </a>
           </div>
@@ -179,10 +179,10 @@
         <!-- Assigned Doctors -->
         <div class="pt-2 border-t">
           <div class="flex items-center gap-2 mb-2">
-            <span class="h-4 w-4 text-gray-500 inline-flex items-center justify-center">{% icon "users" %}</span>
-            <span class="text-sm text-gray-600">Docteurs assignés:</span>
+            <span class="h-4 w-4 text-body-faint inline-flex items-center justify-center">{% icon "users" %}</span>
+            <span class="text-sm text-body-soft">Docteurs assignés:</span>
           </div>
-          <p class="text-sm text-gray-700 ml-6">
+          <p class="text-sm text-body-soft ml-6">
             {% if nurse.assignedDoctorsText %}
                 {{ nurse.assignedDoctorsText }}
             {% else %}
@@ -194,23 +194,23 @@
         <!-- Statistics -->
         <div class="grid grid-cols-3 gap-3 pt-2 border-t">
           <div class="text-center">
-            <div class="text-lg text-blue-600">{%if nurse.patientsCount %}{{ nurse.patientsCount }}{% else %}0{% endif %}</div>
-            <div class="text-xs text-gray-600">Patients</div>
+            <div class="text-lg text-brand-700">{%if nurse.patientsCount %}{{ nurse.patientsCount }}{% else %}0{% endif %}</div>
+            <div class="text-xs text-body-soft">Patients</div>
           </div>
           <div class="text-center">
-            <div class="text-lg text-green-600">{%if nurse.activeSessions %}{{ nurse.activeSessions }}{% else %}0{% endif %}</div>
-            <div class="text-xs text-gray-600">Actives</div>
+            <div class="text-lg text-stable">{%if nurse.activeSessions %}{{ nurse.activeSessions }}{% else %}0{% endif %}</div>
+            <div class="text-xs text-body-soft">Actives</div>
           </div>
           <div class="text-center">
             <div class="text-lg text-indigo-600">{%if nurse.scheduledSessions %}{{ nurse.scheduledSessions }}{% else %}0{% endif %}</div>
-            <div class="text-xs text-gray-600">Planifiées</div>
+            <div class="text-xs text-body-soft">Planifiées</div>
           </div>
         </div>
 
 
       <!-- Action Button -->
       <div class="mt-4">
-        <a href="{% url 'accounts:nurse_profile' nurse.id %}" class="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+        <a href="{% url 'accounts:nurse_profile' nurse.id %}" class="w-full bg-brand-700 text-white py-2.5 rounded-lg hover:bg-brand-800 transition-colors flex items-center justify-center gap-2">
           <span class="h-4 w-4 inline-flex items-center justify-center">{% icon "user" %}</span>
           Voir le dossier complet
         </a>
@@ -228,10 +228,10 @@
 
   <!-- dialog -->
   <div class="relative min-h-full flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+    <div class="bg-surface rounded-xl shadow-xl w-full max-w-md overflow-hidden">
       <div class="flex items-center justify-between p-5 border-b">
         <h3 class="text-lg font-semibold">Ajouter un infirmier</h3>
-        <button type="button" id="closeAddNurseModal" class="p-2 hover:bg-gray-100 rounded-lg">
+        <button type="button" id="closeAddNurseModal" class="p-2 hover:bg-surface-sunken rounded-lg">
           {% icon "x" cls="h-5 w-5" %}
         </button>
       </div>
@@ -240,24 +240,24 @@
         {% csrf_token %}
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Nom</label>
-          <input name="nom" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm text-body-soft mb-1">Nom</label>
+          <input name="nom" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Email</label>
-          <input type="email" name="email" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm text-body-soft mb-1">Email</label>
+          <input type="email" name="email" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Télephone</label>
-          <input name="telepone" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm text-body-soft mb-1">Télephone</label>
+          <input name="telepone" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div class="flex gap-2 pt-2">
-          <button type="button" id="cancelAddNurse" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">
+          <button type="button" id="cancelAddNurse" class="flex-1 px-4 py-2 border rounded-lg hover:bg-surface-sunken">
             Annuler
           </button>
-          <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button type="submit" class="flex-1 px-4 py-2 bg-brand-700 text-white rounded-lg hover:bg-brand-800">
             Enregistrer
           </button>
         </div>
@@ -266,9 +266,9 @@
         <div id="pageMessages" class="space-y-2 px-5 pb-5">
           {% for message in messages %}
             <div class="p-3 rounded-lg border
-            {% if 'error' in message.tags %} bg-red-50 text-red-800 border-red-200
-            {% elif 'success' in message.tags %} bg-green-50 text-green-800 border-green-200
-            {% else %} bg-gray-50 text-gray-800 border-gray-200 {% endif %}">
+            {% if 'error' in message.tags %} bg-critical-soft text-critical border-red-200
+            {% elif 'success' in message.tags %} bg-stable-soft text-stable border-green-200
+            {% else %} bg-surface-sunken text-body border-line {% endif %}">
               {{ message }}
             </div>
           {% endfor %}

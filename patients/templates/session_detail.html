@@ -9,50 +9,50 @@
   <!-- HEADER -->
   <div class="flex items-center gap-4">
     <button onclick="history.back()"
-        class="flex items-center gap-2 border px-4 py-2 rounded-md hover:bg-gray-50 text-sm">
+        class="flex items-center gap-2 border px-4 py-2 rounded-md hover:bg-surface-sunken text-sm">
         ← Retour
     </button>
     <div class="flex-1">
       <h2 class="text-2xl">Détails de la séance</h2>
-      <p class="text-sm text-gray-600 mt-1">
+      <p class="text-sm text-body-soft mt-1">
         {{ patient.first_name }} {{ patient.last_name }}
         &nbsp;·&nbsp;
         {{ seance.session_date|date:"l d F Y" }}
       </p>
     </div>
     <span class="px-3 py-1 rounded-md text-sm
-      {% if seance.status == 'terminée' %}bg-gray-100 text-gray-700 border border-gray-200
-      {% elif seance.status == 'en cours' %}bg-green-100 text-green-700 border border-green-200
-      {% else %}bg-blue-100 text-blue-700 border border-blue-200{% endif %}">
+      {% if seance.status == 'terminée' %}bg-surface-sunken text-body-soft border border-line
+      {% elif seance.status == 'en cours' %}bg-stable-soft text-stable border border-green-200
+      {% else %}bg-brand-50 text-brand-700 border border-brand-200{% endif %}">
       {{ seance.status|capfirst }}
     </span>
   </div>
 
   <!-- CARDS RÉSUMÉ -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="bg-white rounded-xl shadow-sm border p-4">
-      <p class="text-xs text-gray-600 mb-1">Durée</p>
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
+      <p class="text-xs text-body-soft mb-1">Durée</p>
       <p class="text-2xl">{{ seance.duration }}h00</p>
-      <p class="text-xs text-gray-500 mt-1">{{ seance.start_hour|time:"H:i" }} → fin prévue</p>
+      <p class="text-xs text-body-faint mt-1">{{ seance.start_hour|time:"H:i" }} → fin prévue</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm border p-4">
-      <p class="text-xs text-gray-600 mb-1">Machine</p>
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
+      <p class="text-xs text-body-soft mb-1">Machine</p>
       <p class="text-2xl">{{ machine.machine_id }}</p>
-      <p class="text-xs text-gray-500 mt-1">{{ machine.location }}</p>
+      <p class="text-xs text-body-faint mt-1">{{ machine.location }}</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm border p-4">
-      <p class="text-xs text-gray-600 mb-1">Dernière UF volume</p>
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
+      <p class="text-xs text-body-soft mb-1">Dernière UF volume</p>
       <p class="text-2xl">
         {% if last_reading %}{{ last_reading.Volume_UF|floatformat:1 }} mL{% else %}—{% endif %}
       </p>
-      <p class="text-xs text-gray-500 mt-1">Mesure live</p>
+      <p class="text-xs text-body-faint mt-1">Mesure live</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm border p-4">
-      <p class="text-xs text-gray-600 mb-1">Débit sanguin</p>
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
+      <p class="text-xs text-body-soft mb-1">Débit sanguin</p>
       <p class="text-2xl">
         {% if last_reading %}{{ last_reading.Debit_sang|floatformat:0 }} mL/min{% else %}—{% endif %}
       </p>
-      <p class="text-xs text-gray-500 mt-1">Mesure live</p>
+      <p class="text-xs text-body-faint mt-1">Mesure live</p>
     </div>
   </div>
 
@@ -60,65 +60,65 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
     <!-- Pré-séance -->
-    <div class="bg-white rounded-xl shadow-sm border">
-      <div class="px-6 py-4 border-b bg-blue-50">
+    <div class="bg-surface rounded-xl shadow-sm border">
+      <div class="px-6 py-4 border-b bg-brand-50">
         <h3 class="flex items-center gap-2">
-          {% icon "monitor-heart" cls="h-5 w-5 text-blue-600" %}
+          {% icon "monitor-heart" cls="h-5 w-5 text-brand-700" %}
           Mesures pré-séance
         </h3>
       </div>
       <div class="p-6 grid grid-cols-2 gap-4">
         {% if pre %}
           <div>
-            <p class="text-xs text-gray-500">Tension artérielle</p>
+            <p class="text-xs text-body-faint">Tension artérielle</p>
             <p class="text-lg">{{ pre.blood_pressure }} mmHg</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">Fréquence cardiaque</p>
+            <p class="text-xs text-body-faint">Fréquence cardiaque</p>
             <p class="text-lg">{{ pre.heart_rate }} bpm</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">Poids</p>
+            <p class="text-xs text-body-faint">Poids</p>
             <p class="text-lg">{{ pre.weight|floatformat:1 }} kg</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">Température</p>
+            <p class="text-xs text-body-faint">Température</p>
             <p class="text-lg">{{ pre.temperature|floatformat:1 }}°C</p>
           </div>
         {% else %}
-          <p class="text-sm text-gray-400 col-span-2">Aucune mesure pré-séance enregistrée.</p>
+          <p class="text-sm text-body-faint col-span-2">Aucune mesure pré-séance enregistrée.</p>
         {% endif %}
       </div>
     </div>
 
     <!-- Post-séance -->
-    <div class="bg-white rounded-xl shadow-sm border">
-      <div class="px-6 py-4 border-b bg-green-50">
+    <div class="bg-surface rounded-xl shadow-sm border">
+      <div class="px-6 py-4 border-b bg-stable-soft">
         <h3 class="flex items-center gap-2">
-          {% icon "check-circle" cls="h-5 w-5 text-green-600" %}
+          {% icon "check-circle" cls="h-5 w-5 text-stable" %}
           Mesures post-séance
         </h3>
       </div>
       <div class="p-6 grid grid-cols-2 gap-4">
         {% if post %}
           <div>
-            <p class="text-xs text-gray-500">Tension artérielle</p>
+            <p class="text-xs text-body-faint">Tension artérielle</p>
             <p class="text-lg">{{ post.blood_pressure }} mmHg</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">Fréquence cardiaque</p>
+            <p class="text-xs text-body-faint">Fréquence cardiaque</p>
             <p class="text-lg">{{ post.heart_rate }} bpm</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">Poids</p>
+            <p class="text-xs text-body-faint">Poids</p>
             <p class="text-lg">{{ post.weight|floatformat:1 }} kg</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">Température</p>
+            <p class="text-xs text-body-faint">Température</p>
             <p class="text-lg">{{ post.temperature|floatformat:1 }}°C</p>
           </div>
         {% else %}
-          <p class="text-sm text-gray-400 col-span-2">Séance non encore terminée.</p>
+          <p class="text-sm text-body-faint col-span-2">Séance non encore terminée.</p>
         {% endif %}
       </div>
     </div>
@@ -127,23 +127,23 @@
   <!-- GRAPHIQUES -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-    <div class="bg-white rounded-xl shadow-sm border p-6">
+    <div class="bg-surface rounded-xl shadow-sm border p-6">
       <h3 class="flex items-center gap-2 mb-4">
-        {% icon "activity" cls="h-5 w-5 text-red-600" %}
+        {% icon "activity" cls="h-5 w-5 text-critical" %}
         Pressions (PA / PTM / PV)
       </h3>
       <canvas id="chartPression" height="200"></canvas>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-6">
+    <div class="bg-surface rounded-xl shadow-sm border p-6">
       <h3 class="flex items-center gap-2 mb-4">
-        {% icon "droplets" cls="h-5 w-5 text-blue-600" %}
+        {% icon "droplets" cls="h-5 w-5 text-brand-700" %}
         Débit sanguin (Qb)
       </h3>
       <canvas id="chartQb" height="200"></canvas>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-6">
+    <div class="bg-surface rounded-xl shadow-sm border p-6">
       <h3 class="flex items-center gap-2 mb-4">
         {% icon "trending-down" cls="h-5 w-5 text-indigo-600" %}
         Volume UF cumulé
@@ -151,7 +151,7 @@
       <canvas id="chartUF" height="200"></canvas>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-6">
+    <div class="bg-surface rounded-xl shadow-sm border p-6">
       <h3 class="flex items-center gap-2 mb-4">
         {% icon "heart" cls="h-5 w-5 text-rose-500" %}
         Héparine
@@ -162,10 +162,10 @@
   </div>
 
   <!-- ALERTES -->
-  <div class="bg-white rounded-xl shadow-sm border">
+  <div class="bg-surface rounded-xl shadow-sm border">
     <div class="px-6 py-4 border-b">
       <h3 class="flex items-center gap-2">
-        {% icon "alert-triangle" cls="h-5 w-5 text-yellow-600" %}
+        {% icon "alert-triangle" cls="h-5 w-5 text-warning" %}
         Alertes pendant la séance
       </h3>
     </div>
@@ -174,15 +174,15 @@
 
   <!-- NOTES -->
   {% if seance.notes %}
-  <div class="bg-white rounded-xl shadow-sm border">
+  <div class="bg-surface rounded-xl shadow-sm border">
     <div class="px-6 py-4 border-b">
       <h3 class="flex items-center gap-2">
-        {% icon "file-text" cls="h-5 w-5 text-gray-600" %}
+        {% icon "file-text" cls="h-5 w-5 text-body-soft" %}
         Notes
       </h3>
     </div>
     <div class="p-6">
-      <p class="text-sm text-gray-700">{{ seance.notes }}</p>
+      <p class="text-sm text-body-soft">{{ seance.notes }}</p>
     </div>
   </div>
   {% endif %}
@@ -261,7 +261,7 @@ new Chart(document.getElementById('chartHeparin'), {
 // Alertes
 const section = document.getElementById('alerts-section');
 if (alertsData.length === 0) {
-  section.innerHTML = `<p class="text-sm text-gray-400 flex items-center gap-2">
+  section.innerHTML = `<p class="text-sm text-body-faint flex items-center gap-2">
     <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
     </svg>
@@ -271,17 +271,17 @@ if (alertsData.length === 0) {
   section.innerHTML = alertsData.map(a => {
     const isCrit = a.danger_level === 'HIGH';
     return `
-    <div class="flex items-start gap-3 p-3 rounded-lg border mb-2 ${isCrit ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}">
-      <svg class="h-5 w-5 flex-shrink-0 mt-0.5 ${isCrit ? 'text-red-600' : 'text-yellow-600'}"
+    <div class="flex items-start gap-3 p-3 rounded-lg border mb-2 ${isCrit ? 'bg-critical-soft border-red-200' : 'bg-warning-soft border-yellow-200'}">
+      <svg class="h-5 w-5 flex-shrink-0 mt-0.5 ${isCrit ? 'text-critical' : 'text-warning'}"
            fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
       </svg>
       <div class="flex-1">
         <p class="text-sm">${a.message}</p>
-        <p class="text-xs text-gray-500 mt-1">${a.timestamp}</p>
+        <p class="text-xs text-body-faint mt-1">${a.timestamp}</p>
       </div>
-      <span class="text-xs px-2 py-1 rounded ${isCrit ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}">
+      <span class="text-xs px-2 py-1 rounded ${isCrit ? 'bg-critical-soft text-critical' : 'bg-warning-soft text-warning'}">
         ${isCrit ? 'Critique' : 'Avertissement'}
       </span>
     </div>`;

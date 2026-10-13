@@ -12,9 +12,9 @@
   <div class="space-y-2" id="pageMessages">
     {% for message in messages %}
       <div class="p-3 rounded-md
-        {% if 'success' in message.tags %}bg-green-100 text-green-800{% endif %}
-        {% if 'error' in message.tags %}bg-red-100 text-red-800{% endif %}
-        {% if 'warning' in message.tags %}bg-yellow-100 text-yellow-800{% endif %}">
+        {% if 'success' in message.tags %}bg-stable-soft text-stable{% endif %}
+        {% if 'error' in message.tags %}bg-critical-soft text-critical{% endif %}
+        {% if 'warning' in message.tags %}bg-warning-soft text-warning{% endif %}">
         {{ message }}
       </div>
     {% endfor %}
@@ -23,74 +23,74 @@
 
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-xl md:text-2xl font-bold text-gray-900">Appareils Connectés</h2>
-      <p class="text-sm text-gray-600 mt-1">Associez chaque appareil à une machine de dialyse</p>
+      <h2 class="text-xl md:text-2xl font-bold text-body">Appareils Connectés</h2>
+      <p class="text-sm text-body-soft mt-1">Associez chaque appareil à une machine de dialyse</p>
     </div>
     <button onclick="openAddModal()"
-      class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors" style="cursor: pointer;">
-      <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">
-        {% icon "plus" cls="h-5 w-5 text-blue-600" %}
+      class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors" style="cursor: pointer;">
+      <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
+        {% icon "plus" cls="h-5 w-5 text-brand-700" %}
       </span>
-      <span class="text-sm text-blue-700">Nouvelle Appareil</span>
+      <span class="text-sm text-brand-700">Nouvelle Appareil</span>
       </button>
   </div>
   <!-- Cartes statistiques -->
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
 
   <!-- Total appareils -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Total appareils</span>
-      <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-        {% icon "eye" cls="h-5 w-5 text-gray-500" %}
+      <span class="text-sm text-body-soft">Total appareils</span>
+      <div class="w-8 h-8 bg-surface-sunken rounded-lg flex items-center justify-center">
+        {% icon "eye" cls="h-5 w-5 text-body-faint" %}
       </div>
     </div>
     <p class="text-2xl">{{ stats.total }}</p>
-    <p class="text-xs text-gray-500 mt-1">Toutes les Caméras</p>
+    <p class="text-xs text-body-faint mt-1">Toutes les Caméras</p>
   </div>
 
   <!-- Assignés -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Assignés</span>
-      <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-        {% icon "play" cls="h-4 w-4 text-blue-600" %}
+      <span class="text-sm text-body-soft">Assignés</span>
+      <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+        {% icon "play" cls="h-4 w-4 text-brand-700" %}
       </div>
     </div>
     <p class="text-2xl">{{ stats.assigned }}</p>
-    <p class="text-xs text-gray-500 mt-1">Liés à une machine</p>
+    <p class="text-xs text-body-faint mt-1">Liés à une machine</p>
   </div>
 
   <!-- Libres -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Libres</span>
-      <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-        {% icon "check-circle" cls="h-4 w-4 text-green-600" %}
+      <span class="text-sm text-body-soft">Libres</span>
+      <div class="w-8 h-8 bg-stable-soft rounded-lg flex items-center justify-center">
+        {% icon "check-circle" cls="h-4 w-4 text-stable" %}
       </div>
     </div>
     <p class="text-2xl">{{ stats.free }}</p>
-    <p class="text-xs text-gray-500 mt-1">Non assignés</p>
+    <p class="text-xs text-body-faint mt-1">Non assignés</p>
   </div>
 
   <!-- Inactifs -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Inactifs</span>
-      <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-        {% icon "alert-circle" cls="h-4 w-4 text-red-600" %}
+      <span class="text-sm text-body-soft">Inactifs</span>
+      <div class="w-8 h-8 bg-critical-soft rounded-lg flex items-center justify-center">
+        {% icon "alert-circle" cls="h-4 w-4 text-critical" %}
       </div>
     </div>
     <p class="text-2xl">{{ stats.inactive }}</p>
-    <p class="text-xs text-gray-500 mt-1">Jamais connectés</p>
+    <p class="text-xs text-body-faint mt-1">Jamais connectés</p>
   </div>
 
 </div>
 
   <!-- Liste des Raspis -->
-  <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+  <div class="bg-surface rounded-xl shadow-sm border overflow-hidden">
     <div class="p-5 border-b flex items-center justify-between">
-      <h3 class="text-lg font-semibold text-gray-900">Appareils enregistrés</h3>
+      <h3 class="text-lg font-semibold text-body">Appareils enregistrés</h3>
     </div>
 
     <div class="divide-y">
@@ -100,17 +100,17 @@
         <!-- Infos Raspi -->
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-full flex items-center justify-center
-                      {% if device.is_active %}bg-green-100{% else %}bg-gray-100{% endif %}">
-            <svg class="w-5 h-5 {% if device.is_active %}text-green-600{% else %}text-gray-400{% endif %}"
+                      {% if device.is_active %}bg-stable-soft{% else %}bg-surface-sunken{% endif %}">
+            <svg class="w-5 h-5 {% if device.is_active %}text-stable{% else %}text-body-faint{% endif %}"
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
             </svg>
           </div>
           <div>
-            <div class="font-semibold text-gray-900">{{ device.raspi_id }}</div>
-            <div class="text-xs text-gray-500">{{ device.description|default:"—" }}</div>
-            <div class="text-xs text-gray-400 mt-0.5">
+            <div class="font-semibold text-body">{{ device.raspi_id }}</div>
+            <div class="text-xs text-body-faint">{{ device.description|default:"—" }}</div>
+            <div class="text-xs text-body-faint mt-0.5">
               {% if device.last_seen %}
                 Vu le {{ device.last_seen|date:"d/m/Y H:i" }}
               {% else %}
@@ -124,7 +124,7 @@
         <div class="flex items-center gap-3 flex-1 justify-end">
           <span id="badge-{{ device.id }}"
                 class="text-xs font-medium px-3 py-1 rounded-full
-                       {% if device.machine %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+                       {% if device.machine %}bg-brand-50 text-brand-700{% else %}bg-surface-sunken text-body-faint{% endif %}">
             {% if device.machine %}
               Machine {{ device.machine.machine_id }}
             {% else %}
@@ -133,15 +133,15 @@
           </span>
 
           <select id="select-{{ device.id }}"
-                  class="text-sm border border-gray-200 rounded-lg px-3 py-2
-                         focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="text-sm border border-line rounded-lg px-3 py-2
+                         focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                   onchange="assignMachine('{{ device.id }}', this.value)">
             <option value="">— Désassigner —</option>
             {% for machine in machines %}
             <option value="{{ machine.id }}"
                     {% if device.machine and device.machine.id == machine.id %}selected{% endif %}
                     {% if machine.id|stringformat:"s" in assigned_machine_ids and not device.machine or device.machine and device.machine.id != machine.id and machine.id|stringformat:"s" in assigned_machine_ids %}
-                    class="text-gray-400"
+                    class="text-body-faint"
                     {% endif %}>
               Machine {{ machine.machine_id }}
               {% if machine.id|stringformat:"s" in assigned_machine_ids and not device.machine %}(occupée){% endif %}
@@ -152,7 +152,7 @@
 
       </div>
       {% empty %}
-      <div class="p-10 text-center text-gray-500">
+      <div class="p-10 text-center text-body-faint">
         Aucun appareil enregistré.
       </div>
       {% endfor %}
@@ -163,31 +163,31 @@
 
 <!-- Modal Ajouter Raspi -->
 <div id="add-modal" class="hidden fixed inset-0 bg-black flex items-center justify-center z-50" style="background: rgba(0,0,0,.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px)">
-  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+  <div class="bg-surface rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
     <h3 class="text-lg font-semibold mb-4">Ajouter un appareil </h3>
 
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Identifiant (ex: RASPI-03)</label>
+        <label class="block text-sm font-medium text-body-soft mb-1">Identifiant (ex: RASPI-03)</label>
         <input id="new-raspi-id" type="text" placeholder="RASPI-03"
-               class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+               class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30">
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Description (optionnel)</label>
+        <label class="block text-sm font-medium text-body-soft mb-1">Description (optionnel)</label>
         <input id="new-raspi-desc" type="text" placeholder="Salle 2 - Poste 1"
-               class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500">
+               class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30">
       </div>
     </div>
 
-    <div id="add-error" class="hidden mt-3 text-sm text-red-600"></div>
+    <div id="add-error" class="hidden mt-3 text-sm text-critical"></div>
 
     <div class="flex gap-3 mt-6">
       <button onclick="closeAddModal()"
-              class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200">
+              class="flex-1 bg-surface-sunken text-body-soft py-2 rounded-lg hover:bg-surface-sunken">
         Annuler
       </button>
       <button onclick="submitAddRaspi()"
-              class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+              class="flex-1 bg-brand-700 text-white py-2 rounded-lg hover:bg-brand-800">
         Ajouter
       </button>
     </div>
@@ -210,10 +210,10 @@ async function assignMachine(raspiUuid, machineId) {
         const badge = document.getElementById(`badge-${raspiUuid}`);
         if (data.machine) {
             badge.textContent  = `Machine ${data.machine}`;
-            badge.className    = 'text-xs font-medium px-3 py-1 rounded-full bg-blue-100 text-blue-700';
+            badge.className    = 'text-xs font-medium px-3 py-1 rounded-full bg-brand-50 text-brand-700';
         } else {
             badge.textContent  = 'Non assigné';
-            badge.className    = 'text-xs font-medium px-3 py-1 rounded-full bg-gray-100 text-gray-500';
+            badge.className    = 'text-xs font-medium px-3 py-1 rounded-full bg-surface-sunken text-body-faint';
         }
     } else {
         alert('Erreur : ' + data.error);

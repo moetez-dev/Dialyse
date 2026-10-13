@@ -11,9 +11,9 @@
   <div class="space-y-2" id="pageMessages">
     {% for message in messages %}
       <div class="p-3 rounded-md
-        {% if 'success' in message.tags %}bg-green-100 text-green-800{% endif %}
-        {% if 'error' in message.tags %}bg-red-100 text-red-800{% endif %}
-        {% if 'warning' in message.tags %}bg-yellow-100 text-yellow-800{% endif %}">
+        {% if 'success' in message.tags %}bg-stable-soft text-stable{% endif %}
+        {% if 'error' in message.tags %}bg-critical-soft text-critical{% endif %}
+        {% if 'warning' in message.tags %}bg-warning-soft text-warning{% endif %}">
         {{ message }}
       </div>
     {% endfor %}
@@ -24,16 +24,16 @@
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-2xl font-semibold">Gestion des Machines</h2>
-      <p class="text-sm text-gray-500">{{ total_machines }} machines</p>
+      <p class="text-sm text-body-faint">{{ total_machines }} machines</p>
     </div>
 
     <!-- Bouton modal Ajouter Machine -->
     <button id="openAddMachineModal"
-      class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors" style="cursor:pointer">
-      <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">
-        {% icon "plus" cls="h-5 w-5 text-blue-600" %}
+      class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors" style="cursor:pointer">
+      <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
+        {% icon "plus" cls="h-5 w-5 text-brand-700" %}
       </span>
-      <span class="text-sm text-blue-700">Ajouter machine</span>
+      <span class="text-sm text-brand-700">Ajouter machine</span>
     </button>
   </div>
 
@@ -41,82 +41,82 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-4">
 
   <!-- Total Machines -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Total Machines</span>
-      <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+      <span class="text-sm text-body-soft">Total Machines</span>
+      <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
         {% icon "waves" cls="h-5 w-5 text-black-500" %}
       </div>
     </div>
     <p class="text-2xl">{{ total_machines }}</p>
-    <p class="text-xs text-gray-500 mt-1">Toutes les machines</p>
+    <p class="text-xs text-body-faint mt-1">Toutes les machines</p>
   </div>
 
   <!-- Machines Prêtes -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Prêtes</span>
-      <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-        {% icon "check-circle" cls="h-4 w-4 text-green-600" %}
+      <span class="text-sm text-body-soft">Prêtes</span>
+      <div class="w-8 h-8 bg-stable-soft rounded-lg flex items-center justify-center">
+        {% icon "check-circle" cls="h-4 w-4 text-stable" %}
       </div>
     </div>
     <p class="text-2xl">{{ machines_pretes }}</p>
-    <p class="text-xs text-gray-500 mt-1">Prêtes à l'usage</p>
+    <p class="text-xs text-body-faint mt-1">Prêtes à l'usage</p>
   </div>
 
   <!-- Machines en Maintenance -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Maintenance</span>
-      <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+      <span class="text-sm text-body-soft">Maintenance</span>
+      <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
       {% icon "settings" cls="h-5 w-5 text-blue-500" %}
       </div>
     </div>
     <p class="text-2xl">{{ machines_non_disponibles }}</p>
-    <p class="text-xs text-gray-500 mt-1">Actuellement indisponibles</p>
+    <p class="text-xs text-body-faint mt-1">Actuellement indisponibles</p>
   </div>
 
   <!-- Machines Hors Service -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Hors Service</span>
-      <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-        {% icon "alert-circle" cls="h-4 w-4 text-red-600" %}
+      <span class="text-sm text-body-soft">Hors Service</span>
+      <div class="w-8 h-8 bg-critical-soft rounded-lg flex items-center justify-center">
+        {% icon "alert-circle" cls="h-4 w-4 text-critical" %}
       </div>
     </div>
     <p class="text-2xl">{{ machines_en_erreur|default:0 }}</p>
-    <p class="text-xs text-gray-500 mt-1">À vérifier</p>
+    <p class="text-xs text-body-faint mt-1">À vérifier</p>
   </div>
 
   <!-- Machines Réservées -->
-  <div class="bg-white rounded-xl shadow-sm border p-4">
+  <div class="bg-surface rounded-xl shadow-sm border p-4">
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm text-gray-600">Réservées</span>
-      <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-        {% icon "check-circle" cls="h-4 w-4 text-yellow-600" %}
+      <span class="text-sm text-body-soft">Réservées</span>
+      <div class="w-8 h-8 bg-warning-soft rounded-lg flex items-center justify-center">
+        {% icon "check-circle" cls="h-4 w-4 text-warning" %}
 
       </div>
     </div>
     <p class="text-2xl">{{ machines_inactives|default:0 }}</p>
-    <p class="text-xs text-gray-500 mt-1">Réservées / Inactives</p>
+    <p class="text-xs text-body-faint mt-1">Réservées / Inactives</p>
   </div>
 
 </div>
 
   <!-- Search + Filter -->
-  <form method="GET" class="bg-white p-4 rounded-xl border shadow-sm flex gap-4">
+  <form method="GET" class="bg-surface p-4 rounded-xl border shadow-sm flex gap-4">
     <input type="text" name="search" placeholder="Rechercher une machine..."
            value="{{ request.GET.search|default:'' }}"
-           class="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+           class="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
 
-    <select name="status" class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <select name="status" class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
       <option value="">Tous les statuts</option>
       {% for key,label in enumerated_status %}
         <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
 
-    <select name="salle" class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <select name="salle" class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
       <option value="">Toutes les salles</option>
       {% for salle in salles %}
         <option value="{{ salle }}" {% if request.GET.salle == salle %}selected{% endif %}>{{ salle }}</option>
@@ -124,21 +124,21 @@
     </select>
 
     <button type="submit"
-      class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">
-      {% icon "search" cls="h-5 w-5 text-blue-600" %}
-      <span class="text-sm text-blue-700">Rechercher</span>
+      class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors">
+      {% icon "search" cls="h-5 w-5 text-brand-700" %}
+      <span class="text-sm text-brand-700">Rechercher</span>
     </button>
   </form>
 
   <!-- Machines Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"> {% for machine in machines %} <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col justify-between hover:shadow-lg transition">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"> {% for machine in machines %} <div class="bg-surface rounded-xl border border-line shadow-sm p-6 flex flex-col justify-between hover:shadow-lg transition">
       <!-- Header -->
       <div class="flex justify-between items-start">
         <div>
-          <h3 class="text-lg font-semibold text-gray-900">
+          <h3 class="text-lg font-semibold text-body">
             {{ machine.machine_id|default:"—" }}
           </h3>
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-body-faint">
             {{ machine.model|default:"—" }}
           </p>
         </div>
@@ -146,32 +146,32 @@
         <!-- Dot statut -->
         <span class="w-3 h-3 rounded-full mt-1
           {% if machine.status == 'Prete' %}bg-green-500
-          {% elif machine.status == 'Maintenance' %}bg-blue-500
+          {% elif machine.status == 'Maintenance' %}bg-brand-500
           {% elif machine.status == 'Hors Service' %}bg-red-500
           {% elif machine.status == 'Reserve' %}bg-yellow-500
-          {% else %}bg-gray-400{% endif %}">
+          {% else %}bg-idle{% endif %}">
         </span>
       </div>
 
       <!-- Status badge -->
       <div class="mt-4">
   <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium
-    {% if machine.status == 'Prete' %}bg-green-100 text-green-700
-    {% elif machine.status == 'Maintenance' %}bg-blue-100 text-blue-700
-    {% elif machine.status == 'Hors Service' %}bg-red-100 text-red-700
-    {% elif machine.status == 'Reserve' %}bg-yellow-100 text-yellow-700
-    {% else %}bg-gray-100 text-gray-700{% endif %}">
+    {% if machine.status == 'Prete' %}bg-stable-soft text-stable
+    {% elif machine.status == 'Maintenance' %}bg-brand-50 text-brand-700
+    {% elif machine.status == 'Hors Service' %}bg-critical-soft text-critical
+    {% elif machine.status == 'Reserve' %}bg-warning-soft text-warning
+    {% else %}bg-surface-sunken text-body-soft{% endif %}">
 
     {% if machine.status == 'Prete' %}
-      {% icon "check-circle" cls="h-3 w-3 text-green-600" %}
+      {% icon "check-circle" cls="h-3 w-3 text-stable" %}
     {% elif machine.status == 'Maintenance' %}
-      {% icon "settings" cls="h-3 w-3 text-blue-600" %}
+      {% icon "settings" cls="h-3 w-3 text-brand-700" %}
     {% elif machine.status == 'Hors Service' %}
-      {% icon "alert-circle" cls="h-3 w-3 text-red-600" %}
+      {% icon "alert-circle" cls="h-3 w-3 text-critical" %}
     {% elif machine.status == 'Reserve' %}
-      {% icon "check-circle" cls="h-3 w-3 text-yellow-600" %}
+      {% icon "check-circle" cls="h-3 w-3 text-warning" %}
     {% else %}
-      {% icon "help-circle" cls="h-3 w-3 text-gray-500" %}
+      {% icon "help-circle" cls="h-3 w-3 text-body-faint" %}
     {% endif %}
 
     {{ machine.status }}
@@ -181,40 +181,40 @@
       <!-- Infos -->
       <div class="mt-6 space-y-3 text-sm">
         <div class="flex justify-between">
-          <span class="text-gray-500">Salle :</span>
-          <span class="font-semibold text-gray-900">
+          <span class="text-body-faint">Salle :</span>
+          <span class="font-semibold text-body">
             {{ machine.location|default:"—" }}
           </span>
         </div>
 
         <div class="flex justify-between">
-          <span class="text-gray-500">Séances :</span>
-          <span class="font-semibold text-gray-900">
+          <span class="text-body-faint">Séances :</span>
+          <span class="font-semibold text-body">
             {{ machine.sessions|default:0 }}
           </span>
         </div>
 
         <div class="flex justify-between">
-          <span class="text-gray-500">Heures :</span>
-          <span class="font-semibold text-gray-900">
+          <span class="text-body-faint">Heures :</span>
+          <span class="font-semibold text-body">
             {{ machine.hours|default:0 }}h
           </span>
         </div>
       </div>
 
       <!-- Séparateur -->
-<hr class="mt-6 mb-4 border-gray-200">
+<hr class="mt-6 mb-4 border-line">
 
       <!-- Boutons -->
 <div class="grid grid-cols-2 gap-3 pt-2">
         <a href="{% url 'machines:details_machine' machine.id %}"
-           class="flex items-center justify-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition">
+           class="flex items-center justify-center gap-2 px-4 py-2 border border-brand-700 text-brand-700 rounded-lg text-sm font-medium hover:bg-brand-50 transition">
           {% icon "eye" cls="h-4 w-4" %}
           Détails
         </a>
 
          <a href="{% url 'machines:configurer_machine' machine.id %}"
-     class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+     class="flex items-center justify-center gap-2 px-4 py-2 bg-brand-700 text-white rounded-lg text-sm font-medium hover:bg-brand-800 transition">
     {% icon "settings" cls="h-4 w-4" %}
     Config
   </a>
@@ -231,12 +231,12 @@
 <div id="addMachineModal" class="hidden fixed inset-0 z-50 absolute flex items-center justify-center" style="background: rgba(0,0,0,.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px)">
   <!-- backdrop flou -->
   <div class="relative min-h-full flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+    <div class="bg-surface rounded-xl shadow-xl w-full max-w-md overflow-hidden">
       
       <div class="flex items-center justify-between p-5 border-b">
         <h3 class="text-lg font-semibold">Ajouter Machine</h3>
         <button type="button" id="closeAddMachineModal"
-                class="p-2 hover:bg-gray-100 rounded-lg">
+                class="p-2 hover:bg-surface-sunken rounded-lg">
           {% icon "x" cls="h-5 w-5" %}
         </button>
       </div>
@@ -245,31 +245,31 @@
         {% csrf_token %}
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">ID</label>
+          <label class="block text-sm text-body-soft mb-1">ID</label>
           <input name="machine_id" required
-                 class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                 class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Modèle</label>
+          <label class="block text-sm text-body-soft mb-1">Modèle</label>
           <input name="model" required
-                 class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                 class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Salle</label>
+          <label class="block text-sm text-body-soft mb-1">Salle</label>
           <input name="location" required
-                 class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                 class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500/30">
         </div>
 
 
         <div class="flex gap-2 pt-2">
           <button type="button" id="cancelAddMachine"
-                  class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">
+                  class="flex-1 px-4 py-2 border rounded-lg hover:bg-surface-sunken">
             Annuler
           </button>
           <button type="submit"
-                  class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  class="flex-1 px-4 py-2 bg-brand-700 text-white rounded-lg hover:bg-brand-800">
             Enregistrer
           </button>
         </div>

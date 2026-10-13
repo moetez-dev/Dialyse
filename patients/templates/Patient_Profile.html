@@ -4,22 +4,22 @@
 
 {% block content %}
 
-    <div class="bg-white p-6 rounded-xl border border-blue-100 shadow-sm space-y-4">
+    <div class="bg-surface p-6 rounded-xl border border-brand-200 shadow-sm space-y-4">
     <!-- HEADER -->
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
             
             <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">{{ patient.first_name }} {{ patient.last_name }}</h1>
-                <p class="text-sm text-gray-500 mt-1">Dossier patient</p>
+                <h1 class="text-3xl md:text-4xl font-bold text-body">{{ patient.first_name }} {{ patient.last_name }}</h1>
+                <p class="text-sm text-body-faint mt-1">Dossier patient</p>
             </div>
         </div>
         <!-- Bouton Modifier -->
 <div class="flex justify-end mb-2">
   <button type="button" id="openEditModal"
-    class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors " style="cursor: pointer;">
-    {% icon "edit" cls="h-4 w-4 text-blue-600" %}
-    <span class="text-sm text-blue-700">Modifier le profil</span>
+    class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors " style="cursor: pointer;">
+    {% icon "edit" cls="h-4 w-4 text-brand-700" %}
+    <span class="text-sm text-brand-700">Modifier le profil</span>
   </button>
 </div>
     </div>
@@ -29,12 +29,12 @@
 <div id="editPatientModal" class="hidden fixed inset-0 z-50">
   <div class="fixed inset-0" style="background:rgba(0,0,0,.25);backdrop-filter:blur(12px);"></div>
   <div class="relative min-h-full flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto">
+    <div class="bg-surface rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto">
 
       <!-- En-tête modal -->
       <div class="flex items-center justify-between p-5 border-b">
         <h3 class="text-lg font-semibold">Modifier le profil</h3>
-        <button type="button" id="closeEditModal" class="p-2 hover:bg-gray-100 rounded-lg">
+        <button type="button" id="closeEditModal" class="p-2 hover:bg-surface-sunken rounded-lg">
           {% icon "x" cls="h-5 w-5" %}
         </button>
       </div>
@@ -45,35 +45,35 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Prénom</label>
+            <label class="block text-sm text-body-soft mb-1">Prénom</label>
             <input name="FirstName" value="{{ patient.first_name }}" required
-              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
           </div>
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Nom</label>
+            <label class="block text-sm text-body-soft mb-1">Nom</label>
             <input name="LastName" value="{{ patient.last_name }}" required
-              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Date de naissance</label>
+            <label class="block text-sm text-body-soft mb-1">Date de naissance</label>
             <input name="dateOfBirth" type="date" value="{{ patient.date_of_birth|date:'Y-m-d' }}" required
-              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
           </div>
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Téléphone</label>
+            <label class="block text-sm text-body-soft mb-1">Téléphone</label>
             <input name="phone" value="{{ patient.telephone }}" required
-              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
           </div>
         </div>
 
         <div class="grid grid-cols-1 gap-3">
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Groupe sanguin</label>
+            <label class="block text-sm text-body-soft mb-1">Groupe sanguin</label>
             <select name="groupSanguin"
-              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30 bg-surface">
               {% for val, label in groupes_sanguins %}
                 <option value="{{ val }}" {% if patient.group_sanguin == val %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
@@ -83,28 +83,28 @@
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Adresse</label>
+          <label class="block text-sm text-body-soft mb-1">Adresse</label>
           <input name="address" value="{{ patient.adresse }}" required
-            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Contact d'urgence</label>
+          <label class="block text-sm text-body-soft mb-1">Contact d'urgence</label>
           <input name="contacturgences" value="{{ patient.contact_urgence }}" required
-            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Antécédents médicaux</label>
+          <label class="block text-sm text-body-soft mb-1">Antécédents médicaux</label>
           <textarea name="medicalhistory" rows="3"
-            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ patient.antecedents_med }}</textarea>
+            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30 resize-none">{{ patient.antecedents_med }}</textarea>
         </div>
 
         <div class="flex gap-2 pt-2">
           <button type="button" id="cancelEditModal"
-            class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Annuler</button>
+            class="flex-1 px-4 py-2 border rounded-lg hover:bg-surface-sunken">Annuler</button>
           <button type="submit"
-            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Enregistrer</button>
+            class="flex-1 px-4 py-2 bg-brand-700 text-white rounded-lg hover:bg-brand-800">Enregistrer</button>
         </div>
       </form>
     </div>
@@ -116,18 +116,18 @@
    <!-- INFORMATIONS GÉNÉRALES ET CONTACT -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <!-- INFORMATIONS GÉNÉRALES -->
-    <div class="p-6 rounded-xl border border-gray-100 bg-white shadow-sm">
-        <h2 class="font-semibold text-lg mb-4 text-gray-900">Informations générales</h2>
+    <div class="p-6 rounded-xl border border-line bg-surface shadow-sm">
+        <h2 class="font-semibold text-lg mb-4 text-body">Informations générales</h2>
         
         <div class="space-y-4">
             <!-- Date de naissance -->
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    {% icon "calendar" cls="h-5 w-5 text-blue-600" %}
+                <div class="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center flex-shrink-0">
+                    {% icon "calendar" cls="h-5 w-5 text-brand-700" %}
                 </div>
                 <div>
-                    <p class="text-xs text-gray-500 font-medium">Date de naissance</p>
-                    <p class="text-base font-semibold text-gray-900">
+                    <p class="text-xs text-body-faint font-medium">Date de naissance</p>
+                    <p class="text-base font-semibold text-body">
                         {{ patient.date_of_birth|date:"d/m/Y" }}
                     </p>
                 </div>
@@ -135,12 +135,12 @@
 
             <!-- Groupe sanguin -->
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                <div class="w-9 h-9 rounded-lg bg-critical-soft flex items-center justify-center flex-shrink-0">
                     {% icon "droplet" cls="h-5 w-5 text-red-500" %}
                 </div>
                 <div>
-                    <p class="text-xs text-gray-500 font-medium">Groupe sanguin</p>
-                    <p class="text-base font-semibold text-gray-900">
+                    <p class="text-xs text-body-faint font-medium">Groupe sanguin</p>
+                    <p class="text-base font-semibold text-body">
                         {{ patient.group_sanguin }}
                     </p>
                 </div>
@@ -152,8 +152,8 @@
                     {% icon "user" cls="h-5 w-5 text-purple-500" %}
                 </div>
                 <div>
-                    <p class="text-xs text-gray-500 font-medium">Âge</p>
-                    <p class="text-base font-semibold text-gray-900">
+                    <p class="text-xs text-body-faint font-medium">Âge</p>
+                    <p class="text-base font-semibold text-body">
                         {{ patient.age }} ans
                     </p>
                 </div>
@@ -162,40 +162,40 @@
     </div>
 
         <!-- CONTACT -->
-<div class="p-6 rounded-xl border border-gray-100 bg-white shadow-sm">
-    <h2 class="font-semibold text-lg mb-4 text-gray-900">Contact</h2>
+<div class="p-6 rounded-xl border border-line bg-surface shadow-sm">
+    <h2 class="font-semibold text-lg mb-4 text-body">Contact</h2>
     
     <div class="space-y-4">
         <!-- Téléphone -->
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                {% icon "phone" cls="h-5 w-5 text-blue-600" %}
+            <div class="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center flex-shrink-0">
+                {% icon "phone" cls="h-5 w-5 text-brand-700" %}
             </div>
             <div>
-                <p class="text-xs text-gray-500 font-medium">Téléphone</p>
-                <p class="text-base font-semibold text-gray-900">{{ patient.telephone }}</p>
+                <p class="text-xs text-body-faint font-medium">Téléphone</p>
+                <p class="text-base font-semibold text-body">{{ patient.telephone }}</p>
             </div>
         </div>
 
         <!-- Adresse -->
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-                {% icon "map-pin" cls="h-5 w-5 text-green-600" %}
+            <div class="w-9 h-9 rounded-lg bg-stable-soft flex items-center justify-center flex-shrink-0">
+                {% icon "map-pin" cls="h-5 w-5 text-stable" %}
             </div>
             <div>
-                <p class="text-xs text-gray-500 font-medium">Adresse</p>
-                <p class="text-base font-semibold text-gray-900">{{ patient.adresse }}</p>
+                <p class="text-xs text-body-faint font-medium">Adresse</p>
+                <p class="text-base font-semibold text-body">{{ patient.adresse }}</p>
             </div>
         </div>
 
         <!-- Contact d'urgence -->
-        <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
-            <div class="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+        <div class="flex items-center gap-3 pt-4 border-t border-line">
+            <div class="w-9 h-9 rounded-lg bg-warning-soft flex items-center justify-center flex-shrink-0">
                 {% icon "alert-circle" cls="h-5 w-5 text-orange-500" %}
             </div>
             <div>
-                <p class="text-xs text-gray-500 font-medium">Contact d'urgence</p>
-                <p class="text-base font-semibold text-gray-900">{{ patient.contact_urgence }}</p>
+                <p class="text-xs text-body-faint font-medium">Contact d'urgence</p>
+                <p class="text-base font-semibold text-body">{{ patient.contact_urgence }}</p>
             </div>
         </div>
     </div>
@@ -203,22 +203,22 @@
     </div>
 
     <!-- ANTÉCÉDENTS MÉDICAUX -->
-    <div class="p-6 rounded-xl border border-gray-100 bg-white shadow-sm">
+    <div class="p-6 rounded-xl border border-line bg-surface shadow-sm">
         <div class="flex items-start gap-4">
-            {% icon "file-text" cls="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" %}
+            {% icon "file-text" cls="h-6 w-6 text-brand-700 flex-shrink-0 mt-1" %}
             <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-lg mb-3">Antécédents médicaux</h3>
-                <p class="text-base md:text-lg text-gray-900 leading-relaxed">
+                <p class="text-base md:text-lg text-body leading-relaxed">
                     {{ patient.antecedents_med}}
                 </p>
             </div>
         </div>
     </div>
     <!-- HISTORIQUE DES SÉANCES DE DIALYSE -->
-    <div class="p-6 rounded-xl border border-gray-100 bg-white shadow-sm">
+    <div class="p-6 rounded-xl border border-line bg-surface shadow-sm">
         <div class="flex items-center gap-3 mb-4">
-            {% icon "calendar" cls="h-6 w-6 text-blue-600 flex-shrink-0" %}
-            <h3 class="font-semibold text-lg text-gray-900">Historique des séances de dialyse</h3>
+            {% icon "calendar" cls="h-6 w-6 text-brand-700 flex-shrink-0" %}
+            <h3 class="font-semibold text-lg text-body">Historique des séances de dialyse</h3>
         </div>
 
 
@@ -226,85 +226,85 @@
         <div class="overflow-x-auto">
             <table class="w-full border-collapse">
                 <thead>
-                    <tr class="bg-gray-50 border-b border-gray-200">
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Heure</th>
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Durée</th>
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Poids (kg)</th>
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">TA Pré</th>
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">TA Post</th>
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Machine</th>
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Complications</th>
-                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
+                    <tr class="bg-surface-sunken border-b border-line">
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">Date</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">Heure</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">Durée</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">Poids (kg)</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">TA Pré</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">TA Post</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">Machine</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">Complications</th>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-body-soft">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-line">
                     {% for seance in seances %}
-                    <tr class="hover:bg-gray-50 transition">
+                    <tr class="hover:bg-surface-sunken transition">
                         <!-- Date -->
-                        <td class="py-3 px-4 text-sm text-gray-900">
+                        <td class="py-3 px-4 text-sm text-body">
                             {{ seance.session_date|date:"d M. Y"|default:"Non définie" }}
                         </td>
 
                         <!-- Heure -->
-                        <td class="py-3 px-4 text-sm text-gray-900">
+                        <td class="py-3 px-4 text-sm text-body">
                             {{ seance.start_hour|time:"H:i"|default:"--:--" }}
                         </td>
 
                         <!-- Durée -->
-                        <td class="py-3 px-4 text-sm text-gray-900">
+                        <td class="py-3 px-4 text-sm text-body">
                             {{ seance.duration }}h00
                         </td>
 
                         <!-- Poids -->
                         <td class="py-3 px-4 text-sm">
                             {% if seance.pre_measurements %}
-                            <span class="text-gray-500">{{ seance.pre_measurements.weight|floatformat:1 }}</span>
+                            <span class="text-body-faint">{{ seance.pre_measurements.weight|floatformat:1 }}</span>
                             {% if seance.post_measurements %}
-                            <span class="text-gray-400 mx-1">→</span>
-                            <span class="text-blue-600 font-medium">{{ seance.post_measurements.weight|floatformat:1 }}</span>
+                            <span class="text-body-faint mx-1">→</span>
+                            <span class="text-brand-700 font-medium">{{ seance.post_measurements.weight|floatformat:1 }}</span>
                             {% endif %}
                             {% else %}
-                            <span class="text-gray-400">-- → --</span>
+                            <span class="text-body-faint">-- → --</span>
                             {% endif %}
                         </td>
 
                         <!-- TA Pré -->
-                        <td class="py-3 px-4 text-sm text-gray-900">
+                        <td class="py-3 px-4 text-sm text-body">
                             {% if seance.pre_measurements and seance.pre_measurements.blood_pressure %}
                             {{ seance.pre_measurements.blood_pressure }}
                             {% else %}
-                            <span class="text-gray-400">--/--</span>
+                            <span class="text-body-faint">--/--</span>
                             {% endif %}
                         </td>
 
                         <!-- TA Post -->
-                        <td class="py-3 px-4 text-sm text-gray-900">
+                        <td class="py-3 px-4 text-sm text-body">
                             {% if seance.post_measurements and seance.post_measurements.blood_pressure %}
                             {{ seance.post_measurements.blood_pressure }}
                             {% else %}
-                            <span class="text-gray-400">--/--</span>
+                            <span class="text-body-faint">--/--</span>
                             {% endif %}
                         </td>
 
                         <!-- Machine -->
-                        <td class="py-3 px-4 text-sm text-gray-900">
+                        <td class="py-3 px-4 text-sm text-body">
                             {% if seance.machine %}
                             {{ seance.machine }}
                             {% else %}
-                            <span class="text-gray-400">Non assignée</span>
+                            <span class="text-body-faint">Non assignée</span>
                             {% endif %}
                         </td>
 
                         <!-- Complications -->
                         <td class="py-3 px-4 text-sm">
                             {% if seance.complications %}
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-warning-soft text-warning">
                                 {% icon "alert-triangle" cls="h-3 w-3" %}
                                 {{ seance.complications|truncatewords:3 }}
                             </span>
                             {% else %}
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-stable-soft text-stable">
                                 {% icon "check-circle" cls="h-3 w-3" %}
                                 Aucune
                             </span>
@@ -314,7 +314,7 @@
                         <!-- Actions -->
                         <td class="py-3 px-4 text-sm">
                             <a href="{% url 'patients:session_detail' seance.id %}" 
-                               class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium">
+                               class="inline-flex items-center gap-1 text-brand-700 hover:text-blue-800 font-medium">
                                 {% icon "eye" cls="h-4 w-4" %}
                                 Détails
                             </a>
@@ -322,7 +322,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="10" class="py-8 px-4 text-center text-gray-500">
+                        <td colspan="10" class="py-8 px-4 text-center text-body-faint">
                             Aucune séance de dialyse enregistrée pour ce patient.
                         </td>
                     </tr>
@@ -333,21 +333,21 @@
 
         <!-- Pagination (optionnel) -->
         {% if seances.has_other_pages %}
-        <div class="flex justify-center gap-2 mt-4 pt-4 border-t border-gray-100">
+        <div class="flex justify-center gap-2 mt-4 pt-4 border-t border-line">
             {% if seances.has_previous %}
             <a href="?page={{ seances.previous_page_number }}" 
-               class="px-3 py-1 border rounded hover:bg-gray-50 text-sm">
+               class="px-3 py-1 border rounded hover:bg-surface-sunken text-sm">
                 Précédent
             </a>
             {% endif %}
             
-            <span class="px-3 py-1 text-sm text-gray-600">
+            <span class="px-3 py-1 text-sm text-body-soft">
                 Page {{ seances.number }} sur {{ seances.paginator.num_pages }}
             </span>
             
             {% if seances.has_next %}
             <a href="?page={{ seances.next_page_number }}" 
-               class="px-3 py-1 border rounded hover:bg-gray-50 text-sm">
+               class="px-3 py-1 border rounded hover:bg-surface-sunken text-sm">
                 Suivant
             </a>
             {% endif %}
@@ -359,8 +359,8 @@
     <!-- BOUTON RETOUR EN BAS -->
     <div class="flex justify-end pt-4">
         <a href="{% url 'patients:patient' %}"
-            class="px-6 py-2 border rounded-lg hover:bg-gray-100 transition">
-            {% icon "arrow-left" cls="h-4 w-4 text-gray-600 inline-block mr-2" %}
+            class="px-6 py-2 border rounded-lg hover:bg-surface-sunken transition">
+            {% icon "arrow-left" cls="h-4 w-4 text-body-soft inline-block mr-2" %}
             Retour
         </a>
     </div>

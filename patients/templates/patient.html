@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load icons %}
-{% icon "mail" cls="h-4 w-4 text-gray-400 flex-shrink-0" %}
-{% icon "phone" cls="h-4 w-4 text-gray-400 flex-shrink-0" %}
-{% icon "users" cls="h-4 w-4 text-gray-500 flex-shrink-0" %}
-{% icon "user-plus" cls="h-4 w-4 text-gray-500 flex-shrink-0" %}
-{% icon "user" cls="h-4 w-4 text-gray-500 flex-shrink-0" %}
-{% icon "clock" cls="h-3 w-3 text-gray-500 flex-shrink-0" %}
-{% icon "activity" cls="h-4 w-4 text-green-600 flex-shrink-0" %}
+{% icon "mail" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "phone" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "users" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "user-plus" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "user" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+{% icon "clock" cls="h-3 w-3 text-body-faint flex-shrink-0" %}
+{% icon "activity" cls="h-4 w-4 text-stable flex-shrink-0" %}
 {% icon "calendar" cls="h-4 w-4 text-indigo-600 flex-shrink-0" %}
 {% block title %}Patients{% endblock %}
 
@@ -16,8 +16,8 @@
   <div class="space-y-2" id="pageMessages">
     {% for message in messages %}
     <div class="p-3 rounded-md
-                  {% if message.tags == 'success' %}bg-green-100 text-green-800{% endif %}
-                  {% if message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% endif %}">
+                  {% if message.tags == 'success' %}bg-stable-soft text-stable{% endif %}
+                  {% if message.tags == 'warning' %}bg-warning-soft text-warning{% endif %}">
       {{ message }}
     </div>
     {% endfor %}
@@ -27,20 +27,20 @@
 <!-- Header -->
  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
   <div>
-    <h2 class="text-xl md:text-2xl font-bold text-gray-900">Patients</h2>
+    <h2 class="text-xl md:text-2xl font-bold text-body">Patients</h2>
     <div></div>
-    <p class="text-xs md:text-sm text-gray-600 mt-1">
+    <p class="text-xs md:text-sm text-body-soft mt-1">
      Liste des patients 
     </p>
   </div>
   <button type="button" id="openModal"
-      class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+      class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors"
       style="cursor: pointer;">
-      <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">
-        {% icon "user-plus" cls="h-5 w-5 text-blue-600 flex-shrink-0" %}
+      <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
+        {% icon "user-plus" cls="h-5 w-5 text-brand-700 flex-shrink-0" %}
       </span>
       <span class="text-sm">
-        <span class="text-blue-700">Ajouter Patient</span>
+        <span class="text-brand-700">Ajouter Patient</span>
       </span>
     </button>
 </div>
@@ -52,10 +52,10 @@
 
   <!-- dialog -->
 <div class="relative min-h-full flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto">
+  <div class="bg-surface rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between p-5 border-b">
       <h3 class="text-lg font-semibold">Ajouter Patient</h3>
-      <button type="button" id="closeAddPatientModal" class="p-2 hover:bg-gray-100 rounded-lg">
+      <button type="button" id="closeAddPatientModal" class="p-2 hover:bg-surface-sunken rounded-lg">
         {% icon "x" cls="h-5 w-5" %}
       </button>
     </div>
@@ -66,51 +66,51 @@
   <!-- Prénom / Nom -->
 <div class="grid grid-cols-2 gap-3">
   <div>
-    <label class="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+    <label class="flex items-center gap-1.5 text-sm text-body-soft mb-1">
       {% icon "user" cls="h-4 w-4 flex-shrink-0" color="#60a5fa" %}
       Prénom
     </label>
     <input name="FirstName" required placeholder="Prénom"
-      class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500/30">
   </div>
   <div>
-    <label class="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+    <label class="flex items-center gap-1.5 text-sm text-body-soft mb-1">
       {% icon "user" cls="h-4 w-4 flex-shrink-0" color="#60a5fa" %}
       Nom
     </label>
     <input name="LastName" required placeholder="Nom"
-      class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500/30">
   </div>
 </div>
 
 <!-- Date de naissance / Téléphone -->
 <div class="grid grid-cols-2 gap-3">
   <div>
-    <label class="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+    <label class="flex items-center gap-1.5 text-sm text-body-soft mb-1">
       {% icon "calendar" cls="h-4 w-4 flex-shrink-0" color="#818cf8" %}
       Date de naissance
     </label>
     <input name="dateOfBirth" type="date" required
-      class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500/30">
   </div>
   <div>
-    <label class="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+    <label class="flex items-center gap-1.5 text-sm text-body-soft mb-1">
       {% icon "phone" cls="h-4 w-4 flex-shrink-0" color="#22c55e" %}
       Téléphone
     </label>
     <input name="phone" required placeholder="+216 XX XXX XXX"
-      class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+      class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500/30">
   </div>
 </div>
 
 <!-- Groupe sanguin -->
 <div>
-  <label class="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+  <label class="flex items-center gap-1.5 text-sm text-body-soft mb-1">
     {% icon "droplet" cls="h-4 w-4 flex-shrink-0" color="#f87171" %}
     Groupe sanguin
   </label>
   <select name="groupSanguin" required
-    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500/30 bg-surface">
     {% for val, label in groupes_sanguins %}
       <option value="{{ val }}">{{ label }}</option>
     {% endfor %}
@@ -119,42 +119,42 @@
 
 <!-- Adresse -->
 <div>
-  <label class="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+  <label class="flex items-center gap-1.5 text-sm text-body-soft mb-1">
     {% icon "map-pin" cls="h-4 w-4 flex-shrink-0" color="#10b981" %}
     Adresse
   </label>
   <input name="address" required placeholder="Adresse complète"
-    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500/30">
 </div>
 
 <!-- Contact d'urgence -->
 <div>
-  <label class="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+  <label class="flex items-center gap-1.5 text-sm text-body-soft mb-1">
     {% icon "alert-circle" cls="h-4 w-4 flex-shrink-0" color="#fb923c" %}
     Contact d'urgence
   </label>
   <input name="contacturgences" required placeholder="+216 XX XXX XXX"
-    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500/30">
 </div>
 
 <!-- Antécédents médicaux -->
 <div>
-  <label class="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+  <label class="flex items-center gap-1.5 text-sm text-body-soft mb-1">
     {% icon "file-text" cls="h-4 w-4 flex-shrink-0" color="#c084fc" %}
     Antécédents médicaux
   </label>
   <textarea name="medicalhistory" rows="3" placeholder="Maladies, allergies, traitements..."
-    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+    class="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-500/30 resize-none"></textarea>
 </div>
 <!-- Buttons -->
 <div class="flex justify-end gap-3 pt-4 border-t">
   <button type="button" id="cancelAddPatient"
-    class="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-100">
+    class="px-4 py-2 rounded-lg border text-body-soft hover:bg-surface-sunken">
     Annuler
   </button>
 
   <button type="submit"
-    class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+    class="px-4 py-2 rounded-lg bg-brand-700 text-white hover:bg-brand-800">
     Enregistrer
   </button>
 </div>
@@ -164,8 +164,8 @@
     <div id="pageMessages" class="space-y-2 px-5 pb-5">
       {% for message in messages %}
       <div class="p-3 rounded-lg border
-          {% if 'success' in message.tags %} bg-green-50 text-green-800 border-green-200
-          {% else %} bg-gray-50 text-gray-800 border-gray-200 {% endif %}">
+          {% if 'success' in message.tags %} bg-stable-soft text-stable border-green-200
+          {% else %} bg-surface-sunken text-body border-line {% endif %}">
         {{ message }}
       </div>
       {% endfor %}
@@ -177,20 +177,20 @@
 </div>
     <!-- KPI Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="bg-white rounded-xl shadow-sm border p-4">
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm text-gray-600">Patients Totaux</span>
+        <span class="text-sm text-body-soft">Patients Totaux</span>
         <div class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center">
           {% icon "users" cls="h-4 w-4 text-cyan-600" %}
         </div>
       </div>
       <p class="text-2xl">{{ patients_tot }}</p>
-      <p class="text-xs text-gray-500 mt-1">Sous suivi</p>
+      <p class="text-xs text-body-faint mt-1">Sous suivi</p>
     </div>
 
   </div>   
     <!-- Search bar -->
-      <form method="GET" class="bg-white p-4 rounded-xl border shadow-sm flex gap-4">
+      <form method="GET" class="bg-surface p-4 rounded-xl border shadow-sm flex gap-4">
       
           <input
             type="text"
@@ -199,13 +199,13 @@
             placeholder="Rechercher un patient..."
             class="flex-1 border rounded-lg px-4 py-2 text-sm">
         <button type="submit"
-  class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+  class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors"
   style="cursor: pointer;">
-  <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">
-    {% icon "search" cls="h-5 w-5 text-blue-600 flex-shrink-0" %}
+  <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
+    {% icon "search" cls="h-5 w-5 text-brand-700 flex-shrink-0" %}
   </span>
   <span class="text-sm">
-    <span class="text-blue-700">Rechercher</span>
+    <span class="text-brand-700">Rechercher</span>
   </span>
         </div>
       
@@ -217,10 +217,10 @@
     <!-- <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"> -->
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
       {% for p in patients %}
-       <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+       <div class="bg-surface rounded-xl border shadow-sm overflow-hidden">
 
           <!-- Header -->
-         <div class="p-5 border-b bg-gradient-to-br from-blue-50 to-cyan-50">
+         <div class="p-5 border-b bg-surface-sunken">
             <div class="flex items-start justify-between gap-3">
               <div class="flex-1">
                 <div class="flex items-center gap-2 mb-2">
@@ -229,7 +229,7 @@
                 </h3>         
                 </div>
             
-                  <p class="text-sm text-gray-600">
+                  <p class="text-sm text-body-soft">
                     Né(e) le {{ p.date_of_birth|date:"d/m/Y" }}
                   </p>
               
@@ -241,10 +241,10 @@
 
             <!-- Petites “chips” -->
             <div class="mt-2 flex flex-wrap gap-3">
-              <span class="rounded-full bg-white px-3 py-1 text-xs text-slate-700 ring-1 ring-slate-200">
+              <span class="rounded-full bg-surface px-3 py-1 text-xs text-slate-700 ring-1 ring-slate-200">
                 Groupe sanguin: <span class="font-medium">{{ p.group_sanguin|default:"—" }}</span>
               </span> 
-              <span class="rounded-full bg-white px-3 py-1 text-xs text-slate-700 ring-1 ring-slate-200">
+              <span class="rounded-full bg-surface px-3 py-1 text-xs text-slate-700 ring-1 ring-slate-200">
                 Dialyse: <span class="font-medium">{{ p.type_dialyse|default:"—" }}</span>
               </span>
             </div>
@@ -253,28 +253,28 @@
           <!-- Body -->
           <div class="p-4 space-y-3">
             <div class="flex items-center gap-2 text-sm">
-                {% icon "phone" cls="h-4 w-4 text-blue-600 flex-shrink-0" %}
+                {% icon "phone" cls="h-4 w-4 text-brand-700 flex-shrink-0" %}
               <div class="text-sm">
                 <p class="text-xs text-slate-500">Téléphone</p>
             
-                 <span class="text-gray-600">{{ p.telephone }}</span>
+                 <span class="text-body-soft">{{ p.telephone }}</span>
               </div>
             </div>
 
              <div class="flex items-center gap-2 text-sm">
-                  {% icon "users" cls="h-4 w-4 text-blue-600 flex-shrink-0" %}
+                  {% icon "users" cls="h-4 w-4 text-brand-700 flex-shrink-0" %}
               <div class="text-sm">
                 <p class="text-xs text-slate-500">Contact d'urgence</p>
-               <span class="text-gray-600">
+               <span class="text-body-soft">
                   {{ p.contact_urgence|default:"—" }}
                </span>
               </div>
             </div>
             <div class="flex items-center gap-2 text-sm">
-               {% icon "map-pin" cls="h-4 w-4 text-blue-600 flex-shrink-0" %}
+               {% icon "map-pin" cls="h-4 w-4 text-brand-700 flex-shrink-0" %}
                 <div class="text-sm">
               <p class="text-xs text-slate-500">Adresse</p>
-               <span class="text-gray-600">{{ p.adresse|default:"—" }}</span>
+               <span class="text-body-soft">{{ p.adresse|default:"—" }}</span>
             </div>
           </div>
           
@@ -284,7 +284,7 @@
               <div class="text-sm">
                 <p class="text-xs text-slate-500">Antécédents médicaux</p>
             
-                 <span class="text-gray-600">{{ p.antecedents_medicaux }}</span>
+                 <span class="text-body-soft">{{ p.antecedents_medicaux }}</span>
               </div>
             </div> -->
             </div>  
@@ -294,14 +294,14 @@
           <div class="border-t border-slate-100 p-4">
             {% if p.id %}
             <a href="{% url 'patients:Patient_Profile' p.id %}"
-              class="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-white hover:bg-blue-700">
+              class="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-3 text-white hover:bg-brand-800">
                 {% icon "eye" cls="h-4 w-4" %}
                 Voir le dossier
             </a>
             {% endif %}
           </div>
       {% empty %}
-        <div class="col-span-2 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg">
+        <div class="col-span-2 bg-warning-soft border border-yellow-200 text-warning p-4 rounded-lg">
       Aucun résultat trouvé pour votre recherche.
     </div>
       {% endfor %}
@@ -311,14 +311,14 @@
     {% if is_paginated %}
       <div class="mt-6 flex items-center justify-center gap-2">
         {% if page_obj.has_previous %}
-          <a class="px-3 py-2 rounded-lg border bg-white hover:bg-slate-50"
+          <a class="px-3 py-2 rounded-lg border bg-surface hover:bg-slate-50"
              href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Précédent</a>
         {% endif %}
         <span class="text-sm text-slate-600">
           Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
         </span>
         {% if page_obj.has_next %}
-          <a class="px-3 py-2 rounded-lg border bg-white hover:bg-slate-50"
+          <a class="px-3 py-2 rounded-lg border bg-surface hover:bg-slate-50"
              href="?q={{ q }}&page={{ page_obj.next_page_number }}">Suivant</a>
         {% endif %}
       </div>

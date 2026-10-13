@@ -9,34 +9,34 @@
     <div id="pageMessages" class="space-y-2">
       {% for message in messages %}
       <div class="p-3 rounded-md
-                      {% if message.tags == 'success' %}bg-green-100 text-green-800{% endif %}
-                      {% if message.tags == 'error' %}bg-red-100 text-red-800{% endif %}
-                      {% if message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% endif %}">
+                      {% if message.tags == 'success' %}bg-stable-soft text-stable{% endif %}
+                      {% if message.tags == 'error' %}bg-critical-soft text-critical{% endif %}
+                      {% if message.tags == 'warning' %}bg-warning-soft text-warning{% endif %}">
         {{ message }}
       </div>
       {% endfor %}
     </div>
     {% endif %}
-  <div class="bg-white p-6 rounded-xl border border-blue-100 shadow-sm space-y-4">
+  <div class="bg-surface p-6 rounded-xl border border-brand-200 shadow-sm space-y-4">
     <!-- HEADER + INFOS UTILISATEUR -->
     
     <div class="flex items-center gap-6">
         <!-- IMAGE CARREE PETITE -->
-        <div class="w-100 h-100 rounded-lg overflow-hidden border-2 border-gray-200  shadow-md bg-white flex-shrink-0" style="width:150px; height:150px;">
+        <div class="w-100 h-100 rounded-lg overflow-hidden border-2 border-line  shadow-md bg-surface flex-shrink-0" style="width:150px; height:150px;">
             {% if profile and profile.image %}
             <img id="headerImg" class="w-full h-full object-cover" src="{{ profile.image.url }}">
             {% else %}
-            <div class="w-full h-full flex items-center justify-center bg-gray-100">
-                {% icon "user" cls="h-12 w-12 text-gray-500" %}
+            <div class="w-full h-full flex items-center justify-center bg-surface-sunken">
+                {% icon "user" cls="h-12 w-12 text-body-faint" %}
             </div>
             {% endif %}
         </div>
 
         <!-- INFOS PRINCIPALES -->
         <div class="flex-1 min-w-0">
-            <h2 class="text-3xl md:text-xl font-bold text-gray-900 truncate">{{ user.username }}</h2>
+            <h2 class="text-3xl md:text-xl font-bold text-body truncate">{{ user.username }}</h2>
            
-            <span class="inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+            <span class="inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold bg-brand-50 text-brand-700">
                 {{ user.role.name }}
             </span>
         </div>
@@ -45,33 +45,33 @@
      <!-- INFOS DÉTAILLÉES -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Téléphone -->
-        <div class="flex items-center gap-4 p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
-            {% icon "phone" cls="h-6 w-6 text-blue-600 flex-shrink-0" %}
+        <div class="flex items-center gap-4 p-5 rounded-xl border border-line bg-surface shadow-sm">
+            {% icon "phone" cls="h-6 w-6 text-brand-700 flex-shrink-0" %}
             <div class="min-w-0">
-                <p class="text-sm text-gray-500 font-medium">Téléphone</p>
-                <p class="text-base md:text-lg font-semibold text-gray-900 truncate">
+                <p class="text-sm text-body-faint font-medium">Téléphone</p>
+                <p class="text-base md:text-lg font-semibold text-body truncate">
                     {{ user.phone_number|default:"Non renseigné" }}
                 </p>
             </div>
         </div>
 
         <!-- Email -->
-        <div class="flex items-center gap-4 p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
-            {% icon "mail" cls="h-6 w-6 text-blue-600 flex-shrink-0" %}
+        <div class="flex items-center gap-4 p-5 rounded-xl border border-line bg-surface shadow-sm">
+            {% icon "mail" cls="h-6 w-6 text-brand-700 flex-shrink-0" %}
             <div class="min-w-0">
-                <p class="text-sm text-gray-500 font-medium">Email</p>
-                <p class="text-base md:text-lg font-semibold text-gray-900 truncate">
+                <p class="text-sm text-body-faint font-medium">Email</p>
+                <p class="text-base md:text-lg font-semibold text-body truncate">
                     {{ user.email|default:"Non renseignée" }}
                 </p>
             </div>
         </div>
 
         <!-- Adresse -->
-        <div class="flex items-center gap-4 p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
-            {% icon "map-pin" cls="h-6 w-6 text-blue-600 flex-shrink-0" %}
+        <div class="flex items-center gap-4 p-5 rounded-xl border border-line bg-surface shadow-sm">
+            {% icon "map-pin" cls="h-6 w-6 text-brand-700 flex-shrink-0" %}
             <div class="min-w-0">
-                <p class="text-sm text-gray-500 font-medium">Adresse</p>
-                <p class="text-base md:text-lg font-semibold text-gray-900 truncate">
+                <p class="text-sm text-body-faint font-medium">Adresse</p>
+                <p class="text-base md:text-lg font-semibold text-body truncate">
                     {{ user.adress|default:"Non renseignée" }}
                 </p>
             </div>
@@ -80,12 +80,12 @@
 
     <!-- Bio (pleine largeur, mieux placé) -->
     {% if profile.bio %}
-    <div class="p-6 rounded-xl border border-gray-100 bg-white shadow-sm">
+    <div class="p-6 rounded-xl border border-line bg-surface shadow-sm">
         <div class="flex items-start gap-4">
-            {% icon "file-text" cls="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" %}
+            {% icon "file-text" cls="h-6 w-6 text-brand-700 flex-shrink-0 mt-1" %}
             <div class="flex-1 min-w-0">
-                <p class="text-sm text-gray-500 font-medium mb-2">Bio</p>
-                <p class="text-base md:text-lg text-gray-900 leading-relaxed line-clamp-3">{{ profile.bio }}</p>
+                <p class="text-sm text-body-faint font-medium mb-2">Bio</p>
+                <p class="text-base md:text-lg text-body leading-relaxed line-clamp-3">{{ profile.bio }}</p>
             </div>
         </div>
     </div>
@@ -98,22 +98,22 @@
    
 </div>
 
-    <div class="bg-white p-4 rounded-xl border shadow-sm  gap-4">
+    <div class="bg-surface p-4 rounded-xl border shadow-sm  gap-4">
     <!-- FORM DIRECT (espacement comme NewSessionModal) -->
     <form method="POST" enctype="multipart/form-data" class="p-4 md:p-6 space-y-4 md:space-y-6">
         {% csrf_token %}
 
         <!-- PHOTO -->
         <div class="space-y-2">
-            <label class="block text-sm font-semibold text-gray-900 mb-3">Photo de profil</label>
+            <label class="block text-sm font-semibold text-body mb-3">Photo de profil</label>
             <div class="flex items-center gap-6">
                 <!-- CADRE IMAGE PETITE -->
-                <div class="w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100 flex-shrink-0" style="width:70px; height:70px;">
+                <div class="w-20 h-20 rounded-lg overflow-hidden border-2 border-line bg-surface-sunken flex-shrink-0" style="width:70px; height:70px;">
                     {% if profile and profile.image %}
                     <img id="previewImg" class="w-full h-full object-cover" src="{{ profile.image.url }}">
                     {% else %}
-                    <div id="previewImg" class="w-full h-full flex items-center justify-center bg-gray-100">
-                        {% icon "user" cls="h-8 w-8 text-gray-500" %}
+                    <div id="previewImg" class="w-full h-full flex items-center justify-center bg-surface-sunken">
+                        {% icon "user" cls="h-8 w-8 text-body-faint" %}
                     </div>
                     {% endif %}
                 </div>
@@ -123,16 +123,16 @@
                     
 
                      <!-- ACTIONS (bouton Modifier) -->
-    <div class="flex  pt-4  border-blue-100">
+    <div class="flex  pt-4  border-brand-200">
         <label for="imageInput"
-               class="flex items-center gap-2 px-6 py-2.5 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition-all text-sm font-medium text-blue-700 shadow-sm">
+               class="flex items-center gap-2 px-6 py-2.5 bg-surface border border-brand-200 rounded-lg hover:bg-brand-50 hover:border-blue-400 transition-all text-sm font-medium text-brand-700 shadow-sm">
             {% icon "edit" cls="h-4 w-4" %}
             Modifier l'image
         </label>
         <input id="imageInput" type="file" name="image" class="hidden">
         
     </div>
-    <p class="text-xs text-gray-500 mt-1">
+    <p class="text-xs text-body-faint mt-1">
                         JPG/PNG • Taille max : 2MB
                     </p>
 
@@ -147,101 +147,101 @@
 
         <!-- EMAIL -->
         <div class="space-y-2">
-            <label class="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                {% icon "mail" cls="h-4 w-4 text-blue-600" %}
+            <label class="flex items-center gap-2 text-sm font-semibold text-body">
+                {% icon "mail" cls="h-4 w-4 text-brand-700" %}
                 Email
             </label>
             <input type="email" name="email" id="id_email"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                   class="w-full px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-sm md:text-base"
                    value="{{ user.email }}">
         </div>
 
         <!-- TÉLÉPHONE -->
         <div class="space-y-2">
-            <label class="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                {% icon "phone" cls="h-4 w-4 text-green-600" %}
+            <label class="flex items-center gap-2 text-sm font-semibold text-body">
+                {% icon "phone" cls="h-4 w-4 text-stable" %}
                 Téléphone
             </label>
             <input type="text" name="phone_number" id="id_phone"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                   class="w-full px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-sm md:text-base"
                    value="{{ user.phone_number }}">
         </div>
 
         <!-- ADRESSE -->
         <div class="space-y-2">
-            <label class="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                {% icon "map-pin" cls="h-4 w-4 text-blue-600" %}
+            <label class="flex items-center gap-2 text-sm font-semibold text-body">
+                {% icon "map-pin" cls="h-4 w-4 text-brand-700" %}
                 Adresse
             </label>
             <input type="text" name="adress" id="id_address"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                   class="w-full px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-sm md:text-base"
                    value="{{ user.adress }}">
         </div>
 
         <!-- BIO -->
         <div class="space-y-2">
-            <label class="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                {% icon "file-text" cls="h-4 w-4 text-blue-600" %}
+            <label class="flex items-center gap-2 text-sm font-semibold text-body">
+                {% icon "file-text" cls="h-4 w-4 text-brand-700" %}
                 Bio
             </label>
             <textarea name="bio"
-                      class="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                      class="w-full min-h-[100px] px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-sm md:text-base"
                       placeholder="Parlez de vous...">{{ profile.bio }}</textarea>
         </div>
 
         <!-- FORMATION -->
         <div class="space-y-2">
-            <label class="flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <label class="flex items-center gap-2 text-sm font-semibold text-body">
                 {% icon "users" cls="h-4 w-4 text-purple-600" %}
                 Formation
             </label>
             <textarea name="formation"
-                      class="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                      class="w-full min-h-[100px] px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-sm md:text-base"
                       placeholder="Votre formation...">{{ profile.formation }}</textarea>
         </div>
 
         <!-- EXPERIENCE -->
         <div class="space-y-2">
-            <label class="flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <label class="flex items-center gap-2 text-sm font-semibold text-body">
                 {% icon "stethoscope" cls="h-4 w-4 text-purple-600" %}
                 Expérience
             </label>
             <input type="number" name="experience"  value="{{ profile.experience|default_if_none:'' }}"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                      class="w-full px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-sm md:text-base"
                       placeholder="Votre expérience..."></input>
         </div>
 
               <!-- MOT DE PASSE -->
 <!-- LABEL GLOBAL -->
-    <label class="flex items-center gap-2 text-sm font-semibold text-gray-900">
-        {% icon "eye" cls="h-4 w-4 text-gray-600" %}
+    <label class="flex items-center gap-2 text-sm font-semibold text-body">
+        {% icon "eye" cls="h-4 w-4 text-body-soft" %}
         Changer mot de passe
     </label>
 
     <!-- ANCIEN MOT DE PASSE -->
     <div class="space-y-2">
-        <label class="text-sm font-medium text-gray-700">Ancien mot de passe</label>
+        <label class="text-sm font-medium text-body-soft">Ancien mot de passe</label>
         <input type="password" name="old_password"
-               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+               class="w-full px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-sm md:text-base"
                placeholder="Ancien mot de passe"
                {% if user.first_login %} required {% endif %}>
     </div>
 
     <!-- NOUVEAU MOT DE PASSE -->
     <div class="space-y-2">
-        <label class="text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+        <label class="text-sm font-medium text-body-soft">Nouveau mot de passe</label>
         <input type="password" name="password"
-               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+               class="w-full px-3 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 text-sm md:text-base"
                placeholder="{% if user.first_login %}Mot de passe obligatoire{% else %}Nouveau mot de passe{% endif %}"
                {% if user.first_login %} required {% endif %}>
     </div>
 
 {% if user.first_login %}
-    <p class="text-xs text-red-600 font-medium">
+    <p class="text-xs text-critical font-medium">
         ⚠️ Vous devez changer votre mot de passe pour continuer.
     </p>
 {% else %}
-    <p class="text-xs text-gray-500">
+    <p class="text-xs text-body-faint">
         Laissez vide si vous ne voulez pas changer le mot de passe.
     </p>
 {% endif %}
@@ -254,20 +254,20 @@
     {% if current_user.first_login %}
     <button type="button"
         disabled
-        class="flex-1 px-6 py-2.5 border border-gray-300 rounded-lg 
-               bg-gray-200 text-gray-500 cursor-not-allowed
+        class="flex-1 px-6 py-2.5 border border-line rounded-lg 
+               bg-surface-hover text-body-faint cursor-not-allowed
                text-sm md:text-base text-center">
         Annuler
     </button>
 {% else %}
     <a href="{% url 'monitoring:surveillance' %}"
-       class="flex-1 px-6 py-2.5 border border-gray-300 rounded-lg 
-              hover:bg-gray-50 transition-colors text-sm md:text-base text-center">
+       class="flex-1 px-6 py-2.5 border border-line rounded-lg 
+              hover:bg-surface-sunken transition-colors text-sm md:text-base text-center">
         Annuler
     </a>
 {% endif %}
 
-            <button type="submit" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base">
+            <button type="submit" class="flex-1 bg-brand-700 text-white py-2.5 rounded-lg hover:bg-brand-800 transition-colors text-sm md:text-base">
                 Enregistrer
             </button>
         </div>
@@ -276,9 +276,9 @@
 
     <!-- MODAL DE RECADRAGE -->
     <div id="cropModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden">
-        <div class="bg-white rounded-xl shadow-xl overflow-hidden w-full max-w-xl">
-            <div class="sticky top-0 bg-white border-b px-4 md:px-6 py-4">
-                <h3 class="text-lg md:text-xl font-semibold text-gray-900">Recadrer l'image (1:1)</h3>
+        <div class="bg-surface rounded-xl shadow-xl overflow-hidden w-full max-w-xl">
+            <div class="sticky top-0 bg-surface border-b px-4 md:px-6 py-4">
+                <h3 class="text-lg md:text-xl font-semibold text-body">Recadrer l'image (1:1)</h3>
             </div>
 
             <div class="p-4 md:p-6">
@@ -286,10 +286,10 @@
             </div>
 
             <div class="p-4 border-t flex justify-end gap-3">
-                <button id="cancelCrop" type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <button id="cancelCrop" type="button" class="px-4 py-2 border border-line rounded-lg hover:bg-surface-sunken transition-colors">
                     Annuler
                 </button>
-                <button id="saveCrop" type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <button id="saveCrop" type="button" class="px-4 py-2 bg-brand-700 text-white rounded-lg hover:bg-brand-800 transition-colors">
                     Enregistrer
                 </button>
             </div>

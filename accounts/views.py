@@ -473,10 +473,9 @@ def doctor_profile(request, id):
         messages.error(request, "Médecin introuvable.")
         return redirect("accounts:docteurs")
 
-    profile = Profile.objects.filter(user=doctor).first()
-    if not profile:
-        messages.error(request, "Profil médecin introuvable.")
-        return redirect("accounts:docteurs")
+    # Profile ne porte que des champs facultatifs : son absence ne doit pas
+    # empêcher de consulter la fiche.
+    profile, _ = Profile.objects.get_or_create(user=doctor)
     return render(request, "doctor_profile.html", {
         "doctor": doctor,
         "profile": profile,
@@ -492,10 +491,9 @@ def nurse_profile(request, id):
         messages.error(request, "Infirmier introuvable.")
         return redirect("accounts:nurses")
 
-    profile = Profile.objects.filter(user=nurse).first()
-    if not profile:
-        messages.error(request, "Profil infirmier introuvable.")
-        return redirect("accounts:nurses")
+    # Profile ne porte que des champs facultatifs : son absence ne doit pas
+    # empêcher de consulter la fiche.
+    profile, _ = Profile.objects.get_or_create(user=nurse)
     return render(request, "nurse_profile.html", {
         "nurse": nurse,
         "profile": profile,

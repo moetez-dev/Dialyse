@@ -8,9 +8,9 @@
   <div class="space-y-2" id="pageMessages">
     {% for message in messages %}
     <div class="p-3 rounded-md
-                  {% if message.tags == 'success' %}bg-green-100 text-green-800{% endif %}
-                  {% if message.tags == 'error' %}bg-red-100 text-red-800{% endif %}
-                  {% if message.tags == 'warning' %}bg-yellow-100 text-yellow-800{% endif %}">
+                  {% if message.tags == 'success' %}bg-stable-soft text-stable{% endif %}
+                  {% if message.tags == 'error' %}bg-critical-soft text-critical{% endif %}
+                  {% if message.tags == 'warning' %}bg-warning-soft text-warning{% endif %}">
       {{ message }}
     </div>
     {% endfor %}
@@ -20,17 +20,17 @@
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-2xl font-semibold">Gestion des Docteurs</h2>
-      <p class="text-sm text-gray-500">{{ total_doctors }} médecins</p>
+      <p class="text-sm text-body-faint">{{ total_doctors }} médecins</p>
     </div>
 
     <button type="button" id="openModal"
-      class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+      class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors"
       style="cursor: pointer;">
-      <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">
-        {% icon "user-plus" cls="h-5 w-5 text-blue-600 flex-shrink-0" %}
+      <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
+        {% icon "user-plus" cls="h-5 w-5 text-brand-700 flex-shrink-0" %}
       </span>
       <span class="text-sm">
-        <span class="text-blue-700">Ajouter docteur</span>
+        <span class="text-brand-700">Ajouter docteur</span>
       </span>
     </button>
   </div>
@@ -38,48 +38,48 @@
   <!-- KPI Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-    <div class="bg-white rounded-xl shadow-sm border p-4">
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm text-gray-600">Total Médecins</span>
-        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-          {% icon "users" cls="h-4 w-4 text-blue-600" %}
+        <span class="text-sm text-body-soft">Total Médecins</span>
+        <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+          {% icon "users" cls="h-4 w-4 text-brand-700" %}
         </div>
       </div>
       <p class="text-2xl">{{ total_doctors }}</p>
-      <p class="text-xs text-gray-500 mt-1">Tous les médecins</p>
+      <p class="text-xs text-body-faint mt-1">Tous les médecins</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-4">
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm text-gray-600">Médecins Actifs</span>
-        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-          {% icon "activity" cls="h-4 w-4 text-green-600" %}
+        <span class="text-sm text-body-soft">Médecins Actifs</span>
+        <div class="w-8 h-8 bg-stable-soft rounded-lg flex items-center justify-center">
+          {% icon "activity" cls="h-4 w-4 text-stable" %}
         </div>
       </div>
       <p class="text-2xl">{{isActif_count}}</p>
-      <p class="text-xs text-gray-500 mt-1">En service</p>
+      <p class="text-xs text-body-faint mt-1">En service</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-4">
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm text-gray-600">Administrateurs</span>
+        <span class="text-sm text-body-soft">Administrateurs</span>
         <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
           {% icon "users" cls="h-4 w-4 text-purple-600" %}
         </div>
       </div>
       <p class="text-2xl">{{ isadmin_count }}</p>
-      <p class="text-xs text-gray-500 mt-1">Avec accès admin</p>
+      <p class="text-xs text-body-faint mt-1">Avec accès admin</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border p-4">
+    <div class="bg-surface rounded-xl shadow-sm border p-4">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm text-gray-600">Patients Totaux</span>
+        <span class="text-sm text-body-soft">Patients Totaux</span>
         <div class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center">
           {% icon "users" cls="h-4 w-4 text-cyan-600" %}
         </div>
       </div>
       <p class="text-2xl">0</p>
-      <p class="text-xs text-gray-500 mt-1">Sous suivi</p>
+      <p class="text-xs text-body-faint mt-1">Sous suivi</p>
     </div>
 
   </div>
@@ -87,31 +87,31 @@
 
   <!-- search -->
 
-   <form method="GET" class="bg-white p-4 rounded-xl border shadow-sm flex gap-4">
+   <form method="GET" class="bg-surface p-4 rounded-xl border shadow-sm flex gap-4">
   <input name="search" type="text" placeholder="Rechercher un médecin..."
     value="{{ request.GET.search }}"
-    class="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    class="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
 
-  <select name="role" class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+  <select name="role" class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
     <option value="">Tous les rôles</option>
     <option value="admin" {% if request.GET.role == "admin" %}selected{% endif %}>Administrateurs</option>
     <option value="doctor" {% if request.GET.role == "doctor" %}selected{% endif %}>Docteurs</option>
   </select>
 
-  <select name="status" class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+  <select name="status" class="border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30">
     <option value="">Tous les statuts</option>
     <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Actifs</option>
     <option value="inactive" {% if request.GET.status == "inactive" %}selected{% endif %}>Inactifs</option>
   </select>
 
   <button type="submit"
-  class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+  class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors"
   style="cursor: pointer;">
-  <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">
-    {% icon "search" cls="h-5 w-5 text-blue-600 flex-shrink-0" %}
+  <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
+    {% icon "search" cls="h-5 w-5 text-brand-700 flex-shrink-0" %}
   </span>
   <span class="text-sm">
-    <span class="text-blue-700">Rechercher</span>
+    <span class="text-brand-700">Rechercher</span>
   </span>
 </button>
 
@@ -121,15 +121,15 @@
   <!-- Doctors Grid -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     {% if doctors|length == 0 %}
-    <div class="col-span-2 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg">
+    <div class="col-span-2 bg-warning-soft border border-yellow-200 text-warning p-4 rounded-lg">
       Aucun résultat trouvé pour votre recherche.
     </div>
   {% endif %}
     {% for doctor in doctors %}
-    <div class="bg-white rounded-xl border shadow-sm overflow-hidden">
+    <div class="bg-surface rounded-xl border shadow-sm overflow-hidden">
 
       <!-- Header -->
-      <div class="p-5 border-b bg-gradient-to-br from-blue-50 to-cyan-50">
+      <div class="p-5 border-b bg-surface-sunken">
         <div class="flex items-start justify-between mb-3">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-2">
@@ -140,18 +140,18 @@
               </span>
             </div>
 
-            <p class="text-sm text-gray-600">{{ doctor.speciality}}</p>
+            <p class="text-sm text-body-soft">{{ doctor.speciality}}</p>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
           <span
-            class="px-3 py-1 rounded-lg text-xs {% if doctor.roleLabel == 'Admin' %}bg-blue-600 text-white{% else %}bg-white text-gray-700 border{% endif %}">
+            class="px-3 py-1 rounded-lg text-xs {% if doctor.roleLabel == 'Admin' %}bg-brand-700 text-white{% else %}bg-surface text-body-soft border{% endif %}">
             {% if doctor.roleLabel == 'Admin' %}Administrateur{% else %}Docteur{% endif %}
           </span>
 
           {% if doctor.rating %}
-          <span class="flex items-center gap-1 px-2 py-1 bg-white rounded-lg text-xs">
+          <span class="flex items-center gap-1 px-2 py-1 bg-surface rounded-lg text-xs">
             ⭐ {{ doctor.rating }}
           </span>
           {% endif %}
@@ -163,15 +163,15 @@
       <div class="grid grid-cols-3 text-center py-4 border-t">
         <div>
           <div class="text-lg font-semibold">{{ doctor.patientsCount }}</div>
-          <div class="text-xs text-gray-500">Patients</div>
+          <div class="text-xs text-body-faint">Patients</div>
         </div>
         <div>
           <div class="text-lg font-semibold">{{ doctor.sessionsCount }}</div>
-          <div class="text-xs text-gray-500">Séances</div>
+          <div class="text-xs text-body-faint">Séances</div>
         </div>
         <div>
           <div class="text-lg font-semibold">{{ doctor.experienceYears }}</div>
-          <div class="text-xs text-gray-500">Ans exp.</div>
+          <div class="text-xs text-body-faint">Ans exp.</div>
         </div>
       </div>
 
@@ -179,21 +179,21 @@
 
       <div class="p-4 space-y-3">
         <div class="flex items-center gap-2 text-sm">
-          {% icon "mail" cls="h-4 w-4 text-gray-400 flex-shrink-0" %}
-          <span class="text-gray-600 truncate">{{ doctor.email }}</span>
+          {% icon "mail" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+          <span class="text-body-soft truncate">{{ doctor.email }}</span>
         </div>
 
         {% if doctor.phone %}
         <div class="flex items-center gap-2 text-sm">
-          {% icon "phone" cls="h-4 w-4 text-gray-400 flex-shrink-0" %}
-          <span class="text-gray-600">{{ doctor.phone }}</span>
+          {% icon "phone" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+          <span class="text-body-soft">{{ doctor.phone }}</span>
         </div>
         {% endif %}
 
         {% if doctor.memberSince %}
         <div class="flex items-center gap-2 text-sm">
-          {% icon "calendar" cls="h-4 w-4 text-gray-400 flex-shrink-0" %}
-          <span class="text-gray-600">
+          {% icon "calendar" cls="h-4 w-4 text-body-faint flex-shrink-0" %}
+          <span class="text-body-soft">
             Membre depuis {{ doctor.memberSince}}
           </span>
         </div>
@@ -204,7 +204,7 @@
       <!-- Actions -->
       <div class="p-4 border-t flex gap-2">
         <a href="{% url 'accounts:doctor_profile' doctor.id %}"
-          class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-brand-700 text-white rounded-lg hover:bg-brand-800 transition-colors">
           {% icon "eye" cls="h-4 w-4" %} Voir le profil
         </a>
       </div>
@@ -221,10 +221,10 @@
 
   <!-- dialog -->
   <div class="relative min-h-full flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+    <div class="bg-surface rounded-xl shadow-xl w-full max-w-md overflow-hidden">
       <div class="flex items-center justify-between p-5 border-b">
         <h3 class="text-lg font-semibold">Ajouter un docteur</h3>
-        <button type="button" id="closeAddDoctorModal" class="p-2 hover:bg-gray-100 rounded-lg">
+        <button type="button" id="closeAddDoctorModal" class="p-2 hover:bg-surface-sunken rounded-lg">
           {% icon "x" cls="h-5 w-5" %}
         </button>
       </div>
@@ -233,34 +233,34 @@
         {% csrf_token %}
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Nom complet</label>
+          <label class="block text-sm text-body-soft mb-1">Nom complet</label>
           <input name="fullName"
-            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Email</label>
+          <label class="block text-sm text-body-soft mb-1">Email</label>
           <input type="email" name="email"
-            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Spécialité</label>
+          <label class="block text-sm text-body-soft mb-1">Spécialité</label>
           <input name="speciality"
-            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Téléphone</label>
+          <label class="block text-sm text-body-soft mb-1">Téléphone</label>
           <input name="phone"
-            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30">
         </div>
 
         <div class="flex gap-2 pt-2">
-          <button type="button" id="cancelAddDoctor" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">
+          <button type="button" id="cancelAddDoctor" class="flex-1 px-4 py-2 border rounded-lg hover:bg-surface-sunken">
             Annuler
           </button>
-          <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button type="submit" class="flex-1 px-4 py-2 bg-brand-700 text-white rounded-lg hover:bg-brand-800">
             Enregistrer
           </button>
         </div>
@@ -270,9 +270,9 @@
       <div id="pageMessages" class="space-y-2 px-5 pb-5">
         {% for message in messages %}
         <div class="p-3 rounded-lg border
-            {% if 'error' in message.tags %} bg-red-50 text-red-800 border-red-200
-            {% elif 'success' in message.tags %} bg-green-50 text-green-800 border-green-200
-            {% else %} bg-gray-50 text-gray-800 border-gray-200 {% endif %}">
+            {% if 'error' in message.tags %} bg-critical-soft text-critical border-red-200
+            {% elif 'success' in message.tags %} bg-stable-soft text-stable border-green-200
+            {% else %} bg-surface-sunken text-body border-line {% endif %}">
           {{ message }}
         </div>
         {% endfor %}

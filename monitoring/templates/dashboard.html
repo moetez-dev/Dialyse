@@ -599,6 +599,20 @@ function alertTone(a){
     return ALERT_TONES.info;
 }
 
+
+// Les valeurs injectées dans innerHTML viennent de la base (noms de patients,
+// libellés de machines, messages d'alerte). Sans échappement, un nom contenant
+// du balisage serait interprété comme du HTML.
+function esc(value) {
+    if (value === null || value === undefined) return "";
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
 function cleanAlertMessage(message){
     return (message || "")
         .replace(/^[^\p{L}\d]*\s*/u, "")
@@ -623,9 +637,9 @@ function updateAlerts(alerts){
             <article class="rounded-card border p-3.5 ${tone.box}">
               <div class="flex items-baseline justify-between gap-3">
                 <span class="text-xs font-medium ${tone.label}">${tone.text}</span>
-                <span class="shrink-0 text-xs text-body-faint">${alert.machine || ""}</span>
+                <span class="shrink-0 text-xs text-body-faint">${esc(alert.machine || '')}</span>
               </div>
-              <p class="mt-1.5 text-sm leading-relaxed text-body">${cleanAlertMessage(alert.message)}</p>
+              <p class="mt-1.5 text-sm leading-relaxed text-body">${esc(cleanAlertMessage(alert.message))}</p>
             </article>`;
     });
 }

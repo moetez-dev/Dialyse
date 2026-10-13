@@ -6,32 +6,32 @@
 
 {% block content %}
 <div class="p-6">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden border mx-auto">
+  <div class="bg-surface rounded-xl shadow-xl w-full max-w-2xl overflow-hidden border mx-auto">
     <div class="flex items-center justify-between p-5 border-b">
-      <h3 class="text-lg font-semibold text-gray-900">Accès refusé</h3>
-      <span class="text-xs font-medium px-2 py-1 rounded bg-red-100 text-red-800 border border-red-200">
+      <h3 class="text-lg font-semibold text-body">Accès refusé</h3>
+      <span class="text-xs font-medium px-2 py-1 rounded bg-critical-soft text-critical border border-red-200">
         403
       </span>
     </div>
 
     <div class="p-6 space-y-4">
-      <div class="text-5xl font-bold text-gray-900">Erreur 403</div>
-      <p class="text-gray-600 leading-relaxed">
+      <div class="text-5xl font-bold text-body">Erreur 403</div>
+      <p class="text-body-soft leading-relaxed">
         Vous n'avez pas accès à cette page. Vérifiez que vous êtes connecté avec un compte autorisé.
       </p>
 
-      <div class="p-4 rounded-lg border bg-gray-50 text-gray-700">
+      <div class="p-4 rounded-lg border bg-surface-sunken text-body-soft">
         Si vous pensez que c'est une erreur, contactez l'administrateur.
       </div>
 
       <div class="flex gap-2 pt-2">
-        <a href="{% url 'monitoring:surveillance' %}" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center">
+        <a href="{% url 'monitoring:surveillance' %}" class="flex-1 px-4 py-2 bg-brand-700 text-white rounded-lg hover:bg-brand-800 text-center">
           Accueil
         </a>
         <button id="goBackBtn"
             type="button"
-            class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 text-center">
-            {% icon "arrow-left" cls="h-4 w-4 text-gray-600 inline-block mr-2" %}
+            class="flex-1 px-4 py-2 border rounded-lg hover:bg-surface-sunken text-center">
+            {% icon "arrow-left" cls="h-4 w-4 text-body-soft inline-block mr-2" %}
             Retour
         </button>
       </div>

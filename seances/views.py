@@ -135,8 +135,10 @@ def create_session(request):
         
         return JsonResponse({'success': True, 'id': str(seance.id)})
     
-    # GET
-    return render(request, 'createSession.html', {'current_user': current_user})
+    # GET : la création se fait depuis la modale du planning ; cette vue
+    # n'est qu'un point de terminaison POST. Rendre une page vide était
+    # une impasse pour qui arrivait ici par l'URL.
+    return redirect('seances:planning')
     
 # class PreSessionForm(forms.ModelForm):
 #     class Meta:

@@ -10,18 +10,18 @@
   <!-- Header -->
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
-      <h2 class="text-xl md:text-2xl font-bold text-gray-900">Planification des séances</h2>
-      <p class="text-xs md:text-sm text-gray-600 mt-1">Gérez le planning des séances de dialyse</p>
+      <h2 class="text-xl md:text-2xl font-bold text-body">Planification des séances</h2>
+      <p class="text-xs md:text-sm text-body-soft mt-1">Gérez le planning des séances de dialyse</p>
     </div>
 
     <button id="newSessionBtn" type="button"
-      class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+      class="flex items-center gap-2 bg-brand-50 border border-brand-200 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors"
       style="cursor: pointer;">
-      <span class="h-5 w-5 text-blue-600 inline-flex items-center justify-center">
-        {% icon "plus" cls="h-5 w-5 text-blue-600 flex-shrink-0" %}
+      <span class="h-5 w-5 text-brand-700 inline-flex items-center justify-center">
+        {% icon "plus" cls="h-5 w-5 text-brand-700 flex-shrink-0" %}
       </span>
       <span class="text-sm">
-        <span class="text-blue-700">Nouvelle séance</span>
+        <span class="text-brand-700">Nouvelle séance</span>
       </span>
       
     </button>
@@ -29,70 +29,70 @@
 
   <!-- Statistics Cards -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-    <div class="bg-white rounded-lg md:rounded-xl shadow-sm border p-3 md:p-4 hover:shadow-md transition-shadow">
+    <div class="bg-surface rounded-lg md:rounded-xl shadow-sm border p-3 md:p-4 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs md:text-sm text-gray-600">Planifiées</span>
-        <div class="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-          {% icon "calendar" cls="h-3 w-3 md:h-4 md:w-4 text-blue-600" %}
+        <span class="text-xs md:text-sm text-body-soft">Planifiées</span>
+        <div class="w-6 h-6 md:w-8 md:h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+          {% icon "calendar" cls="h-3 w-3 md:h-4 md:w-4 text-brand-700" %}
         </div>
       </div>
-      <p class="text-xl md:text-2xl font-bold text-gray-900" id="plannedCount">{{ stats.planifiée }}</p>
-      <p class="text-xs text-gray-500 mt-1">À venir</p>
+      <p class="text-xl md:text-2xl font-bold text-body" id="plannedCount">{{ stats.planifiée }}</p>
+      <p class="text-xs text-body-faint mt-1">À venir</p>
     </div>
 
-    <div class="bg-white rounded-lg md:rounded-xl shadow-sm border p-3 md:p-4 hover:shadow-md transition-shadow">
+    <div class="bg-surface rounded-lg md:rounded-xl shadow-sm border p-3 md:p-4 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs md:text-sm text-gray-600">En cours</span>
-        <div class="w-6 h-6 md:w-8 md:h-8 bg-green-100 rounded-lg flex items-center justify-center">
+        <span class="text-xs md:text-sm text-body-soft">En cours</span>
+        <div class="w-6 h-6 md:w-8 md:h-8 bg-stable-soft rounded-lg flex items-center justify-center">
           <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse md:w-3 md:h-3"></div>
         </div>
       </div>
-      <p class="text-xl md:text-2xl font-bold text-gray-900" id="inProgressCount">{{ stats.en_cours }}</p>
-      <p class="text-xs text-gray-500 mt-1">Actives</p>
+      <p class="text-xl md:text-2xl font-bold text-body" id="inProgressCount">{{ stats.en_cours }}</p>
+      <p class="text-xs text-body-faint mt-1">Actives</p>
     </div>
 
-    <div class="bg-white rounded-lg md:rounded-xl shadow-sm border p-3 md:p-4 hover:shadow-md transition-shadow">
+    <div class="bg-surface rounded-lg md:rounded-xl shadow-sm border p-3 md:p-4 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs md:text-sm text-gray-600">Terminées</span>
-        <div class="w-6 h-6 md:w-8 md:h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-          <div class="w-2 h-2 bg-gray-400 rounded-full md:w-3 md:h-3"></div>
+        <span class="text-xs md:text-sm text-body-soft">Terminées</span>
+        <div class="w-6 h-6 md:w-8 md:h-8 bg-surface-sunken rounded-lg flex items-center justify-center">
+          <div class="w-2 h-2 bg-idle rounded-full md:w-3 md:h-3"></div>
         </div>
       </div>
-      <p class="text-xl md:text-2xl font-bold text-gray-900" id="completedCount">{{ stats.terminée }}</p>
-      <p class="text-xs text-gray-500 mt-1">Aujourd'hui</p>
+      <p class="text-xl md:text-2xl font-bold text-body" id="completedCount">{{ stats.terminée }}</p>
+      <p class="text-xs text-body-faint mt-1">Aujourd'hui</p>
     </div>
 
-    <div class="bg-white rounded-lg md:rounded-xl shadow-sm border p-3 md:p-4 hover:shadow-md transition-shadow">
+    <div class="bg-surface rounded-lg md:rounded-xl shadow-sm border p-3 md:p-4 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs md:text-sm text-gray-600">Disponibles</span>
+        <span class="text-xs md:text-sm text-body-soft">Disponibles</span>
         <div class="w-6 h-6 md:w-8 md:h-8 bg-cyan-100 rounded-lg flex items-center justify-center">
           <span class="text-cyan-600 text-xs font-medium">{{ stations|length }}</span>
         </div>
       </div>
-      <p class="text-xl md:text-2xl font-bold text-gray-900" id="availableCount">{{ stats.available }}</p>
-      <p class="text-xs text-gray-500 mt-1">Sur {{ stations|length }}</p>
+      <p class="text-xl md:text-2xl font-bold text-body" id="availableCount">{{ stats.available }}</p>
+      <p class="text-xs text-body-faint mt-1">Sur {{ stations|length }}</p>
     </div>
   </div>
   <!-- Barre de recherche -->
-<div class="bg-white rounded-lg md:rounded-xl shadow-sm border p-4 md:p-5 ">
+<div class="bg-surface rounded-lg md:rounded-xl shadow-sm border p-4 md:p-5 ">
 
   <div class="flex flex-col sm:flex-row gap-3">
 
     <!-- Champ texte -->
     <div class="relative flex-1">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-body-faint pointer-events-none"
            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
       </svg>
       <input type="text" id="searchInput"
              placeholder="Rechercher un patient..."
-             class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 "
+             class="w-full pl-10 pr-4 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 "
              autocomplete="off">
     </div>
 
     <!-- Sélecteur de période -->
     <select id="periodSelect"
-            class="py-2 px-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+            class="py-2 px-3 border border-line rounded-lg text-sm focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 bg-surface">
       <option value="today">Aujourd'hui</option>
       <option value="week">Cette semaine</option>
       <option value="last_week">Semaine dernière</option>
@@ -103,45 +103,45 @@
 
     <!-- Spinner -->
     <div id="searchSpinner" class="hidden items-center justify-center w-9">
-      <div class="w-5 h-5 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <div class="w-5 h-5 border-2 border-line border-t-blue-500 rounded-full animate-spin"></div>
     </div>
 
   </div>
 
   <!-- Filtres statuts -->
-  <hr class="my-3 border-gray-100" style ="margin-top: 30px; margin-bottom: 20px;">
+  <hr class="my-3 border-line" style ="margin-top: 30px; margin-bottom: 20px;">
   <div class="flex flex-wrap gap-2 ">
     <button type="button" data-filter="all"
-            class="filter-pill active inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-blue-50 border-blue-200 text-blue-700">
+            class="filter-pill active inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-brand-50 border-brand-200 text-brand-700">
       Tous
     </button>
     <button type="button" data-filter="planifiée"
-            class="filter-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-gray-50 border-gray-200 text-gray-600">
-      <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>Planifiée
+            class="filter-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-surface-sunken border-line text-body-soft">
+      <span class="w-2 h-2 rounded-full bg-brand-400 inline-block"></span>Planifiée
     </button>
     <button type="button" data-filter="en cours"
-            class="filter-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-gray-50 border-gray-200 text-gray-600">
+            class="filter-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-surface-sunken border-line text-body-soft">
       <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>En cours
     </button>
     <button type="button" data-filter="terminée"
-            class="filter-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-gray-50 border-gray-200 text-gray-600">
-      <span class="w-2 h-2 rounded-full bg-gray-400 inline-block"></span>Terminée
+            class="filter-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-surface-sunken border-line text-body-soft">
+      <span class="w-2 h-2 rounded-full bg-idle inline-block"></span>Terminée
     </button>
     <button type="button" data-filter="annulée"
-            class="filter-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-gray-50 border-gray-200 text-gray-600">
+            class="filter-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-surface-sunken border-line text-body-soft">
       <span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span>Annulée
     </button>
   </div>
 
   <!-- Résultats -->
-  <div id="searchResults" class="hidden mt-3 border border-gray-200 rounded-lg overflow-hidden bg-white" style="margin-top: 15px;"></div>
+  <div id="searchResults" class="hidden mt-3 border border-line rounded-lg overflow-hidden bg-surface" style="margin-top: 15px;"></div>
 
 </div>
 
   <!-- Planning -->
-  <div class="bg-white rounded-lg md:rounded-xl shadow-sm border overflow-hidden">
+  <div class="bg-surface rounded-lg md:rounded-xl shadow-sm border overflow-hidden">
     <!-- Navigation Header -->
-<div class="p-4 md:p-6 border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+<div class="p-4 md:p-6 border-b bg-surface-sunken">
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
     <h3 id="currentDate" class="text-base md:text-xl capitalize"
         data-date="{{ selected_date|date:'Y-m-d' }}">
@@ -150,7 +150,7 @@
 
     <div class="flex items-center gap-2 w-full sm:w-auto">
       <button id="prevDay" type="button"
-              class="p-2 hover:bg-white rounded-md transition-colors border border-gray-200"
+              class="p-2 hover:bg-surface rounded-md transition-colors border border-line"
               title="Jour précédent">
         {% icon "chevron-left" cls="h-4 w-4 md:h-5 md:w-5" %}
       </button>
@@ -158,16 +158,16 @@
       <!-- ✅ NOUVEAU: sélecteur de date natif -->
       <input type="date" id="datePickerInput"
              value="{{ selected_date|date:'Y-m-d' }}"
-             class="flex-1 sm:flex-none px-3 py-2 rounded-md text-sm border border-gray-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+             class="flex-1 sm:flex-none px-3 py-2 rounded-md text-sm border border-line bg-surface focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 cursor-pointer"
              title="Choisir une date">
 
       <button id="todayBtn" type="button"
-              class="px-3 md:px-4 py-2 rounded-md transition-colors text-sm font-medium shadow-sm bg-blue-600 text-white">
+              class="px-3 md:px-4 py-2 rounded-md transition-colors text-sm font-medium shadow-sm bg-brand-700 text-white">
         Aujourd'hui
       </button>
 
       <button id="nextDay" type="button"
-              class="p-2 hover:bg-white rounded-md transition-colors border border-gray-200"
+              class="p-2 hover:bg-surface rounded-md transition-colors border border-line"
               title="Jour suivant">
         {% icon "chevron-right" cls="h-4 w-4 md:h-5 md:w-5" %}
       </button>
@@ -176,32 +176,32 @@
 </div>
 
     <!-- Schedule container -->
-    <div id="scheduleContainer" class="p-3 md:p-6 overflow-x-auto min-h-[360px] bg-white"></div>
+    <div id="scheduleContainer" class="p-3 md:p-6 overflow-x-auto min-h-[360px] bg-surface"></div>
 
     {{ sessions_json|json_script:"sessions-data" }}
     {{ stations_json|json_script:"stations-data" }}
     {{ machines_data|json_script:"machines-data" }}
 
     <!-- Legend -->
-    <div class="px-3 md:px-6 py-3 md:py-4 bg-gray-50 border-t">
+    <div class="px-3 md:px-6 py-3 md:py-4 bg-surface-sunken border-t">
       <div class="flex flex-wrap items-center gap-3 md:gap-6 text-xs md:text-sm">
-        <span class="text-gray-600 w-full sm:w-auto">Légende:</span>
+        <span class="text-body-soft w-full sm:w-auto">Légende:</span>
         <div class="flex items-center gap-2">
-          <div class="w-4 h-4 md:w-5 md:h-5 bg-blue-100 border-2 border-blue-300 rounded"></div>
+          <div class="w-4 h-4 md:w-5 md:h-5 bg-brand-50 border-2 border-brand-200 rounded"></div>
           <span>Planifiée</span>
         </div>
         <div class="flex items-center gap-2">
-          <div class="w-4 h-4 md:w-5 md:h-5 bg-green-100 border-2 border-green-300 rounded flex items-center justify-center">
+          <div class="w-4 h-4 md:w-5 md:h-5 bg-stable-soft border-2 border-green-300 rounded flex items-center justify-center">
             <div class="w-1 h-1 md:w-1.5 md:h-1.5 bg-green-500 rounded-full"></div>
           </div>
           <span>En cours</span>
         </div>
         <div class="flex items-center gap-2">
-          <div class="w-4 h-4 md:w-5 md:h-5 bg-gray-100 border-2 border-gray-300 rounded"></div>
+          <div class="w-4 h-4 md:w-5 md:h-5 bg-surface-sunken border-2 border-line rounded"></div>
           <span>Terminée</span>
         </div>
         <div class="flex items-center gap-2">
-          <div class="w-4 h-4 md:w-5 md:h-5 bg-red-100 border-2 border-red-300 rounded"></div>
+          <div class="w-4 h-4 md:w-5 md:h-5 bg-critical-soft border-2 border-red-300 rounded"></div>
           <span>Annulée</span>
         </div>
       </div>
@@ -212,13 +212,13 @@
 <!-- Modal nouvelle séance -->
 <div id="newSessionModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden"
      style="background: rgba(0,0,0,.25); backdrop-filter: blur(12px);">
-  <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ">
+  <div class="bg-surface rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ">
     <div class="p-6 border-b flex items-center justify-between">
       <div>
         <h3 class="text-xl font-semibold">Planifier une nouvelle séance</h3>
-        <p class="text-sm text-gray-500 mt-1">Ajoutez une séance de dialyse au planning</p>
+        <p class="text-sm text-body-faint mt-1">Ajoutez une séance de dialyse au planning</p>
       </div>
-      <button id="closeNewModal" type="button" class="p-2 hover:bg-gray-100 rounded-md">✕</button>
+      <button id="closeNewModal" type="button" class="p-2 hover:bg-surface-sunken rounded-md">✕</button>
     </div>
 
     <form id="newSessionForm" class="p-6 space-y-6" method="post">
@@ -226,16 +226,16 @@
 
       <!-- Patient -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">
+        <label class="block text-sm font-medium text-body-soft mb-2">
           <span class="inline-flex items-center gap-2">
-            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-50 text-brand-700">
               {% icon "user" cls="w-3 h-3" %}
             </span>
             Patient *
           </span>
         </label>
         <select name="patient"
-                class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                 required>
           <option value="">Sélectionner un patient</option>
           {% for patient in patients %}
@@ -247,9 +247,9 @@
       <!-- Date + Heure -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-body-soft mb-2">
             <span class="inline-flex items-center gap-2">
-              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-50 text-brand-700">
                 {% icon "calendar" cls="w-3 h-3" %}
               </span>
               Date *
@@ -258,21 +258,21 @@
           <!-- On utilise selected_date côté serveur comme valeur initiale -->
           <input type="date" name="session_date"
                  value="{{ selected_date|date:'Y-m-d' }}"
-                 class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                 class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                  required>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-body-soft mb-2">
             <span class="inline-flex items-center gap-2">
-              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-50 text-brand-700">
                 {% icon "clock" cls="w-3 h-3" %}
               </span>
               Heure de début *
             </span>
           </label>
           <select name="start_time"
-                  class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                   required>
             {% for time in time_slots %}
               <option value="{{ time }}">{{ time }}</option>
@@ -284,16 +284,16 @@
       <!-- Durée + Poste -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-body-soft mb-2">
             <span class="inline-flex items-center gap-2">
-              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-50 text-brand-700">
                 {% icon "clock" cls="w-3 h-3" %}
               </span>
               Durée (heures) *
             </span>
           </label>
           <select name="duration"
-                  class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                   required>
             <option value="2">2 heures</option>
             <option value="3">3 heures</option>
@@ -303,16 +303,16 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-body-soft mb-2">
             <span class="inline-flex items-center gap-2">
-              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-50 text-brand-700">
                 {% icon "map-pin" cls="w-3 h-3" %}
               </span>
               Poste de dialyse *
             </span>
           </label>
           <select name="machine"
-                  class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                   required>
             {% for station in stations %}
               <option value="{{ station.id }}">{{ station.machine_id }} - {{ station.model }}</option>
@@ -323,27 +323,27 @@
 
       <!-- Notes -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">
+        <label class="block text-sm font-medium text-body-soft mb-2">
           <span class="inline-flex items-center gap-2">
-            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-50 text-brand-700">
               {% icon "file-text" cls="w-3 h-3" %}
             </span>
             Notes (optionnel)
           </span>
         </label>
         <textarea name="notes" rows="1"
-                  class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                   placeholder="Ajouter des notes pour cette séance..."></textarea>
       </div>
 
       <!-- Actions -->
       <div class="flex gap-3 pt-4">
         <button type="button" id="cancelNewModal"
-                class="flex-1 bg-gray-100 border border-gray-200 text-gray-800 py-2.5 px-4 rounded-lg hover:bg-gray-200 transition-colors">
+                class="flex-1 bg-surface-sunken border border-line text-body py-2.5 px-4 rounded-lg hover:bg-surface-sunken transition-colors">
           Annuler
         </button>
         <button type="submit"
-                class="flex-1 bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                class="flex-1 bg-brand-700 text-white py-2.5 px-4 rounded-lg hover:bg-brand-800 transition-colors font-medium">
           Créer la séance
         </button>
       </div>
@@ -355,11 +355,11 @@
 <!-- Modal détails séance -->
 <div id="sessionDetailsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden"
      style="background: rgba(0,0,0,.25); backdrop-filter: blur(12px);">
-  <div class="bg-white rounded-xl shadow-xl max-w-lg w-full">
+  <div class="bg-surface rounded-xl shadow-xl max-w-lg w-full">
     <div class="p-6 border-b flex items-center justify-between" id="sessionDetailsHeader"></div>
     <div id="sessionDetailsContent" class="p-6 space-y-4"></div>
     <div class="p-6 border-t rounded-md">
-      <button id="closeDetailsModal" type="button" class="w-full px-4 py-2 bg-gray-200 border border-gray-300 hover:bg-gray-300 rounded-lg transition-colors" style="cursor: pointer;">
+      <button id="closeDetailsModal" type="button" class="w-full px-4 py-2 bg-surface-hover border border-line hover:bg-surface-hover rounded-lg transition-colors" style="cursor: pointer;">
         Fermer
       </button>
     </div>
@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Rend le planning complet
   function renderSchedule() {
     if (!Array.isArray(stationsList) || stationsList.length === 0) {
-      scheduleContainer.innerHTML = `<div class="text-sm text-gray-500 p-4">Aucune machine disponible</div>`;
+      scheduleContainer.innerHTML = `<div class="text-sm text-body-faint p-4">Aucune machine disponible</div>`;
       return;
     }
 
@@ -456,8 +456,8 @@ document.addEventListener('DOMContentLoaded', function () {
     stationsList.forEach(station => {
       const isMaintenance = isMachineInMaintenance(station);
       const headerClass = isMaintenance 
-        ? 'bg-yellow-100 border-2 border-yellow-400 text-yellow-800 cursor-not-allowed'
-        : 'bg-gradient-to-b from-gray-50 to-gray-100';
+        ? 'bg-warning-soft border-2 border-yellow-400 text-warning cursor-not-allowed'
+        : 'bg-surface-sunken';
 
       html += `
         <div class="text-center py-2 md:py-3 ${headerClass} rounded-lg border relative">
@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Colonne horaire
       html += `
         <div class="flex items-start pt-2 md:pt-3 pr-1 md:pr-2">
-          <span class="text-xs md:text-sm text-gray-600 font-medium">${time}</span>
+          <span class="text-xs md:text-sm text-body-soft font-medium">${time}</span>
         </div>
       `;
 
@@ -510,14 +510,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (isMaintenance) {
               // Machine en maintenance → AVERTISSEMENT URGENT
-              cardClass = 'bg-yellow-100 border-4 border-yellow-500';
+              cardClass = 'bg-warning-soft border-4 border-yellow-500';
               dotHtml = '<div class="w-2 h-2 md:w-3 md:h-3 bg-yellow-600 rounded-full animate-pulse flex-shrink-0 mt-1"></div>';
               warningBadge = `
                 <div class="top-1 right-1 w-4 h-4 bg-yellow-500 border-2 border-white rounded-full flex items-center justify-center shadow-sm">
                   <span class="text-xs font-bold text-white">!</span>
                 </div>
               `;
-              maintenanceWarning = '<p class="text-xs text-yellow-800 font-semibold mt-1"> Déplacer/Retarder</p>';
+              maintenanceWarning = '<p class="text-xs text-warning font-semibold mt-1"> Déplacer/Retarder</p>';
             } else {
               // Statuts normaux
               const isInProgress = session.status === 'en cours';
@@ -526,14 +526,14 @@ document.addEventListener('DOMContentLoaded', function () {
               const isCancelled = session.status === 'annulée';
 
               if (isInProgress) {
-                cardClass = 'bg-green-100 border-2 border-green-400';
+                cardClass = 'bg-stable-soft border-2 border-green-400';
                 dotHtml = '<div class="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0 mt-1"></div>';
               } else if (isPlanned) {
-                cardClass = 'bg-blue-100 border-2 border-blue-400';
+                cardClass = 'bg-brand-50 border-2 border-blue-400';
               } else if (isCompleted) {
-                cardClass = 'bg-gray-100 border-2 border-gray-400';
+                cardClass = 'bg-surface-sunken border-2 border-line-strong';
               } else if (isCancelled) {
-                cardClass = 'bg-red-100 border-2 border-red-400';
+                cardClass = 'bg-critical-soft border-2 border-red-400';
               }
             }
 
@@ -574,7 +574,7 @@ document.addEventListener('DOMContentLoaded', function () {
           
           if (isOccupied || isMaintenance) {
             const title = isMaintenance ? 'Machine en maintenance' : 'Machine occupée';
-            const bgClass = isMaintenance ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-200';
+            const bgClass = isMaintenance ? 'bg-warning-soft border-yellow-300' : 'bg-surface-sunken border-line';
             
             html += `
               <div class="min-h-[40px] md:min-h-[50px] ${bgClass} border-2 rounded-lg opacity-60 cursor-not-allowed"
@@ -583,8 +583,8 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
           } else {
             html += `
-              <div class="min-h-[40px] md:min-h-[50px] border-2 border-dashed border-gray-200 rounded-lg 
-                   hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all empty-slot"
+              <div class="min-h-[40px] md:min-h-[50px] border-2 border-dashed border-line rounded-lg 
+                   hover:bg-brand-50 hover:border-brand-300 cursor-pointer transition-all empty-slot"
                    style="width:100%; max-width:100%; box-sizing:border-box;"
                    data-time="${time}" data-station="${station}"></div>
             `;
@@ -610,9 +610,9 @@ document.addEventListener('DOMContentLoaded', function () {
   function updateTodayButton() {
     const todayBtn = document.getElementById('todayBtn');
     if (isToday()) {
-      todayBtn.className = 'flex-1 sm:flex-none px-3 md:px-4 py-2 rounded-md transition-colors text-sm md:text-base font-medium shadow-sm bg-blue-600 text-white';
+      todayBtn.className = 'flex-1 sm:flex-none px-3 md:px-4 py-2 rounded-md transition-colors text-sm md:text-base font-medium shadow-sm bg-brand-700 text-white';
     } else {
-      todayBtn.className = 'flex-1 sm:flex-none px-3 md:px-4 py-2 rounded-md transition-colors text-sm md:text-base font-medium shadow-sm bg-white text-gray-700 hover:bg-gray-50 border border-gray-200';
+      todayBtn.className = 'flex-1 sm:flex-none px-3 md:px-4 py-2 rounded-md transition-colors text-sm md:text-base font-medium shadow-sm bg-surface text-body-soft hover:bg-surface-sunken border border-line';
     }
   }
   // ── Sélecteur de date natif ──────────────────────────────
@@ -625,15 +625,15 @@ let searchTimer  = null;
 let activeFilter = 'all';
 
 const statusBadgeClass = {
-  'planifiée': 'bg-blue-50 text-blue-700 border border-blue-200',
-  'en cours':  'bg-green-50 text-green-700 border border-green-200',
-  'terminée':  'bg-gray-100 text-gray-600 border border-gray-200',
-  'annulée':   'bg-red-50 text-red-700 border border-red-200',
+  'planifiée': 'bg-brand-50 text-brand-700 border border-brand-200',
+  'en cours':  'bg-stable-soft text-stable border border-green-200',
+  'terminée':  'bg-surface-sunken text-body-soft border border-line',
+  'annulée':   'bg-critical-soft text-critical border border-red-200',
 };
 const statusDotClass = {
-  'planifiée': 'bg-blue-400',
+  'planifiée': 'bg-brand-400',
   'en cours':  'bg-green-500',
-  'terminée':  'bg-gray-400',
+  'terminée':  'bg-idle',
   'annulée':   'bg-red-400',
 };
 const statusLabelMap = {
@@ -646,11 +646,11 @@ const statusLabelMap = {
 // ── Helpers pills ────────────────────────────────────────
 function setActivePill(btn) {
   document.querySelectorAll('.filter-pill').forEach(b => {
-    b.classList.remove('active', 'bg-blue-50', 'border-blue-200', 'text-blue-700');
-    b.classList.add('bg-gray-50', 'border-gray-200', 'text-gray-600');
+    b.classList.remove('active', 'bg-brand-50', 'border-brand-200', 'text-brand-700');
+    b.classList.add('bg-surface-sunken', 'border-line', 'text-body-soft');
   });
-  btn.classList.remove('bg-gray-50', 'border-gray-200', 'text-gray-600');
-  btn.classList.add('active', 'bg-blue-50', 'border-blue-200', 'text-blue-700');
+  btn.classList.remove('bg-surface-sunken', 'border-line', 'text-body-soft');
+  btn.classList.add('active', 'bg-brand-50', 'border-brand-200', 'text-brand-700');
 }
 
 // ── Listeners ────────────────────────────────────────────
@@ -699,12 +699,12 @@ async function runSearch() {
     // ── Aucun résultat ───────────────────────────────────
     if (!data.sessions || data.sessions.length === 0) {
       resultsDiv.innerHTML = `
-        <div class="flex flex-col items-center py-8 text-gray-400">
+        <div class="flex flex-col items-center py-8 text-body-faint">
           <svg class="w-10 h-10 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           <p class="text-sm">Aucune séance trouvée</p>
-          <p class="text-xs mt-1 text-gray-300">Essayez un autre filtre ou une autre période</p>
+          <p class="text-xs mt-1 text-body-faint">Essayez un autre filtre ou une autre période</p>
         </div>`;
       return;
     }
@@ -719,12 +719,12 @@ async function runSearch() {
 
     // ── Construction HTML ────────────────────────────────
     let html = `
-      <div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-        <span class="text-xs font-medium text-gray-500">
+      <div class="flex items-center justify-between px-4 py-2.5 bg-surface-sunken border-b border-line">
+        <span class="text-xs font-medium text-body-faint">
           ${data.count} séance${data.count > 1 ? 's' : ''} trouvée${data.count > 1 ? 's' : ''}
         </span>
         <button type="button" id="closeSearchResults"
-                class="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors">
+                class="text-xs text-body-faint hover:text-body flex items-center gap-1 transition-colors">
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path d="M18 6 6 18M6 6l12 12"/>
           </svg>
@@ -741,30 +741,30 @@ async function runSearch() {
         : '—';
 
       html += `
-        <div class="px-4 py-2 bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">${dateLabel}</p>
+        <div class="px-4 py-2 bg-surface-sunken border-b border-line sticky top-0 z-10">
+          <p class="text-xs font-semibold text-body-faint uppercase tracking-wider">${dateLabel}</p>
         </div>`;
 
       grouped[dateKey].forEach(s => {
-        const badge    = statusBadgeClass[s.status] || 'bg-gray-100 text-gray-600 border border-gray-200';
-        const dot      = statusDotClass[s.status]   || 'bg-gray-400';
+        const badge    = statusBadgeClass[s.status] || 'bg-surface-sunken text-body-soft border border-line';
+        const dot      = statusDotClass[s.status]   || 'bg-idle';
         const label    = statusLabelMap[s.status]   || s.status;
         const initials = ((s.patient__first_name?.[0] || '') + (s.patient__last_name?.[0] || '')).toUpperCase();
 
         html += `
-          <div class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors session-search-item"
+          <div class="flex items-center gap-3 px-4 py-3 hover:bg-brand-50 cursor-pointer transition-colors session-search-item"
                data-session-id="${s.id}">
-            <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center
-                        text-xs font-semibold text-blue-700 flex-shrink-0">${initials || '?'}</div>
+            <div class="w-9 h-9 rounded-full bg-brand-50 flex items-center justify-center
+                        text-xs font-semibold text-brand-700 flex-shrink-0">${initials || '?'}</div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-900 truncate">
+              <p class="text-sm font-semibold text-body truncate">
                 ${s.patient__first_name} ${s.patient__last_name}
               </p>
-              <div class="flex items-center gap-1.5 mt-0.5 flex-wrap text-xs text-gray-500">
+              <div class="flex items-center gap-1.5 mt-0.5 flex-wrap text-xs text-body-faint">
                 <span>${s.machine__machine_id || '—'}</span>
-                <span class="text-gray-300">·</span>
+                <span class="text-body-faint">·</span>
                 <span>${s.start_hour || '—'}</span>
-                <span class="text-gray-300">·</span>
+                <span class="text-body-faint">·</span>
                 <span>${s.duration}h</span>
               </div>
             </div>
@@ -901,10 +901,10 @@ async function runSearch() {
     };
 
     const statusClasses = {
-      'planifiée': 'bg-blue-100 text-blue-800',
-      'en cours': 'bg-green-100 text-green-800',
-      'terminée': 'bg-gray-100 text-gray-600',
-      'annulée': 'bg-red-100 text-red-800'
+      'planifiée': 'bg-brand-50 text-brand-700',
+      'en cours': 'bg-stable-soft text-stable',
+      'terminée': 'bg-surface-sunken text-body-soft',
+      'annulée': 'bg-critical-soft text-critical'
     };
 
     const isMaintenance = isMachineInMaintenance(session.machine__machine_id);
@@ -913,19 +913,19 @@ async function runSearch() {
       <h3 class="text-xl font-semibold">
         ${isMaintenance ? '⚠️ ' : ''}Détails de la séance
       </h3>
-      <button type="button" class="p-2 hover:bg-gray-100 rounded-md" id="closeDetailsModalInner">✕</button>
+      <button type="button" class="p-2 hover:bg-surface-sunken rounded-md" id="closeDetailsModalInner">✕</button>
     `;
 
     let actionsHtml = '';
     if (isMaintenance) {
       actionsHtml = `
-        <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mt-4">
-          <p class="text-sm font-semibold text-yellow-800 mb-2">⚠️ Machine en maintenance</p>
+        <div class="bg-warning-soft border-2 border-yellow-300 rounded-lg p-4 mt-4">
+          <p class="text-sm font-semibold text-warning mb-2">⚠️ Machine en maintenance</p>
           <div class="flex gap-3">
             <button type="button" id="moveSessionBtn" class="flex-1 bg-orange-600 text-white py-2.5 px-4 rounded-lg hover:bg-orange-700 transition-colors font-medium">
               Déplacer séance
             </button>
-            <button type="button" id="delaySessionBtn" class="flex-1 bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            <button type="button" id="delaySessionBtn" class="flex-1 bg-brand-700 text-white py-2.5 px-4 rounded-lg hover:bg-brand-800 transition-colors font-medium">
               Retarder séance
             </button>
           </div>
@@ -959,27 +959,27 @@ async function runSearch() {
 
     document.getElementById('sessionDetailsContent').innerHTML = `
       <div>
-        <span class="text-sm text-gray-600">Patient</span>
+        <span class="text-sm text-body-soft">Patient</span>
         <p class="text-lg font-semibold">${session.patient__first_name} ${session.patient__last_name}</p>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <div><span class="text-sm text-gray-600">Heure</span><p class="font-medium">${session.start_hour}</p></div>
-        <div><span class="text-sm text-gray-600">Durée</span><p class="font-medium">${session.duration} heures</p></div>
+        <div><span class="text-sm text-body-soft">Heure</span><p class="font-medium">${session.start_hour}</p></div>
+        <div><span class="text-sm text-body-soft">Durée</span><p class="font-medium">${session.duration} heures</p></div>
       </div>
       <div class="grid grid-cols-2 gap-4">
-        <div><span class="text-sm text-gray-600">Machine</span><p class="font-medium">${session.machine__machine_id}</p></div>
+        <div><span class="text-sm text-body-soft">Machine</span><p class="font-medium">${session.machine__machine_id}</p></div>
         <div>
-          <span class="text-sm text-gray-600">Statut</span>
-          <span class="inline-block px-3 py-1 rounded-full text-sm font-medium mt-1 ${statusClasses[session.status] || 'bg-gray-100 text-gray-600'}">
+          <span class="text-sm text-body-soft">Statut</span>
+          <span class="inline-block px-3 py-1 rounded-full text-sm font-medium mt-1 ${statusClasses[session.status] || 'bg-surface-sunken text-body-soft'}">
             ${statusLabels[session.status] || session.status}
           </span>
-          ${isMaintenance ? '<div class="mt-1 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">Maintenance</div>' : ''}
+          ${isMaintenance ? '<div class="mt-1 text-xs bg-warning-soft text-warning px-2 py-1 rounded-full font-medium">Maintenance</div>' : ''}
         </div>
       </div>
       ${session.notes ? `
         <div>
-          <span class="text-sm text-gray-600">Notes</span>
-          <p class="text-sm mt-1 text-gray-700">${session.notes}</p>
+          <span class="text-sm text-body-soft">Notes</span>
+          <p class="text-sm mt-1 text-body-soft">${session.notes}</p>
         </div>
       ` : ''}
       ${actionsHtml}

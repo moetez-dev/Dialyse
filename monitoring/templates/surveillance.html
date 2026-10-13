@@ -88,6 +88,20 @@ let alarmPlaying = false;
 // ===============================
 
 
+
+// Les valeurs injectées dans innerHTML viennent de la base (noms de patients,
+// libellés de machines, messages d'alerte). Sans échappement, un nom contenant
+// du balisage serait interprété comme du HTML.
+function esc(value) {
+    if (value === null || value === undefined) return "";
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
 function formatAlertTime(alert){
     const raw = alert.timestamp || alert.time;
     if (!raw) return "";
@@ -196,7 +210,7 @@ if (data.measurements && data.measurements.length > 0) {
         const param = (label, value, unit) => `
             <div>
               <dt class="text-xs text-body-faint">${label}</dt>
-              <dd class="tabular-nums text-body">${value ?? "—"}${value == null ? "" : `<span class="ml-0.5 text-xs text-body-faint">${unit}</span>`}</dd>
+              <dd class="tabular-nums text-body">${value == null ? "—" : esc(value)}${value == null ? "" : `<span class="ml-0.5 text-xs text-body-faint">${unit}</span>`}</dd>
             </div>`;
 
         if (sessions.length === 0) {
@@ -220,8 +234,8 @@ if (data.measurements && data.measurements.length > 0) {
             <article class="rounded-card border bg-surface p-4 ${st.card}">
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <h3 class="truncate font-medium text-body">${session.patient}</h3>
-                  <p class="mt-0.5 truncate text-xs text-body-faint">${session.machine}</p>
+                  <h3 class="truncate font-medium text-body">${esc(session.patient)}</h3>
+                  <p class="mt-0.5 truncate text-xs text-body-faint">${esc(session.machine)}</p>
                 </div>
                 <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${st.pill}">
                   ${st.label}
@@ -242,11 +256,11 @@ if (data.measurements && data.measurements.length > 0) {
                 <summary class="cursor-pointer list-none text-xs text-body-soft hover:text-body">
                   Voir la capture du générateur
                 </summary>
-                <img src="${session.image_url}" alt="Écran du générateur ${session.machine}"
+                <img src="${esc(session.image_url)}" alt="Écran du générateur ${esc(session.machine)}"
                      class="mt-2 w-full rounded-lg border border-line object-cover" loading="lazy">
                 <p class="mt-1.5 flex items-center justify-between text-[11px] text-body-faint">
-                  <span>Source : ${session.source || "AI_OCR"}</span>
-                  <span>${session.status_validation || "VALIDATED"}</span>
+                  <span>Source : ${esc(session.source || 'AI_OCR')}</span>
+                  <span>${esc(session.status_validation || 'VALIDATED')}</span>
                 </p>
               </details>` : ""}
 
@@ -307,13 +321,13 @@ if (data.measurements && data.measurements.length > 0) {
                 <span class="shrink-0 text-xs tabular-nums text-body-faint">${formatAlertTime(alert)}</span>
               </div>
 
-              <p class="mt-1.5 text-sm leading-relaxed text-body">${cleanAlertMessage(alert.message)}</p>
+              <p class="mt-1.5 text-sm leading-relaxed text-body">${esc(cleanAlertMessage(alert.message))}</p>
 
-              ${alert.machine ? `<p class="mt-1 text-xs text-body-faint">${alert.machine}</p>` : ""}
+              ${alert.machine ? `<p class="mt-1 text-xs text-body-faint">${esc(alert.machine)}</p>` : ""}
 
               ${acknowledged
                 ? `<p class="mt-2.5 text-xs text-body-faint">Acquittée</p>`
-                : `<button type="button" onclick="ackAlert('${alert.id}')"
+                : `<button type="button" onclick="ackAlert('${esc(alert.id)}')"
                      class="mt-2.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs
                             font-medium text-body hover:bg-surface-sunken">
                      Acquitter
