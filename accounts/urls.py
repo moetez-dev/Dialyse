@@ -5,7 +5,7 @@ urlpatterns = [
     path("api/", include("api.urls")),
     
     path("error/", views.error, name="error"),
-    path('', views.login_view, name='login_view'),
+    path('connexion/', views.login_view, name='login_view'),
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile, name='profile'),
     path('docteurs/', views.docteurs_list, name='docteurs'),

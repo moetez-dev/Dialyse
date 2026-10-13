@@ -1,0 +1,7 @@
+<div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <h1 class="font-serif text-2xl tracking-tight text-body">{{ title }}</h1>
+    {% if subtitle %}<p class="mt-1 text-sm text-body-soft">{{ subtitle }}</p>{% endif %}
+  </div>
+  {% if actions %}<div class="flex flex-wrap items-center gap-2">{{ actions }}</div>{% endif %}
+</div>

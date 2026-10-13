@@ -1,0 +1,31 @@
+{% load icons %}
+{% comment %}
+django.contrib.messages est configuré (MESSAGE_TAGS dans settings) et utilisé
+par le décorateur et une dizaine de vues, mais aucun gabarit ne l'affichait :
+tous ces messages — dont « changez votre mot de passe » — étaient invisibles.
+{% endcomment %}
+{% if messages %}
+  <div class="mb-5 space-y-2" role="status" aria-live="polite">
+    {% for message in messages %}
+      <div class="flex items-start gap-2.5 rounded-lg border p-3.5 text-sm
+        {% if message.level_tag == 'error' %}border-critical/30 bg-critical-soft text-body
+        {% elif message.level_tag == 'warning' %}border-warning/30 bg-warning-soft text-body
+        {% elif message.level_tag == 'success' %}border-stable/30 bg-stable-soft text-body
+        {% else %}border-line bg-surface-sunken text-body{% endif %}">
+
+        <span class="mt-0.5 shrink-0
+          {% if message.level_tag == 'error' %}text-critical
+          {% elif message.level_tag == 'warning' %}text-warning
+          {% elif message.level_tag == 'success' %}text-stable
+          {% else %}text-body-faint{% endif %}">
+          {% if message.level_tag == 'error' %}{% icon "alert-circle" cls="h-4 w-4" %}
+          {% elif message.level_tag == 'warning' %}{% icon "alert-triangle" cls="h-4 w-4" %}
+          {% elif message.level_tag == 'success' %}{% icon "check-circle" cls="h-4 w-4" %}
+          {% else %}{% icon "help-circle" cls="h-4 w-4" %}{% endif %}
+        </span>
+
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

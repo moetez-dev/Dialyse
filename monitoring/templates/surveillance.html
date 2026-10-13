@@ -221,6 +221,14 @@ let alarmPlaying = false;
 // LOAD LIVE DATA
 // ===============================
 
+
+function formatAlertTime(alert){
+    const raw = alert.timestamp || alert.time;
+    if (!raw) return "";
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? "" : d.toLocaleTimeString();
+}
+
 function loadLiveData(){
 
     fetch("/api/real-monitoring/")
@@ -261,15 +269,36 @@ if(data.measurements && data.measurements.length > 0){
         // UPDATE KPI
         // ===============================
 
-        document.getElementById("sessions-count").textContent = sessions.length;
-        document.getElementById("machines-count").textContent = sessions.length;
+        // `sessions` contient une entrée par MESURE (les 20 dernières), pas par
+        // séance : compter sa longueur affichait 20 partout. On déduplique.
+        const seanceIds = new Set(
+            (data.measurements || []).map(m => m.seance_id).filter(Boolean));
+        const machineIds = new Set(
+            (data.measurements || []).map(m => m.machine_id || m.machine).filter(Boolean));
 
-        let critical = alerts.filter(a => a.niveau === "HIGH").length;
-        let warning = alerts.filter(a => a.niveau === "MEDIUM").length;
+        document.getElementById("sessions-count").textContent = seanceIds.size;
+        document.getElementById("machines-count").textContent = machineIds.size;
+
+        // Le niveau est du texte libre : monitoring.alerte écrit RED/YELLOW,
+        // monitoring.views écrit HIGH/MEDIUM. Les deux comptent.
+        const level = a => (a.niveau || "").trim().toUpperCase();
+        const CRIT = ["HIGH", "RED", "CRITIQUE"];
+        const WARN = ["MEDIUM", "YELLOW", "ALERTE"];
+        const openAlerts = alerts.filter(a => (a.status || "NEW") !== "RESOLVED");
+
+        let critical = openAlerts.filter(a => CRIT.includes(level(a))).length;
+        let warning = openAlerts.filter(a => WARN.includes(level(a))).length;
+
+        // Un patient est « stable » si aucune alerte ouverte ne vise sa séance.
+        const troubled = new Set(
+            openAlerts.map(a => a.seance_id).filter(Boolean));
+        const stable = troubled.size
+            ? Math.max(0, seanceIds.size - troubled.size)
+            : Math.max(0, seanceIds.size - (critical ? 1 : 0));
 
         document.getElementById("critical-alerts").textContent = critical;
         document.getElementById("warning-alerts").textContent = warning;
-        document.getElementById("stable-patients").textContent = Math.max(0, sessions.length - critical);
+        document.getElementById("stable-patients").textContent = stable;
         document.getElementById("last-update").textContent = "Dernière mise à jour : " + new Date().toLocaleTimeString();
 
         // ===============================
@@ -399,12 +428,7 @@ if(data.measurements && data.measurements.length > 0){
                     text-xs
                     text-gray-500">
 
-                    ${
-                    new Date(
-                    alert.time
-                    )
-                    .toLocaleTimeString()
-                    }
+                    ${formatAlertTime(alert)}
 
                     </span>
 

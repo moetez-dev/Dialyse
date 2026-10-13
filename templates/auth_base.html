@@ -1,0 +1,85 @@
+{% load static %}{% load icons %}<!doctype html>
+{% comment %}
+Gabarit des pages hors application : connexion, réinitialisation.
+Pas de navbar ni de volet latéral — seulement l'identité et le formulaire.
+{% endcomment %}
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>{% block title %}Dialyse Manager{% endblock %}</title>
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        if (t === "dark") document.documentElement.classList.add("dark");
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+  <link rel="stylesheet" href="{% static 'css/index.css' %}">
+</head>
+
+<body class="min-h-full bg-canvas text-body antialiased">
+  <div class="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
+
+    {# Volet gauche : rappelle où l'on est. Masqué sur petit écran. #}
+    <aside class="relative hidden flex-col justify-between bg-brand-900 p-12 lg:flex">
+      <a href="{% url 'landing' %}" class="flex items-center gap-2.5">
+        <span class="grid h-8 w-8 place-items-center rounded-lg bg-white/10 text-white">
+          {% icon "activity" cls="h-[18px] w-[18px]" %}
+        </span>
+        <span class="font-serif text-[17px] font-semibold tracking-tight text-white">Dialyse&nbsp;Manager</span>
+      </a>
+
+      <div class="max-w-sm">
+        <p class="font-serif text-[1.7rem] leading-snug text-white">
+          {% block aside_title %}La surveillance de l'unité, sur un seul écran.{% endblock %}
+        </p>
+        <p class="mt-4 text-[15px] leading-relaxed text-brand-100">
+          {% block aside_body %}Paramètres relevés en continu, alertes dès qu'un
+          seuil est dépassé, dossier de séance constitué au fil de l'eau.{% endblock %}
+        </p>
+      </div>
+
+      <p class="text-xs text-brand-200">Accès réservé au personnel de l'unité.</p>
+    </aside>
+
+    {# Volet droit : le formulaire. #}
+    <main class="flex flex-col px-5 py-8 sm:px-10">
+      <div class="flex items-center justify-between lg:justify-end">
+        <a href="{% url 'landing' %}" class="flex items-center gap-2.5 lg:hidden">
+          <span class="grid h-8 w-8 place-items-center rounded-lg bg-brand-700 text-white">
+            {% icon "activity" cls="h-[18px] w-[18px]" %}
+          </span>
+          <span class="font-serif text-[17px] font-semibold tracking-tight">Dialyse&nbsp;Manager</span>
+        </a>
+        <button type="button" data-theme-toggle
+                class="grid h-9 w-9 place-items-center rounded-lg border border-line text-body-soft hover:bg-surface-sunken hover:text-body"
+                aria-label="Changer de thème">
+          <span class="hidden dark:block">{% icon "sun" cls="h-[18px] w-[18px]" %}</span>
+          <span class="block dark:hidden">{% icon "moon" cls="h-[18px] w-[18px]" %}</span>
+        </button>
+      </div>
+
+      <div class="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-10">
+        {% block content %}{% endblock %}
+      </div>
+
+      <p class="mx-auto w-full max-w-sm text-xs text-body-faint">
+        <a href="{% url 'landing' %}" class="hover:text-body-soft">← Retour à l'accueil</a>
+      </p>
+    </main>
+  </div>
+
+  <script src="{% static 'js/ui.js' %}" defer></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

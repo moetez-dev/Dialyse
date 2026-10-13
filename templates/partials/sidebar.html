@@ -1,91 +1,43 @@
 {% load icons %}
+{% comment %}
+Navigation latérale. Les entrées viennent de core/navigation.py via le
+processeur de contexte : un seul jeu de classes, un seul état actif, et un
+filtrage par capacité plutôt que par comparaison de chaînes sur le rôle.
+{% endcomment %}
 
 <aside id="sidebar" class="
-  fixed lg:sticky top-[57px] left-0 h-[calc(100vh-57px)]
-  bg-white border-r border-gray-200 w-64 z-30
+  fixed lg:sticky top-navbar left-0 h-[calc(100vh-var(--spacing-navbar))]
+  w-64 shrink-0 overflow-y-auto border-r border-line bg-surface z-30
   transition-transform duration-300 ease-in-out
   -translate-x-full lg:translate-x-0
 ">
+  <nav class="space-y-6 p-4" aria-label="Navigation principale">
+    {% for group in nav_groups %}
+      <div>
+        <p class="px-3 pb-2 text-xs font-medium tracking-wide text-body-faint">
+          {{ group.group }}
+        </p>
 
-  <nav class="p-4 space-y-2">
-
-    <!-- ADMIN : TOUT le sidebar -->
-    {% if current_user.role.name == "Admin"  %}
-      <a class="w-full flex items-center gap-3 px-4 py-3 rounded-md transition-color hover:bg-gray-100
-         {% if current_user.first_login %}disabled-link{% endif %}"
-         href="{% url 'monitoring:dashboard' %}">
-        {% icon "home" cls="h-5 w-5 text-indigo-500" %} Dashboard
-      </a>
-    {% endif %}
-
-    {% if current_user.role.name == "Admin" %}
-      <a class="w-full flex items-center gap-3 px-4 py-3 rounded-md transition-colors hover:bg-gray-100
-         {% if current_user.first_login %}disabled-link{% endif %}"
-         href="{% url 'machines:raspi-management' %}">
-        {% icon "camera" cls="h-5 w-5 text-green-700" %} Gestion des appareils
-      </a>
-    {% endif %}
-
-    <a class="w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors text-gray-700 hover:bg-gray-100
-       {% if current_user.first_login %}disabled-link{% endif %}"
-       href="{% url 'monitoring:surveillance' %}">
-      {% icon "heart" cls="h-5 w-5 text-gray-500" %} Surveillance
-    </a>
-    <a href="{% url 'monitoring:alerts_history' %}"
-     class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100">
-    
-      {% icon "alert-circle" cls="h-5 w-5 text-red-500" %}
-    
-    <span>Historique des alertes</span>
-
-    </a>
-    <a class="w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors text-gray-700 hover:bg-gray-100
-       {% if current_user.first_login %}disabled-link{% endif %}"
-       href="{% url 'patients:patient' %}">
-      {% icon "users" cls="h-5 w-5 text-gray-500" %} Patients
-    </a>
-        {% if current_user.role.name != "Docteur"  %}
-    <a class="w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors text-gray-700 hover:bg-gray-100
-       {% if current_user.first_login %}disabled-link{% endif %}"
-       href="{% url 'machines:machines' %}">
-      {% icon "waves" cls="h-5 w-5 text-gray-500" %} Machines
-    </a>
-    {% endif %}
-
-    
-    <a class="w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors text-gray-700 hover:bg-gray-100
-       {% if current_user.first_login %}disabled-link{% endif %}"
-       href="{% url 'seances:planning' %}">
-      {% icon "calendar" cls="h-5 w-5 text-gray-500" %} Séances
-    </a>
-    <a href="{% url 'monitoring:seances_history' %}"
-    class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100">
-
-      {% icon "calendar" cls="h-5 w-5 text-blue-500" %}
-
-      <span>Historique des séances</span>
-
-    </a>
-    {% if current_user.role.name == "Admin"  %}
-      <a class="w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors text-gray-700 hover:bg-gray-100
-         {% if current_user.first_login %}disabled-link{% endif %}"
-         href="{% url 'accounts:docteurs' %}">
-        {% icon "stethoscope" cls="h-5 w-5 text-gray-500" %} Docteurs
-      </a>
-    {% endif %}
-    
-
-    {% if current_user.role.name != "Infirmier" %}
-      <a class="w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors text-gray-700 hover:bg-gray-100
-         {% if current_user.first_login %}disabled-link{% endif %}"
-         href="{% url 'accounts:nurses' %}">
-        {% icon "user" cls="h-5 w-5 text-gray-500" %} Infirmiers
-      </a>
-    {% endif %}
-    
-
+        <ul class="space-y-0.5">
+          {% for item in group.items %}
+            <li>
+              <a href="{{ item.href }}"
+                 {% if item.active %}aria-current="page"{% endif %}
+                 {% if item.locked %}title="Changez votre mot de passe pour accéder à cette page"{% endif %}
+                 class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors
+                        {% if item.active %}bg-brand-50 font-medium text-brand-800 dark:bg-brand-950 dark:text-brand-200
+                        {% else %}text-body-soft hover:bg-surface-sunken hover:text-body{% endif %}
+                        {% if item.locked %}disabled-link{% endif %}">
+                {% icon item.icon cls="h-[18px] w-[18px] shrink-0" %}
+                <span class="truncate">{{ item.label }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
   </nav>
 </aside>
 
-<div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden hidden"
-  style="background: rgba(0,0,0,.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);"></div>
+<div id="sidebarOverlay"
+     class="fixed inset-0 z-20 hidden bg-ink-950/40 lg:hidden"></div>

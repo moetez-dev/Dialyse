@@ -1,0 +1,108 @@
+# Dialyse — local development stack.
+#
+#   docker compose up -d              web + broker + AI service + MQTT listener
+#   docker compose up -d web          Django only (dashboard at http://localhost:8000)
+#   docker compose logs -f listener   follow the MQTT pipeline
+#
+# The project directory is bind-mounted into every Python service, so edits on the
+# host take effect immediately and db.sqlite3 / media/ stay on the host.
+
+services:
+  web:
+    build: .
+    image: dialyse-backend
+    container_name: dialyse-web
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      RUN_MIGRATIONS: "1"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,web,0.0.0.0"
+      MQTT_BROKER: mqtt
+      AI_SERVICE_URL: http://ai:8001/analyze/
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  ai:
+    build: .
+    image: dialyse-backend
+    container_name: dialyse-ai
+    command: python -m uvicorn qwen_api:app --host 0.0.0.0 --port 8001
+    environment:
+      # Vision model runs on the host (or anywhere reachable); the service falls
+      # back to empty readings when it is unavailable.
+      OLLAMA_URL: http://host.docker.internal:11434/api/generate
+    env_file:
+      - .env
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Rebuilds static/css/index.css whenever a template or the CSS source changes.
+  css:
+    image: node:24-alpine
+    container_name: dialyse-css
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run css:watch"
+    volumes:
+      - .:/app
+      - css-node-modules:/app/node_modules
+    # Tailwind's --watch treats stdin EOF as "stop", so it needs a TTY held open.
+    stdin_open: true
+    tty: true
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: dialyse-mqtt
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./docker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+
+  listener:
+    build: .
+    image: dialyse-backend
+    container_name: dialyse-listener
+    command: python mqtt_listener.py
+    environment:
+      WAIT_FOR_DB: "1"
+      MQTT_BROKER: mqtt
+      MQTT_PORT: "1883"
+      AI_SERVICE_URL: http://ai:8001/analyze/
+      # Reach an n8n instance running on the host, if there is one.
+      N8N_CRITICAL_RISK_WEBHOOK_URL: http://host.docker.internal:5678/webhook/dialysis-critical-risk
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      web:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+
+volumes:
+  mosquitto-data:
+  css-node-modules:

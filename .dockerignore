@@ -1,0 +1,29 @@
+# Virtualenvs (the committed .venv is Windows-only and must never reach the image)
+.venv/
+venv/
+env/
+
+.git/
+.gitignore
+.github/
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Flutter app: not part of the backend image
+mobile/
+
+# Local state (bind-mounted by compose instead)
+*.log
+.DS_Store
+.idea/
+.vscode/
+offline_buffer.db
+
+docker-compose*.yml
+Dockerfile
+.dockerignore
+node_modules/

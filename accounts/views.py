@@ -21,18 +21,6 @@ from accounts.models import UserActivity
 # def home(request):
 # return render(request, 'home.html')
 
-def dashboard(request):
-
-    activity_rows = UserActivity.objects.all().order_by("-login_at")
-
-    return render(
-        request,
-        "dashboard.html",
-        {
-            "activity_rows": activity_rows
-        }
-    )
-
 def login_view(request):
     auth_error = None
     if request.method == "POST":

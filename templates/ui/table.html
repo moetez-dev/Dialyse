@@ -1,0 +1,15 @@
+<div class="overflow-x-auto rounded-card border border-line bg-surface">
+  <table class="w-full text-sm">
+    {% if columns %}
+      <thead class="border-b border-line bg-surface-sunken text-left">
+        <tr>
+          {% for col in columns %}
+            <th scope="col" class="px-4 py-3 font-medium text-body-soft">{{ col }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+    {% endif %}
+    <tbody class="divide-y divide-line">{{ rows }}</tbody>
+  </table>
+  {% if empty %}<p class="px-4 py-6 text-center text-sm text-body-faint">{{ empty }}</p>{% endif %}
+</div>

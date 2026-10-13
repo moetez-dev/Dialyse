@@ -1,46 +1,50 @@
-{% load static %}
-{% if current_user.first_login %}
-<style>
-    .disabled-link {
-        pointer-events: none;
-        opacity: 0.5;
-    }
-</style>
-
-{% endif %}
-<!doctype html>
-<html lang="fr">
+{% load static %}<!doctype html>
+<html lang="fr" class="h-full">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <title>{% block title %}Dialyse Manager{% endblock %}</title>
 
-  {# Ton CSS Tailwind compilé (index.css) #}
-  <link rel="stylesheet" href="{% static 'css/styles/globals.css' %}">
+  {# Applique le thème avant le premier rendu pour éviter un flash clair. #}
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) {
+          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        if (t === "dark") document.documentElement.classList.add("dark");
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  {# Feuille Tailwind compilée depuis static/css/src/app.css — ne pas éditer à la main. #}
   <link rel="stylesheet" href="{% static 'css/index.css' %}">
   {% block extra_css %}{% endblock %}
 </head>
 
-<body class="min-h-screen bg-gray-50"
-      {% if current_user.is_authenticated %}user-logged-in{% endif %}>
-
-  
+<body class="legacy-theme min-h-full bg-canvas text-body">
 
   {% include "partials/navbar.html" %}
 
   <div class="flex">
     {% include "partials/sidebar.html" %}
 
-    <main class="flex-1 min-w-0 p-4 lg:p-6 lg:ml-64">
-    {% block content %}{% endblock %}
-  </main>
+    <main class="flex-1 min-w-0 p-4 lg:p-6">
+      {% include "partials/messages.html" %}
+      {% block content %}{% endblock %}
+    </main>
   </div>
 
-  {# JS minimal pour toggle sidebar #}
   <script src="{% static 'js/ui.js' %}" defer></script>
 
-
-  {% block extra_js %}
-  {% endblock %}
+  {% block extra_js %}{% endblock %}
+  {% block extra_scripts %}{% endblock %}
 </body>
 </html>

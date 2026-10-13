@@ -1,0 +1,478 @@
+{% load static %}{% load icons %}<!doctype html>
+<html lang="fr" class="h-full scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Dialyse Manager — surveillance continue des séances de dialyse</title>
+  <meta name="description"
+        content="Dialyse Manager relève en continu les paramètres de chaque générateur de dialyse, signale les écarts dès qu'ils apparaissent et constitue le dossier de séance automatiquement." />
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        if (t === "dark") document.documentElement.classList.add("dark");
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+  <link rel="stylesheet" href="{% static 'css/index.css' %}">
+</head>
+
+<body class="min-h-full bg-canvas text-body antialiased">
+
+<!-- ─────────────────────────────  en-tête  ───────────────────────────── -->
+<header class="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur">
+  <div class="mx-auto flex h-14 max-w-6xl items-center gap-4 px-5">
+    <a href="/" class="flex items-center gap-2.5">
+      <span class="grid h-8 w-8 place-items-center rounded-lg bg-brand-700 text-white">
+        {% icon "activity" cls="h-[18px] w-[18px]" %}
+      </span>
+      <span class="font-serif text-[17px] font-semibold tracking-tight text-body">Dialyse&nbsp;Manager</span>
+    </a>
+
+    <nav class="ml-auto hidden items-center gap-7 text-sm text-body-soft md:flex">
+      <a href="#surveillance" class="hover:text-body">Surveillance</a>
+      <a href="#alertes" class="hover:text-body">Alertes</a>
+      <a href="#lecture" class="hover:text-body">Lecture des écrans</a>
+      <a href="#seance" class="hover:text-body">Déroulé d'une séance</a>
+    </nav>
+
+    <button type="button" data-theme-toggle
+            class="ml-auto grid h-9 w-9 place-items-center rounded-lg border border-line text-body-soft hover:bg-surface-sunken hover:text-body md:ml-0"
+            aria-label="Changer de thème">
+      <span class="hidden dark:block">{% icon "sun" cls="h-[18px] w-[18px]" %}</span>
+      <span class="block dark:hidden">{% icon "moon" cls="h-[18px] w-[18px]" %}</span>
+    </button>
+
+    <a href="{% url 'accounts:login_view' %}"
+       class="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800">
+      Se connecter
+    </a>
+  </div>
+</header>
+
+<!-- ─────────────────────────────  hero  ───────────────────────────── -->
+<section class="border-b border-line bg-surface">
+  <div class="mx-auto grid max-w-6xl gap-14 px-5 py-16 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:py-24">
+
+    <div class="max-w-xl">
+      <h1 class="font-serif text-[2.1rem] leading-[1.12] tracking-tight text-body sm:text-[2.9rem]">
+        Surveiller douze postes sans quitter le chevet du patient.
+      </h1>
+
+      <p class="mt-6 text-[17px] leading-relaxed text-body-soft">
+        Dialyse Manager relève en continu les paramètres de chaque générateur,
+        signale un écart dès qu'il apparaît, et constitue le dossier de séance
+        pendant que vous soignez.
+      </p>
+
+      <div class="mt-9 flex flex-wrap items-center gap-3">
+        <a href="{% url 'accounts:login_view' %}"
+           class="rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-800">
+          Se connecter
+        </a>
+        <a href="#surveillance"
+           class="rounded-lg border border-line px-5 py-2.5 text-sm font-medium text-body hover:bg-surface-sunken">
+          Comment ça fonctionne
+        </a>
+      </div>
+
+      <p class="mt-7 max-w-md text-sm leading-relaxed text-body-faint">
+        Conçu pour les unités d'hémodialyse : un poste de surveillance partagé
+        par l'équipe soignante, alimenté directement par les générateurs.
+      </p>
+    </div>
+
+    <!-- l'unité en un coup d'œil : le cœur du produit, montré tel quel -->
+    <div class="rounded-card border border-line bg-canvas p-4 shadow-sm sm:p-5">
+      <div class="mb-4 flex items-center justify-between px-1">
+        <div class="flex items-center gap-2 text-sm font-medium text-body">
+          <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-stable opacity-60 motion-reduce:hidden"></span>
+            <span class="relative inline-flex h-2 w-2 rounded-full bg-stable"></span>
+          </span>
+          Salle A — 4 postes actifs
+        </div>
+        <span class="text-xs text-body-faint tabular-nums">mise à jour il y a 2&nbsp;s</span>
+      </div>
+
+      <div class="grid gap-3 sm:grid-cols-2">
+        <!-- poste stable -->
+        <article class="rounded-lg border border-line bg-surface p-4">
+          <div class="flex items-baseline justify-between">
+            <span class="font-medium text-body">Poste 1</span>
+            <span class="rounded-full bg-stable-soft px-2 py-0.5 text-xs font-medium text-stable">Stable</span>
+          </div>
+          <p class="mt-0.5 text-xs text-body-faint">M. Khelifi — 2 h 40 restantes</p>
+          <dl class="mt-3 grid grid-cols-3 gap-y-2 text-sm tabular-nums">
+            <div><dt class="text-xs text-body-faint">Qb</dt><dd class="text-body">300</dd></div>
+            <div><dt class="text-xs text-body-faint">PA</dt><dd class="text-body">−120</dd></div>
+            <div><dt class="text-xs text-body-faint">PV</dt><dd class="text-body">140</dd></div>
+            <div><dt class="text-xs text-body-faint">PTM</dt><dd class="text-body">165</dd></div>
+            <div><dt class="text-xs text-body-faint">UF</dt><dd class="text-body">1 420</dd></div>
+            <div><dt class="text-xs text-body-faint">Hép.</dt><dd class="text-body">2,5</dd></div>
+          </dl>
+        </article>
+
+        <!-- poste en alerte : la raison d'être du produit -->
+        <article class="rounded-lg border border-critical/40 bg-surface p-4 ring-1 ring-critical/15">
+          <div class="flex items-baseline justify-between">
+            <span class="font-medium text-body">Poste 2</span>
+            <span class="rounded-full bg-critical-soft px-2 py-0.5 text-xs font-medium text-critical">PTM élevée</span>
+          </div>
+          <p class="mt-0.5 text-xs text-body-faint">Mme Brahmi — 1 h 05 restantes</p>
+          <dl class="mt-3 grid grid-cols-3 gap-y-2 text-sm tabular-nums">
+            <div><dt class="text-xs text-body-faint">Qb</dt><dd class="text-body">280</dd></div>
+            <div><dt class="text-xs text-body-faint">PA</dt><dd class="text-body">−145</dd></div>
+            <div><dt class="text-xs text-body-faint">PV</dt><dd class="text-body">178</dd></div>
+            <div><dt class="text-xs text-body-faint">PTM</dt><dd class="font-semibold text-critical">252</dd></div>
+            <div><dt class="text-xs text-body-faint">UF</dt><dd class="text-body">2 050</dd></div>
+            <div><dt class="text-xs text-body-faint">Hép.</dt><dd class="text-body">3,0</dd></div>
+          </dl>
+        </article>
+
+        <article class="rounded-lg border border-line bg-surface p-4">
+          <div class="flex items-baseline justify-between">
+            <span class="font-medium text-body">Poste 3</span>
+            <span class="rounded-full bg-stable-soft px-2 py-0.5 text-xs font-medium text-stable">Stable</span>
+          </div>
+          <p class="mt-0.5 text-xs text-body-faint">M. Saïdi — 3 h 15 restantes</p>
+          <dl class="mt-3 grid grid-cols-3 gap-y-2 text-sm tabular-nums">
+            <div><dt class="text-xs text-body-faint">Qb</dt><dd class="text-body">320</dd></div>
+            <div><dt class="text-xs text-body-faint">PA</dt><dd class="text-body">−98</dd></div>
+            <div><dt class="text-xs text-body-faint">PV</dt><dd class="text-body">132</dd></div>
+            <div><dt class="text-xs text-body-faint">PTM</dt><dd class="text-body">148</dd></div>
+            <div><dt class="text-xs text-body-faint">UF</dt><dd class="text-body">640</dd></div>
+            <div><dt class="text-xs text-body-faint">Hép.</dt><dd class="text-body">2,0</dd></div>
+          </dl>
+        </article>
+
+        <article class="rounded-lg border border-warning/40 bg-surface p-4">
+          <div class="flex items-baseline justify-between">
+            <span class="font-medium text-body">Poste 4</span>
+            <span class="rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning">À surveiller</span>
+          </div>
+          <p class="mt-0.5 text-xs text-body-faint">Mme Ferchichi — 0 h 20 restantes</p>
+          <dl class="mt-3 grid grid-cols-3 gap-y-2 text-sm tabular-nums">
+            <div><dt class="text-xs text-body-faint">Qb</dt><dd class="text-body">250</dd></div>
+            <div><dt class="text-xs text-body-faint">PA</dt><dd class="font-semibold text-warning">−168</dd></div>
+            <div><dt class="text-xs text-body-faint">PV</dt><dd class="text-body">155</dd></div>
+            <div><dt class="text-xs text-body-faint">PTM</dt><dd class="text-body">190</dd></div>
+            <div><dt class="text-xs text-body-faint">UF</dt><dd class="text-body">2 780</dd></div>
+            <div><dt class="text-xs text-body-faint">Hép.</dt><dd class="text-body">2,5</dd></div>
+          </dl>
+        </article>
+      </div>
+
+      <p class="mt-4 px-1 text-xs text-body-faint">
+        Exemple de l'écran de surveillance. Les valeurs proviennent des générateurs.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  le constat  ───────────────────────────── -->
+<section class="border-b border-line">
+  <div class="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+    <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+      <h2 class="font-serif text-[1.65rem] leading-snug tracking-tight text-body sm:text-[2rem]">
+        Entre deux relevés, une unité fonctionne à l'aveugle.
+      </h2>
+      <div class="space-y-5 text-[15.5px] leading-relaxed text-body-soft">
+        <p>
+          Les paramètres sont notés toutes les trente minutes, à la main, sur une
+          feuille par patient. Entre deux passages, une chute de pression
+          artérielle ou une montée de PTM n'est vue qu'au relevé suivant.
+        </p>
+        <p>
+          Les feuilles sont ensuite retranscrites dans le dossier. Le temps passé
+          à recopier est du temps pris sur la surveillance, et chaque
+          retranscription est une occasion d'erreur.
+        </p>
+        <p class="text-body">
+          Dialyse Manager supprime le relevé manuel : les valeurs arrivent seules,
+          en continu, et le dossier se remplit au fil de la séance.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  surveillance  ───────────────────────────── -->
+<section id="surveillance" class="scroll-mt-16 border-b border-line bg-surface">
+  <div class="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+    <h2 class="max-w-2xl font-serif text-[1.65rem] leading-snug tracking-tight text-body sm:text-[2rem]">
+      Les six paramètres qui comptent, relevés en continu
+    </h2>
+    <p class="mt-4 max-w-2xl text-[15.5px] leading-relaxed text-body-soft">
+      Chaque poste remonte ses valeurs toutes les vingt à soixante secondes,
+      selon le rythme configuré pour la séance. Les valeurs hors limites
+      physiologiques sont écartées avant d'entrer au dossier.
+    </p>
+
+    <dl class="mt-10 grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="border-t border-line pt-4">
+        <dt class="font-medium text-body">Débit sang <span class="text-body-faint">(Qb)</span></dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          Le débit de la pompe. Une baisse signale souvent un problème d'abord vasculaire.
+        </dd>
+      </div>
+      <div class="border-t border-line pt-4">
+        <dt class="font-medium text-body">Pression artérielle <span class="text-body-faint">(PA)</span></dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          Pression à l'aspiration. Une valeur trop négative traduit une aiguille mal positionnée.
+        </dd>
+      </div>
+      <div class="border-t border-line pt-4">
+        <dt class="font-medium text-body">Pression veineuse <span class="text-body-faint">(PV)</span></dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          Pression au retour. Sa montée accompagne une coagulation du circuit.
+        </dd>
+      </div>
+      <div class="border-t border-line pt-4">
+        <dt class="font-medium text-body">Pression transmembranaire <span class="text-body-faint">(PTM)</span></dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          L'indicateur de l'état du dialyseur. Sa dérive annonce un encrassement.
+        </dd>
+      </div>
+      <div class="border-t border-line pt-4">
+        <dt class="font-medium text-body">Ultrafiltration <span class="text-body-faint">(UF)</span></dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          Volume soustrait et débit de soustraction, suivis par rapport à l'objectif de séance.
+        </dd>
+      </div>
+      <div class="border-t border-line pt-4">
+        <dt class="font-medium text-body">Héparine</dt>
+        <dd class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          Débit d'anticoagulation, tracé avec le reste de la séance.
+        </dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  alertes  ───────────────────────────── -->
+<section id="alertes" class="scroll-mt-16 border-b border-line">
+  <div class="mx-auto grid max-w-6xl gap-12 px-5 py-16 lg:grid-cols-2 lg:items-start lg:gap-16 lg:py-20">
+    <div>
+      <h2 class="font-serif text-[1.65rem] leading-snug tracking-tight text-body sm:text-[2rem]">
+        Une alerte quand c'est utile, pas à chaque mesure
+      </h2>
+      <div class="mt-5 space-y-5 text-[15.5px] leading-relaxed text-body-soft">
+        <p>
+          Les seuils sont définis séance par séance, pas une fois pour toute
+          l'unité : la pression veineuse acceptable d'un patient ne l'est pas
+          forcément pour son voisin.
+        </p>
+        <p>
+          Quand un paramètre sort de ses limites, l'alerte est levée une fois,
+          puis mise en sourdine quinze minutes pour ce même paramètre. Une
+          dérive lente ne produit pas cinquante notifications identiques.
+        </p>
+        <p>
+          Chaque alerte est acquittée puis résolue par un soignant identifié,
+          et reste consultable dans l'historique de la séance.
+        </p>
+      </div>
+    </div>
+
+    <div class="rounded-card border border-line bg-surface p-5">
+      <p class="mb-4 text-sm font-medium text-body">Fil d'alertes</p>
+      <ul class="space-y-3">
+        <li class="flex gap-3 rounded-lg border border-critical/30 bg-critical-soft/60 p-3.5">
+          <span class="mt-0.5 text-critical">{% icon "alert-triangle" cls="h-4 w-4" %}</span>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-body">PTM à 252 mmHg — Poste 2</p>
+            <p class="mt-0.5 text-xs text-body-soft">Au-dessus du seuil critique de 240. Vérifier le dialyseur.</p>
+            <p class="mt-1.5 text-xs text-body-faint tabular-nums">il y a 40 s · non acquittée</p>
+          </div>
+        </li>
+        <li class="flex gap-3 rounded-lg border border-warning/30 bg-warning-soft/60 p-3.5">
+          <span class="mt-0.5 text-warning">{% icon "alert-circle" cls="h-4 w-4" %}</span>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-body">PA à −168 mmHg — Poste 4</p>
+            <p class="mt-0.5 text-xs text-body-soft">Approche du seuil. Contrôler la position de l'aiguille.</p>
+            <p class="mt-1.5 text-xs text-body-faint tabular-nums">il y a 6 min · acquittée par S. Naceur</p>
+          </div>
+        </li>
+        <li class="flex gap-3 rounded-lg border border-line p-3.5">
+          <span class="mt-0.5 text-stable">{% icon "check-circle" cls="h-4 w-4" %}</span>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-body">Débit sang rétabli — Poste 1</p>
+            <p class="mt-0.5 text-xs text-body-soft">Retour dans les limites après repositionnement.</p>
+            <p class="mt-1.5 text-xs text-body-faint tabular-nums">il y a 22 min · résolue</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  lecture des écrans  ───────────────────────────── -->
+<section id="lecture" class="scroll-mt-16 border-b border-line bg-surface">
+  <div class="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+    <h2 class="max-w-2xl font-serif text-[1.65rem] leading-snug tracking-tight text-body sm:text-[2rem]">
+      Les générateurs n'ont pas besoin d'être connectés
+    </h2>
+    <p class="mt-4 max-w-2xl text-[15.5px] leading-relaxed text-body-soft">
+      Un boîtier placé devant la machine photographie son écran à intervalle
+      régulier. Les valeurs sont lues sur l'image, vérifiées, puis enregistrées.
+      Aucune modification du générateur, aucun remplacement de parc.
+    </p>
+
+    <ol class="mt-10 grid gap-8 md:grid-cols-4">
+      <li class="relative">
+        <span class="font-serif text-2xl text-brand-600 tabular-nums">1</span>
+        <h3 class="mt-1.5 font-medium text-body">Capture</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          Le boîtier photographie l'écran du générateur toutes les 20 à 60 secondes.
+        </p>
+      </li>
+      <li>
+        <span class="font-serif text-2xl text-brand-600 tabular-nums">2</span>
+        <h3 class="mt-1.5 font-medium text-body">Lecture</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          Un modèle de vision extrait les six paramètres affichés.
+        </p>
+      </li>
+      <li>
+        <span class="font-serif text-2xl text-brand-600 tabular-nums">3</span>
+        <h3 class="mt-1.5 font-medium text-body">Vérification</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          Toute valeur hors limites physiologiques est écartée plutôt que devinée.
+        </p>
+      </li>
+      <li>
+        <span class="font-serif text-2xl text-brand-600 tabular-nums">4</span>
+        <h3 class="mt-1.5 font-medium text-body">Enregistrement</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-body-soft">
+          La mesure rejoint la séance, avec la photo d'origine en justificatif.
+        </p>
+      </li>
+    </ol>
+
+    <p class="mt-9 max-w-2xl rounded-lg border border-line bg-canvas p-4 text-sm leading-relaxed text-body-soft">
+      Une valeur douteuse n'est jamais inventée : elle est laissée vide et
+      signalée comme telle. Le dossier distingue toujours ce qui a été lu de ce
+      qui ne l'a pas été.
+    </p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  déroulé d'une séance  ───────────────────────────── -->
+<section id="seance" class="scroll-mt-16 border-b border-line">
+  <div class="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+    <h2 class="max-w-2xl font-serif text-[1.65rem] leading-snug tracking-tight text-body sm:text-[2rem]">
+      Du branchement au compte rendu
+    </h2>
+
+    <ol class="mt-10 space-y-px overflow-hidden rounded-card border border-line">
+      <li class="grid gap-2 bg-surface p-5 sm:grid-cols-[13rem_1fr] sm:gap-8">
+        <h3 class="font-medium text-body">Avant la séance</h3>
+        <p class="text-sm leading-relaxed text-body-soft">
+          Poids d'entrée, tension, objectif d'ultrafiltration, durée et seuils
+          propres au patient. Le poste et le générateur sont affectés depuis le planning.
+        </p>
+      </li>
+      <li class="grid gap-2 border-t border-line bg-surface p-5 sm:grid-cols-[13rem_1fr] sm:gap-8">
+        <h3 class="font-medium text-body">Pendant la séance</h3>
+        <p class="text-sm leading-relaxed text-body-soft">
+          Les paramètres arrivent en continu sur l'écran de surveillance.
+          L'équipe voit l'ensemble des postes et traite les alertes à mesure.
+        </p>
+      </li>
+      <li class="grid gap-2 border-t border-line bg-surface p-5 sm:grid-cols-[13rem_1fr] sm:gap-8">
+        <h3 class="font-medium text-body">À la fin</h3>
+        <p class="text-sm leading-relaxed text-body-soft">
+          Poids de sortie, perte réelle, incidents et observations. L'écart avec
+          l'objectif d'ultrafiltration est calculé.
+        </p>
+      </li>
+      <li class="grid gap-2 border-t border-line bg-surface p-5 sm:grid-cols-[13rem_1fr] sm:gap-8">
+        <h3 class="font-medium text-body">Le compte rendu</h3>
+        <p class="text-sm leading-relaxed text-body-soft">
+          Courbes des paramètres, alertes survenues et données de séance,
+          rassemblées dans un rapport imprimable versé au dossier du patient.
+        </p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  pour qui  ───────────────────────────── -->
+<section class="border-b border-line bg-surface">
+  <div class="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+    <h2 class="font-serif text-[1.65rem] leading-snug tracking-tight text-body sm:text-[2rem]">
+      Trois usages, un même dossier
+    </h2>
+
+    <div class="mt-9 grid gap-x-10 gap-y-8 md:grid-cols-3">
+      <div class="border-t-2 border-brand-600 pt-4">
+        <h3 class="font-medium text-body">Infirmiers</h3>
+        <p class="mt-2 text-sm leading-relaxed text-body-soft">
+          L'état de tous les postes sur un écran, les alertes à traiter en tête
+          de liste, et plus de feuille à recopier en fin de poste.
+        </p>
+      </div>
+      <div class="border-t-2 border-brand-600 pt-4">
+        <h3 class="font-medium text-body">Néphrologues</h3>
+        <p class="mt-2 text-sm leading-relaxed text-body-soft">
+          L'historique complet d'un patient, séance par séance, avec les courbes
+          et les incidents, consultable sans ressortir les feuilles papier.
+        </p>
+      </div>
+      <div class="border-t-2 border-brand-600 pt-4">
+        <h3 class="font-medium text-body">Encadrement</h3>
+        <p class="mt-2 text-sm leading-relaxed text-body-soft">
+          L'occupation des postes, l'état du parc de générateurs et l'activité
+          de l'équipe, suivis au jour le jour.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  accès  ───────────────────────────── -->
+<section class="border-b border-line">
+  <div class="mx-auto max-w-6xl px-5 py-16 lg:py-20">
+    <div class="rounded-card border border-line bg-brand-900 px-6 py-12 text-center sm:px-12">
+      <h2 class="mx-auto max-w-xl font-serif text-[1.6rem] leading-snug tracking-tight text-white sm:text-[1.9rem]">
+        Votre unité est déjà configurée&nbsp;?
+      </h2>
+      <p class="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-brand-100">
+        Connectez-vous avec le compte fourni par l'administrateur de votre
+        service. Les comptes sont créés en interne, il n'y a pas d'inscription.
+      </p>
+      <a href="{% url 'accounts:login_view' %}"
+         class="mt-7 inline-block rounded-lg bg-white px-6 py-2.5 text-sm font-medium text-brand-900 hover:bg-brand-50">
+        Se connecter
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  pied de page  ───────────────────────────── -->
+<footer class="bg-surface">
+  <div class="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-9 text-sm text-body-faint sm:flex-row sm:items-center">
+    <div class="flex items-center gap-2.5">
+      <span class="grid h-7 w-7 place-items-center rounded-md bg-brand-700 text-white">
+        {% icon "activity" cls="h-4 w-4" %}
+      </span>
+      <span class="font-medium text-body-soft">Dialyse Manager</span>
+    </div>
+    <p class="sm:ml-auto">
+      Système de surveillance des séances d'hémodialyse.
+    </p>
+  </div>
+</footer>
+
+<script src="{% static 'js/ui.js' %}" defer></script>
+</body>
+</html>

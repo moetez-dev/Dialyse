@@ -1,6 +1,6 @@
-from turtle import color
-
 from django import template
+from django.conf import settings
+from django.template import TemplateSyntaxError
 from django.utils.html import format_html
 
 register = template.Library()
@@ -140,10 +140,6 @@ SVG = {
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
 </svg>""",
 
-    "heart": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-</svg>""",
-
     "droplet": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
 </svg>""",
@@ -199,12 +195,29 @@ SVG = {
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 7l-.94-1.88A2 2 0 0013.76 4h-3.52a2 2 0 00-1.8 1.12L7.5 7"/>
   <circle cx="12" cy="14" r="3.5" stroke-width="1.5"/>
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 12v4M10 14h4"/>
+</svg>""",
+"sun": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="4" stroke-width="1.5"/>
+  <path stroke-linecap="round" stroke-width="1.5" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+</svg>""",
+"moon": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+</svg>""",
+"help-circle": """<svg class="{}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="9" stroke-width="1.5"/>
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.5 9.5a2.5 2.5 0 114 2c-.9.7-1.5 1.3-1.5 2.5"/>
+  <path stroke-linecap="round" stroke-width="1.5" d="M12 17.5h.01"/>
 </svg>"""
 }
 @register.simple_tag
 def icon(name, cls="w-6 h-6" , color=""):
     svg = SVG.get(name)
     if not svg:
+        if settings.DEBUG:
+            raise TemplateSyntaxError(
+                f"icône inconnue : {name!r}. Icônes disponibles : "
+                + ", ".join(sorted(SVG))
+            )
         return ""
     # Si une couleur est passée, on l'injecte en style inline
     if color:

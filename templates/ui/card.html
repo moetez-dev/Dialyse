@@ -1,0 +1,9 @@
+<section class="rounded-card border border-line bg-surface">
+  {% if title %}
+    <header class="border-b border-line px-5 py-4">
+      <h2 class="font-medium text-body">{{ title }}</h2>
+      {% if subtitle %}<p class="mt-0.5 text-sm text-body-soft">{{ subtitle }}</p>{% endif %}
+    </header>
+  {% endif %}
+  <div class="{% if padded %}p-5{% endif %}">{{ body }}</div>
+</section>

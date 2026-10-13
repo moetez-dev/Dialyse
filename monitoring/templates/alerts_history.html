@@ -1,225 +1,107 @@
 {% extends "base.html" %}
+{% load ui %}
+
+{% block title %}Historique des alertes — Dialyse Manager{% endblock %}
 
 {% block content %}
 
-<div class="p-6">
+{% ui_page_header "Historique des alertes" subtitle="Alertes générées pendant les séances de dialyse" %}{% endui_page_header %}
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-
-        <!-- Header -->
-        <div class="px-6 py-5 border-b border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-800">
-                Historique des alertes
-            </h2>
-
-            <p class="text-sm text-gray-500 mt-1">
-                Suivi des alertes générées pendant les séances de dialyse
-            </p>
-        </div>
-
-
-        <!-- Table -->
-        <div class="overflow-x-auto">
-
-            <table class="w-full text-sm text-left">
-
-                <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
-
-                    <tr>
-                        <th class="px-6 py-4">Heure</th>
-                        <th class="px-6 py-4">Patient</th>
-                        <th class="px-6 py-4">Machine</th>
-                        <th class="px-6 py-4">Niveau</th>
-                        <th class="px-6 py-4">Message</th>
-                        <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4">Action</th>
-                    </tr>
-
-                </thead>
-
-
-                <tbody class="divide-y divide-gray-100">
-
-
-                {% for alert in alerts %}
-
-                <tr class="hover:bg-gray-50 transition">
-
-
-                    <td class="px-6 py-4 text-gray-700">
-                        {{ alert.timestamp }}
-                    </td>
-
-
-                    <td class="px-6 py-4 font-medium text-gray-800">
-                        {{ alert.reading.seance.patient }}
-                    </td>
-
-
-                    <td class="px-6 py-4 text-gray-600">
-                        {{ alert.reading.seance.machine }}
-                    </td>
-
-
-                    <td class="px-6 py-4">
-
-                        {% if alert.niveau == "HIGH" %}
-
-                        <span class="px-3 py-1 rounded-full text-xs bg-red-100 text-red-700">
-                            HIGH
-                        </span>
-
-                        {% else %}
-
-                        <span class="px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
-                            {{ alert.niveau }}
-                        </span>
-
-                        {% endif %}
-
-                    </td>
-
-
-                    <td class="px-6 py-4 text-gray-600">
-                        {{ alert.message }}
-                    </td>
-
-
-                    <td class="px-6 py-4">
-
-                        {% if alert.status == "NEW" %}
-
-                        <span class="px-3 py-1 rounded-full text-xs bg-orange-100 text-orange-700">
-                            Nouvelle
-                        </span>
-
-
-                        {% elif alert.status == "ACK" %}
-
-                        <span class="px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
-                            Acquittée
-                        </span>
-
-
-                        {% elif alert.status == "RESOLVED" %}
-
-                        <span class="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700">
-                            Résolue
-                        </span>
-
-                        {% endif %}
-
-                    </td>
-
-
-                    <td class="px-6 py-4">
-
-                        {% if alert.status == "NEW" %}
-
-                        <button
-                        onclick="ackAlert('{{ alert.id }}')"
-                        class="px-4 py-2 rounded-lg bg-yellow-500 text-white text-xs hover:bg-yellow-600">
-                            Acquitter
-                        </button>
-
-
-                        {% elif alert.status == "ACK" %}
-
-                        <button
-                        onclick="resolveAlert('{{ alert.id }}')"
-                        class="px-4 py-2 rounded-lg bg-green-600 text-white text-xs hover:bg-green-700">
-                            Résoudre
-                        </button>
-
-                        {% endif %}
-
-                    </td>
-
-
-                </tr>
-
-                {% empty %}
-
-                <tr>
-                    <td colspan="7"
-                    class="px-6 py-6 text-center text-gray-500">
-                        Aucune alerte.
-                    </td>
-                </tr>
-
-
-                {% endfor %}
-
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
+{# La vue calculait déjà ces quatre compteurs ; aucun gabarit ne les affichait. #}
+<div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {% ui_stat_card "Total" total_alerts icon="bell" %}
+  {% ui_stat_card "Nouvelles" new_alerts tone="crit" icon="alert-triangle" %}
+  {% ui_stat_card "Acquittées" ack_alerts tone="warn" icon="eye" %}
+  {% ui_stat_card "Résolues" resolved_alerts tone="ok" icon="check-circle" %}
 </div>
+
+<div class="overflow-x-auto rounded-card border border-line bg-surface">
+  <table class="w-full text-left text-sm">
+    <thead class="border-b border-line bg-surface-sunken text-xs text-body-soft">
+      <tr>
+        <th scope="col" class="px-4 py-3 font-medium">Heure</th>
+        <th scope="col" class="px-4 py-3 font-medium">Patient</th>
+        <th scope="col" class="px-4 py-3 font-medium">Machine</th>
+        <th scope="col" class="px-4 py-3 font-medium">Niveau</th>
+        <th scope="col" class="px-4 py-3 font-medium">Message</th>
+        <th scope="col" class="px-4 py-3 font-medium">Statut</th>
+        <th scope="col" class="px-4 py-3 font-medium">Action</th>
+      </tr>
+    </thead>
+
+    <tbody class="divide-y divide-line">
+      {% for alert in alerts %}
+        <tr class="hover:bg-surface-sunken">
+          <td class="px-4 py-3 tabular-nums text-body-soft">{{ alert.timestamp|date:"d/m/Y H:i" }}</td>
+          <td class="px-4 py-3 font-medium text-body">{{ alert.reading.seance.patient }}</td>
+          <td class="px-4 py-3 text-body-soft">{{ alert.reading.seance.machine }}</td>
+
+          {% comment %}
+          Le niveau vient de deux vocabulaires concurrents (HIGH/MEDIUM et
+          RED/YELLOW) : la tonalité est résolue en Python, plus en cascade ici.
+          {% endcomment %}
+          <td class="px-4 py-3">{% ui_status alert.niveau kind="alerte" %}</td>
+
+          <td class="px-4 py-3 text-body-soft">{{ alert.message }}</td>
+          <td class="px-4 py-3">{% ui_status alert.status kind="alerte" %}</td>
+
+          <td class="px-4 py-3">
+            {% if alert.status == "NEW" %}
+              <button type="button" onclick="ackAlert('{{ alert.id }}')"
+                      class="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-body
+                             hover:bg-surface-sunken">
+                Acquitter
+              </button>
+            {% elif alert.status == "ACK" %}
+              <button type="button" onclick="resolveAlert('{{ alert.id }}')"
+                      class="rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-medium text-white
+                             hover:bg-brand-800">
+                Résoudre
+              </button>
+            {% else %}
+              <span class="text-xs text-body-faint">—</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" class="px-4 py-10">
+            {% ui_empty_state "Aucune alerte enregistrée" body="Les alertes apparaîtront ici dès qu'un paramètre sortira de ses seuils pendant une séance." icon="bell" %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-
-function resolveAlert(id){
-
-    fetch(
-        `/monitoring/alert/${id}/resolve/`,
-        {
-            method: "POST",
-
-            headers:{
-                "X-CSRFToken": getCookie("csrftoken")
-            }
-        }
-    )
-
-    .then(response => response.json())
-
-    .then(data => {
-
-        console.log("Alert RESOLVED:", data);
-
-        location.reload();
-
+// Acquitter et Résoudre partagent la même mécanique. `ackAlert` n'existait que
+// dans surveillance.html : sur cette page, le bouton levait un ReferenceError.
+function postAlertAction(id, action){
+    return fetch(`/monitoring/alert/${id}/${action}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") }
     })
-
+    .then(response => {
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+    })
+    .then(() => location.reload())
     .catch(error => {
-
-        console.log(error);
-
+        console.error("Action alerte échouée:", error);
+        window.alert("L'action n'a pas pu être enregistrée (" + error.message + ").");
     });
-
 }
 
+function ackAlert(id){ return postAlertAction(id, "ack"); }
+function resolveAlert(id){ return postAlertAction(id, "resolve"); }
 
 function getCookie(name){
-
-    let cookieValue = null;
-
-    if(document.cookie && document.cookie !== ""){
-
-        const cookies = document.cookie.split(";");
-
-        for(let i = 0; i < cookies.length; i++){
-
-            const cookie = cookies[i].trim();
-
-            if(cookie.substring(0,name.length+1)
-            === (name+"=")){
-
-                cookieValue = decodeURIComponent(
-                    cookie.substring(name.length+1)
-                );
-
-                break;
-            }
-        }
-    }
-
-    return cookieValue;
+    const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+    return match ? decodeURIComponent(match[2]) : "";
 }
-
 </script>
 {% endblock %}

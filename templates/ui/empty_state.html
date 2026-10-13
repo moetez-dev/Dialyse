@@ -1,0 +1,11 @@
+{% load icons %}<div class="flex flex-col items-center rounded-card border border-dashed border-line px-6 py-12 text-center">
+  <span class="text-body-faint">{% icon icon cls="h-7 w-7" %}</span>
+  <p class="mt-3 font-medium text-body">{{ title }}</p>
+  {% if body %}<p class="mt-1 max-w-sm text-sm leading-relaxed text-body-soft">{{ body }}</p>{% endif %}
+  {% if action_label and action_href %}
+    <a href="{{ action_href }}"
+       class="mt-4 rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white hover:bg-brand-800">
+      {{ action_label }}
+    </a>
+  {% endif %}
+</div>

@@ -1,0 +1,7 @@
+# Extra deps for the companion services that ship alongside Django:
+#   mqtt_listener.py  -> paho-mqtt
+#   qwen_api.py       -> fastapi + uvicorn
+paho-mqtt==2.1.0
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20

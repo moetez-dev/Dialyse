@@ -1206,13 +1206,41 @@ def push_measurement(request):
         from monitoring.alerte import analyser_mesure
         alerts_created = analyser_mesure(measurement)
 
-        return _json_ok(data={
-            "id": str(measurement.id),
-            "status": val_res["status"],
-            "alerts_created": len(alerts_created),
-        })
+        # analyser_mesure ne renvoie que les seances.Alert ; les monitoring.Alerte
+        # miroirs étaient créées mais jamais comptées dans la réponse.
+        # _json_ok imbrique `data` ; les compteurs sont attendus à la racine.
+        # analyser_mesure ne renvoie que les seances.Alert : les monitoring.Alerte
+        # miroirs étaient bien créées, mais jamais comptées nulle part.
+        return _json_ok(
+            data={
+                "id": str(measurement.id),
+                "status": val_res["status"],
+                "alerts_created": len(alerts_created),   # conservé : clé historique
+            },
+            seance_alerts_created=len(alerts_created),
+            monitoring_alerts_created=measurement.alertes.count(),
+        )
     except Exception as e:
         return _json_err(str(e), status=500)
+
+CRITICAL_LEVELS = {"HIGH", "RED", "CRITIQUE"}
+WARNING_LEVELS = {"MEDIUM", "YELLOW", "ALERTE"}
+
+
+def _measurement_status(alerts):
+    """NORMAL / WARNING / CRITICAL à partir des alertes rattachées à la mesure.
+
+    Le champ `niveau` est du texte libre et contient deux vocabulaires selon le
+    producteur : HIGH/MEDIUM (monitoring.views) et RED/YELLOW (monitoring.alerte).
+    Les deux sont acceptés ici.
+    """
+    levels = {(a.get("niveau") or "").strip().upper() for a in alerts}
+    if levels & CRITICAL_LEVELS:
+        return "CRITICAL"
+    if levels & WARNING_LEVELS:
+        return "WARNING"
+    return "NORMAL"
+
 
 @api_login_required
 def real_monitoring(request):
@@ -1243,8 +1271,27 @@ def real_monitoring(request):
             "status_validation": m.status_validation or "VALIDATED",
             "source": m.source or "AI_OCR",
             "alerts": alerts,
+            # Clés ajoutées pour le tableau de bord web. Ajouts uniquement :
+            # aucune clé existante n'est modifiée, le client Flutter n'est pas affecté.
+            "Qb": m.Debit_sang,
+            "UF": m.Volume_UF,
+            "status": _measurement_status(alerts),
         })
-    return JsonResponse({"success": True, "measurements": data})
+
+    # Le tableau de bord attend les alertes au niveau racine, avec la machine.
+    flat_alerts = []
+    for entry in data:
+        for a in entry["alerts"]:
+            flat_alerts.append({
+                **a,
+                "machine": entry["machine_id"] or entry["machine"],
+                "seance_id": entry["seance_id"],
+                "patient": entry["patient"],
+            })
+
+    return JsonResponse(
+        {"success": True, "measurements": data, "alerts": flat_alerts}
+    )
 
 @api_login_required
 def api_monitoring_live(request):

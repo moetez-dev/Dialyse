@@ -1,0 +1,5 @@
+{% load icons %}<span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium {{ classes }}">
+  {% if dot %}<span class="h-1.5 w-1.5 rounded-full bg-current"></span>{% endif %}
+  {% if icon %}{% icon icon cls="h-3.5 w-3.5" %}{% endif %}
+  {{ label }}
+</span>

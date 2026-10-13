@@ -1,0 +1,10 @@
+{% load icons %}<div class="rounded-card border border-line bg-surface p-4">
+  <div class="flex items-start justify-between gap-3">
+    <p class="text-sm text-body-soft">{{ label }}</p>
+    {% if icon %}<span class="shrink-0 text-body-faint">{% icon icon cls="h-4 w-4" %}</span>{% endif %}
+  </div>
+  <p class="mt-2 text-2xl font-semibold tabular-nums {{ value_class }}">
+    {{ value }}{% if unit %}<span class="ml-1 text-sm font-normal text-body-faint">{{ unit }}</span>{% endif %}
+  </p>
+  {% if hint %}<p class="mt-1 text-xs text-body-faint">{{ hint }}</p>{% endif %}
+</div>

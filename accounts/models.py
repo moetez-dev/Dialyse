@@ -32,6 +32,64 @@ class User(models.Model):
 
 
 
+    # ------------------------------------------------------------------
+    # Rôles et capacités
+    #
+    # `Role.name` est du texte libre : "Admin", "admin" ou "Admin " existent
+    # tous en base. Les comparaisons de chaînes dispersées dans les gabarits
+    # étaient sensibles à la casse, si bien qu'un rôle "admin" donnait l'accès
+    # aux vues mais masquait toute la navigation d'administration.
+    # ------------------------------------------------------------------
+    ADMIN = "admin"
+    DOCTEUR = "docteur"
+    INFIRMIER = "infirmier"
+
+    @property
+    def role_slug(self):
+        if not self.role_id or not self.role or not self.role.name:
+            return ""
+        return self.role.name.strip().casefold()
+
+    @property
+    def role_label(self):
+        if not self.role_id or not self.role or not self.role.name:
+            return "Utilisateur"
+        return self.role.name.strip().title()
+
+    @property
+    def is_admin(self):
+        return self.role_slug == self.ADMIN
+
+    @property
+    def is_docteur(self):
+        return self.role_slug == self.DOCTEUR
+
+    @property
+    def is_infirmier(self):
+        return self.role_slug == self.INFIRMIER
+
+    # Capacités : ce que la navigation demande réellement, exprimé par
+    # l'intention plutôt que par des comparaisons négatives de rôle.
+    @property
+    def can_view_admin_dashboard(self):
+        return self.is_admin
+
+    @property
+    def can_manage_devices(self):
+        return self.is_admin
+
+    @property
+    def can_manage_machines(self):
+        return not self.is_docteur
+
+    @property
+    def can_manage_doctors(self):
+        return self.is_admin
+
+    @property
+    def can_manage_nurses(self):
+        return not self.is_infirmier
+
     def get_specialite(self):
         if self.role and self.role.name == "Docteur":
             return self.specialite

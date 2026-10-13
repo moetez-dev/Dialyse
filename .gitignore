@@ -14,3 +14,9 @@ mobile/.dart_tool/
 mobile/build/
 mobile/.flutter-plugins-dependencies
 offline_buffer.db
+
+# Node / Tailwind build
+node_modules/
+
+# Local dev credentials (never commit)
+.dev-credentials

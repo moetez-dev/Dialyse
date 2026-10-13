@@ -2,6 +2,7 @@ import json
 from datetime import date
 from django.conf import settings
 from django.test import TestCase, Client
+from django.urls import reverse
 from accounts.models import User, Role
 from patients.models import Patient
 from machines.models import Machine, RaspiDevice
@@ -599,7 +600,8 @@ class StaffCreatePermissionTests(TestCase):
             },
         )
         self.assertEqual(res.status_code, 302)
-        self.assertTrue(res.url in ("/", "/login/", "/login"), msg=res.url)
+        # Résolu par nom : la page de connexion a déménagé de / vers /connexion/.
+        self.assertEqual(res.url, reverse("accounts:login_view"), msg=res.url)
         self.assertFalse(User.objects.filter(email="drnew@test.com").exists())
 
     def test_add_doctor_forbidden_for_doctor_role(self):

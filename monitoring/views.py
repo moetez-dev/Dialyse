@@ -50,12 +50,17 @@ def dashboard(request):
     current_user = request.current_user
 
     # KPIs (comme avant)
-    kpi_doctors = User.objects.filter(role__name__in=["Docteur", "Admin"]).count()
+    # La carte est intitulée « Nombre total de docteurs » : ne compter que les docteurs.
+    kpi_doctors = User.objects.filter(role__name__iexact="Docteur").count()
     kpi_nurses = User.objects.filter(role__name__iexact="Infirmier").count()
-    kpi_machines_total = 0
-    kpi_machines_available = 0
+    # Ces deux KPI étaient codés en dur à 0 : la carte « Machines disponibles »
+    # affichait toujours 0 quel que soit l'état du parc.
+    kpi_machines_total = Machine.objects.count()
+    kpi_machines_available = Machine.objects.filter(status="Prete").count()
+    # « Actif » = vu récemment, et non le drapeau etat qui reste vrai quand un
+    # utilisateur ferme son onglet sans se déconnecter.
     limit = timezone.now() - timedelta(minutes=5)
-    kpi_active_users = User.objects.filter(etat=True).count()
+    kpi_active_users = User.objects.filter(etat=True, last_seen__gte=limit).count()
 
     # GET params (on garde day et on ajoute q/role/sort)
     selected_day = (request.GET.get("day") or "").strip()
@@ -305,6 +310,8 @@ def push_measurement(request):
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 @require_POST
+@app_login_required
+@role_required("Admin", "Docteur", "Infirmier", redirect_to="accounts:error")
 def ack_alert(request, alert_id):
 
     alert = get_object_or_404(
@@ -353,6 +360,8 @@ def alerts_history(request):
         },
     )
 @require_POST
+@app_login_required
+@role_required("Admin", "Docteur", "Infirmier", redirect_to="accounts:error")
 def resolve_alert(request, alert_id):
 
     alert = get_object_or_404(

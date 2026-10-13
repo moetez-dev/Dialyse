@@ -1,57 +1,49 @@
 {% load icons %}
-<header class="bg-white border-b border-gray-200 sticky top-0 z-40 ">
-  <div class="px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <!-- Menu burger et logo existants inchangés -->
-      <button class="lg:hidden p-2 hover:bg-gray-100 rounded-md" data-sidebar-toggle type="button">
-        <span class="text-sm">{% icon "menu" cls="h-5 w-5 text-gray-500" %}</span>
+<header class="sticky top-0 z-40 h-navbar border-b border-line bg-surface">
+  <div class="flex h-full items-center gap-3 px-4">
+
+    <button type="button" data-sidebar-toggle
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-body-soft hover:bg-surface-sunken hover:text-body lg:hidden"
+            aria-label="Ouvrir la navigation" aria-controls="sidebar">
+      {% icon "menu" cls="h-5 w-5" %}
+    </button>
+
+    <a href="{% url 'landing' %}" class="flex items-center gap-2.5">
+      <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-700 text-white">
+        {% icon "activity" cls="h-[18px] w-[18px]" %}
+      </span>
+      <span class="font-serif text-[17px] font-semibold tracking-tight text-body">Dialyse&nbsp;Manager</span>
+    </a>
+
+    <div class="ml-auto flex items-center gap-2">
+
+      <button type="button" data-theme-toggle
+              class="grid h-9 w-9 place-items-center rounded-lg text-body-soft hover:bg-surface-sunken hover:text-body"
+              aria-label="Changer de thème">
+        <span class="hidden dark:block">{% icon "sun" cls="h-[18px] w-[18px]" %}</span>
+        <span class="block dark:hidden">{% icon "moon" cls="h-[18px] w-[18px]" %}</span>
       </button>
-      <div class="bg-blue-600 p-2 rounded-lg">
-        <span class="h-6 w-6 text-white">{% icon "activity" cls="h-6 w-6 text-white" %}</span>
-      </div>
-      <div>
-        <h1 class="text-xl">Dialyse Manager</h1>
-        <p class="text-sm text-gray-600 hidden sm:block">Centre de dialyse - Suivi en temps réel</p>
-      </div>
-    </div>
 
-    <div class="flex items-center gap-4">
-      <!-- UTILISATEUR CONNECTÉ - NOUVEAU CONDITIONNEL -->
-
-      {% if current_user or user.is_authenticated %}
-      <div class="text-right hidden sm:block">
-        <a href="{% url 'accounts:profile' %}" class="hover:underline flex items-center gap-2">
-          {% icon "user" cls="h-4 w-4 text-gray-600" %}
-          <p class="text-sm font-medium">
-            {% if current_user %}
-            {{ current_user.username }}
-            {% else %}
-            {{ user.get_full_name|default:user.username }}
-            {% endif %}
-          </p>
+      {% if current_user %}
+        <a href="{% url 'accounts:profile' %}"
+           class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-sunken">
+          <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-sunken text-body-soft">
+            {% icon "user" cls="h-4 w-4" %}
+          </span>
+          <span class="hidden text-left leading-tight sm:block">
+            <span class="block text-sm font-medium text-body">{{ current_user.username }}</span>
+            <span class="block text-xs text-body-faint">{{ current_user.role_label }}</span>
+          </span>
         </a>
-        <p class="text-xs text-gray-600">
-          {% if current_user and current_user.role %}
-          {{ current_user.role.name|title }}
-          {% elif user.role %}
-          {{ user.role.name|title }}
-          {% else %}
-          Utilisateur
-          {% endif %}
-        </p>
-      </div>
 
+        <a href="{% url 'accounts:logout' %}"
+           class="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-body-soft
+                  hover:bg-surface-sunken hover:text-body
+                  {% if current_user.first_login %}disabled-link{% endif %}">
+          {% icon "log-out" cls="h-4 w-4" %}
+          <span class="hidden sm:inline">Déconnexion</span>
+        </a>
       {% endif %}
-
-      <!-- Bouton logout toujours visible ou conditionnel -->
-      <a href="{% url 'accounts:logout' %}"
-   class="flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-gray-50 transition-colors
-   {% if not current_user and not user.is_authenticated %}hidden{% endif %}
-   {% if current_user.first_login %}disabled-link{% endif %}">
-
-        <span>{% icon "log-out" cls="h-4 w-4 text-gray-500" %}</span>
-        <span class="hidden sm:inline">Déconnexion</span>
-      </a>
     </div>
   </div>
 </header>

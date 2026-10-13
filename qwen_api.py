@@ -7,8 +7,10 @@ import re
 
 app = FastAPI(title="PFA Dialyse AI Server (Qwen)")
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-MODEL = "qwen2.5vl:3b"
+import os
+
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
+MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5vl:3b")
 
 def sanitize_extracted_dict(data: dict) -> dict:
     """Ensure output keys match standard format with float values or null."""

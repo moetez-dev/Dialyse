@@ -766,19 +766,10 @@ Machine :
 
 
 
-  function updateMonitoring(){
+  function updateMonitoring(measurements){
 
-
-
-    fetch("/api/real-monitoring/")
-
-    
-
-    .then(response => response.json())
-
-
-
-    .then(data => {
+    const data = { measurements: measurements || [] };
+    {
 
 
 
@@ -831,22 +822,7 @@ Machine :
 
 
 
-    })
-
-
-
-    .catch(error => {
-
-
-
-        console.log("Monitoring error:", error);
-
-
-
-    });
-
-
-
+    }
 }
 
 
@@ -855,19 +831,10 @@ Machine :
 
 
 
-function updateAlerts(){
-  
+function updateAlerts(alerts){
 
-
-   fetch("/api/real-monitoring/")
-
-
-
-    .then(response => response.json())
-
-
-
-    .then(data => {
+  const data = { alerts: alerts || [] };
+  {
 
 
 
@@ -1015,21 +982,7 @@ function updateAlerts(){
 
 
 
-    })
-
-
-
-
-
-    .catch(error => {
-
-
-
-        console.log("Alerts error:", error);
-
-
-
-    });
+    }
 
 
 
@@ -1051,23 +1004,33 @@ function updateAlerts(){
 
 function refreshDashboard(){
 
+    // Un flux figé ne doit pas ressembler à « tout va bien » : on signale l'échec.
     fetch("/api/real-monitoring/")
-
-    .then(response => response.json())
-
+    .then(response => {
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+    })
     .then(data => {
-
-        console.log("Dashboard:", data);
-
         updateMonitoring(data.measurements);
         updateAlerts(data.alerts);
-
+        setFeedState(true);
     })
-
     .catch(error => {
-        console.log("Dashboard error:", error);
+        console.error("Dashboard error:", error);
+        setFeedState(false, error.message);
     });
 
+}
+
+function setFeedState(ok, detail){
+    const el = document.getElementById("feed-state");
+    if (!el) return;
+    el.textContent = ok
+        ? "Flux actif"
+        : "Flux interrompu" + (detail ? " (" + detail + ")" : "");
+    el.className = ok
+        ? "text-xs font-medium text-stable"
+        : "text-xs font-medium text-critical";
 }
 
 
