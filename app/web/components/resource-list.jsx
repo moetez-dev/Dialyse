@@ -9,7 +9,7 @@
  * désormais par les composants et les jetons communs. */
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { apiRequest } from './api';
 import { Icon } from './icons';
@@ -45,6 +45,8 @@ export function ResourceList({
   description,
   endpoint,
   columns,
+  createEndpoint,
+  createFields = [],
   addHref,
   addLabel = 'Ajouter',
   createRoles,
@@ -57,6 +59,12 @@ export function ResourceList({
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
+  const submitting = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -84,11 +92,39 @@ export function ResourceList({
     return () => {
       alive = false;
     };
-  }, [endpoint, query]);
+  }, [endpoint, query, refreshKey]);
 
   function submitSearch(event) {
     event.preventDefault();
     setQuery(term.trim());
+  }
+
+  async function submitCreate(event) {
+    event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
+    setCreating(true);
+    setCreateError('');
+
+    try {
+      const form = event.currentTarget;
+      const payload = Object.fromEntries(new FormData(form));
+      const result = await apiRequest(createEndpoint, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      const temporaryPassword = result.temporary_password
+        ? ` Mot de passe provisoire : ${result.temporary_password}`
+        : '';
+      setSuccessMessage(`Création effectuée avec succès.${temporaryPassword}`);
+      setCreateOpen(false);
+      setRefreshKey((key) => key + 1);
+    } catch (cause) {
+      setCreateError(cause.message || 'La création a échoué.');
+    } finally {
+      submitting.current = false;
+      setCreating(false);
+    }
   }
 
   const showAdd = addHref && canCreate(role, createRoles);
@@ -99,12 +135,25 @@ export function ResourceList({
         title={title}
         subtitle={description}
         actions={
-          showAdd && (
+          showAdd && (createEndpoint ? (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => {
+                setCreateError('');
+                setSuccessMessage('');
+                setCreateOpen(true);
+              }}
+            >
+              <Icon name="plus" className="h-4 w-4" />
+              {addLabel}
+            </Button>
+          ) : (
             <Button as={Link} href={addHref} variant="primary">
               <Icon name="plus" className="h-4 w-4" />
               {addLabel}
             </Button>
-          )
+          ))
         }
       />
 
@@ -143,6 +192,109 @@ export function ResourceList({
             <Icon name="alert-circle" className="h-4 w-4" />
           </span>
           <span>{error}</span>
+        </div>
+      )}
+
+      {successMessage && (
+        <div
+          role="status"
+          className="mb-4 rounded-lg border border-stable/30 bg-stable-soft p-3.5 text-sm text-body"
+        >
+          {successMessage}
+        </div>
+      )}
+
+      {createOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-4 backdrop-blur-sm">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resource-create-title"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-surface shadow-xl"
+          >
+            <header className="flex items-center justify-between border-b border-line p-5">
+              <h2 id="resource-create-title" className="text-lg font-semibold text-body">
+                {addLabel}
+              </h2>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={creating}
+                onClick={() => setCreateOpen(false)}
+              >
+                Fermer
+              </Button>
+            </header>
+
+            <form onSubmit={submitCreate} className="space-y-4 p-5">
+              {createError && (
+                <div
+                  role="alert"
+                  className="rounded-lg border border-critical/30 bg-critical-soft p-3 text-sm text-body"
+                >
+                  {createError}
+                </div>
+              )}
+
+              {createFields.map((field) => (
+                <div key={field.name}>
+                  <label
+                    htmlFor={`create-${field.name}`}
+                    className="mb-1 block text-sm text-body-soft"
+                  >
+                    {field.label}
+                  </label>
+                  {field.options ? (
+                    <select
+                      id={`create-${field.name}`}
+                      name={field.name}
+                      required={field.required}
+                      defaultValue={field.options[0]?.[0] || ''}
+                      className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-body focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                    >
+                      {field.options.map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : field.multiline ? (
+                    <textarea
+                      id={`create-${field.name}`}
+                      name={field.name}
+                      required={field.required}
+                      maxLength={field.maxLength}
+                      rows={3}
+                      className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-body focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                    />
+                  ) : (
+                    <input
+                      id={`create-${field.name}`}
+                      name={field.name}
+                      type={field.type || 'text'}
+                      required={field.required}
+                      maxLength={field.maxLength}
+                      autoComplete={field.type === 'email' ? 'email' : 'off'}
+                      className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-body focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                    />
+                  )}
+                </div>
+              ))}
+
+              <div className="flex justify-end gap-2 border-t border-line pt-4">
+                <Button
+                  type="button"
+                  disabled={creating}
+                  onClick={() => setCreateOpen(false)}
+                >
+                  Annuler
+                </Button>
+                <Button type="submit" variant="primary" disabled={creating}>
+                  {creating ? 'Enregistrement…' : 'Enregistrer'}
+                </Button>
+              </div>
+            </form>
+          </section>
         </div>
       )}
 

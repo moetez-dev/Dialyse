@@ -16,6 +16,12 @@ export default function NursesPage() {
     ]}
     searchable
     createRoles={['admin']}
+    createEndpoint="/api/nurses/"
+    createFields={[
+      { name: 'username', label: 'Nom', required: true, maxLength: 150 },
+      { name: 'email', label: 'E-mail', type: 'email', required: true },
+      { name: 'phone', label: 'Téléphone', maxLength: 20 },
+    ]}
     addHref="/nurses/ajouter/"
     addLabel="Ajouter un infirmier"
     detailPath="/nurse/{id}/"

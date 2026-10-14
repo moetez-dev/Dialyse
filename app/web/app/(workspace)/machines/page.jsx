@@ -16,6 +16,13 @@ export default function MachinesPage() {
     ]}
     searchable
     createRoles={['admin', 'technicien']}
+    createEndpoint="/api/machines/"
+    createFields={[
+      { name: 'machine_id', label: 'Identifiant', required: true, maxLength: 50 },
+      { name: 'model', label: 'Modèle', required: true, maxLength: 100 },
+      { name: 'manufacturer', label: 'Fabricant', maxLength: 100 },
+      { name: 'location', label: 'Salle', required: true, maxLength: 100 },
+    ]}
     addHref="/machines/ajout_machine/"
     addLabel="Ajouter un générateur"
     detailPath="/machines/details/{id}/"

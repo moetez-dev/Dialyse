@@ -16,6 +16,13 @@ export default function DoctorsPage() {
     ]}
     searchable
     createRoles={['admin']}
+    createEndpoint="/api/doctors/"
+    createFields={[
+      { name: 'username', label: 'Nom complet', required: true, maxLength: 150 },
+      { name: 'email', label: 'E-mail', type: 'email', required: true },
+      { name: 'specialite', label: 'Spécialité', maxLength: 100 },
+      { name: 'phone', label: 'Téléphone', maxLength: 20 },
+    ]}
     addHref="/add-doctor/"
     addLabel="Ajouter un docteur"
     detailPath="/doctor/{id}/"
