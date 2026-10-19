@@ -1,0 +1,610 @@
+audit:
+  project_overview:
+    technology_stack:
+      - "Django 4.2.27 (Python) backend REST API"
+      - "SQLite database (db.sqlite3 at repository root)"
+      - "FastAPI AI/image analysis service (app/api/ai/qwen_api.py, port 8001)"
+      - "Ollama local LLM (qwen2.5:3b / qwen2.5vl:3b) via HTTP 127.0.0.1:11434"
+      - "Next.js web frontend (app/web, port 3000)"
+      - "Flutter mobile app (app/mobile)"
+      - "Mosquitto MQTT broker (port 1883)"
+      - "n8n automation webhook (optional, port 5678) for critical-risk alerts"
+      - "Docker Compose orchestration"
+    architecture_summary: >
+      A Django monolithic REST API (app/api/django) owns patient, machine, seance
+      (dialysis session), measurement (LiveMeasurement), and alert (seances.Alert +
+      monitoring.Alerte) models. Measurements enter via an HTTP /api/push/ endpoint
+      (edge/Raspberry Pi) or an MQTT listener (app/api/mqtt/mqtt_listener.py) that
+      runs image OCR through a FastAI service (qwen_api.py), validates the values,
+      persists them to LiveMeasurement, and then runs threshold-based alert detection
+      (monitoring/alerte.py analyser_mesure). Alerts are persisted to seances.Alert
+      and a monitoring.Alerte mirror; critical alerts are dispatched to an n8n webhook.
+      A React/Next.js web app and a Flutter mobile app consume the Django API. A local
+      Ollama model (qwen2.5:3b) is available for AI analysis via monitoring/ai_service.py
+      and seances/services.py (session summary). There is a separate FastAPI server.py
+      (port 8000 alternative) referencing a Hugging Face Qwen model, but it is not wired
+      into Django.
+    existing_ai_agent: >
+      No alert-triggered AI agent exists. Two Ollama-based AI call sites exist:
+      (1) monitoring/ai_service.py analyze_measurement() calls Ollama /api/chat with
+      qwen2.5:3b for a general "short clinical-support analysis" of raw measurements,
+      invoked only manually through POST /api/ai/analyze/; (2)
+      seances/services.py generate_session_summary_and_report() calls Ollama
+      /api/generate for an end-of-seance summary. Neither is triggered by an alert,
+      neither receives structured alert context, and neither stores a recommendation
+      linked to an alert. monitoring/ai_service.py build_alert_guidance() is a
+      rule-based (non-AI) helper that returns parameter-specific checks from persisted
+      alert fields; it is computed on-the-fly in api_monitoring_live() and displayed
+      in live-surveillance.jsx but is not persisted.
+    alert_generation_mechanism: >
+      Rule-based threshold evaluation in monitoring/alerte.py analyser_mesure(), called
+      from monitoring/services.py check_thresholds(). Triggered on every new
+      LiveMeasurement (via push_measurement in monitoring/views.py and via
+      api/views.py measurement creation endpoint, and via MQTT listener). For each of
+      7 parameters (Debit_sang, PA, PV, PTM, Taux_UF, Volume_UF, Heparine), the value
+      is compared against per-seance configurable thresholds (Seance model fields) with
+      defaults in SEUILS_DEFAUT. A 15-minute cooldown per seance/parameter suppresses
+      duplicates. Alerts are created as seances.Alert (danger_level LOW/MEDIUM/HIGH)
+      and a monitoring.Alerte mirror (niveau RED/YELLOW). Critical (HIGH) alerts also
+      fire dispatch_n8n_critical_risk() to an n8n webhook.
+    alert_delivery_mechanism: >
+      (1) Persistence in SQLite tables alerts (seances.Alert) and live_measurements /
+      alerts (monitoring.Alerte). (2) n8n webhook POST for critical-risk alerts only
+      (dispatch_n8n_critical_risk in monitoring/alerte.py), URL from
+      N8N_CRITICAL_RISK_WEBHOOK_URL setting (default localhost:5678). (3) Dashboard
+      display: GET /api/monitoring/live/ (api_views.api_monitoring_live) returns
+      recent alerts with ai_guidance computed on the fly via build_alert_guidance;
+      consumed by app/web/components/live-surveillance.jsx. (4) Alert history page
+      (monitoring/views.alerts_history, GET /monitoring/alerts-history/). (5) Ack /
+      resolve endpoints (ack_alert, resolve_alert). No direct SMS/email/push delivery
+      to a specific nurse is implemented; delivery is via dashboard UI and optional n8n
+      webhook.
+
+  workflow_audit:
+    - step: "1. A dialysis-related event or measurement is recorded"
+      status: "implemented"
+      evidence:
+        - file: "app/api/django/monitoring/views.py"
+          location: "push_measurement() lines 233-297"
+          finding: "POST /api/push/ creates a LiveMeasurement linked to an active Seance,
+          then calls check_thresholds() -> analyser_mesure() to detect alerts."
+        - file: "app/api/django/api/views.py"
+          location: "measurement creation endpoint ~lines 1310-1378"
+          finding: "Authenticated edge endpoint validates data via
+          monitoring.validation.validate_dialysis_data(), creates LiveMeasurement,
+          then calls analyser_mesure()."
+        - file: "app/api/mqtt/mqtt_listener.py"
+          location: "process_and_save_image() and save_telemetry_measurement()"
+          finding: "MQTT image/telemetry pipeline: image -> FastAPI qwen_api OCR ->
+          validate_dialysis_data -> LiveMeasurement.create -> analyser_mesure()."
+      gaps: []
+
+    - step: "2. The application evaluates the relevant configured alert rules"
+      status: "implemented"
+      evidence:
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "analyser_mesure() lines 57-226, SEUILS_DEFAUT lines 10-18"
+          finding: "For each of 7 parameters, value compared against per-seance
+          thresholds (blood_flow_min/max, arterial_pressure_*, etc.) with defaults;
+          critical (HIGH) < crit_min / > crit_max; warning (MEDIUM) < min / > max."
+        - file: "app/api/django/seances/models.py"
+          location: "Seance model lines 36-73"
+          finding: "Per-seance configurable normal and critical thresholds for all
+          7 parameters, editable via pre-session launch form (seances/views.py lines
+          243-254)."
+      gaps: []
+
+    - step: "3. An alert is generated and assigned a unique identifier"
+      status: "implemented"
+      evidence:
+        - file: "app/api/django/seances/models.py"
+          location: "Alert model lines 158-178"
+          finding: "UUID primary key, seance FK, alert_type, message, danger_level
+          (LOW/MEDIUM/HIGH), recommended_action, status NEW/ACK/RESOLVED, timestamp."
+        - file: "app/api/django/monitoring/models.py"
+          location: "Alerte model lines 91-132"
+          finding: "UUID primary key, reading FK, source_alert FK, niveau, message,
+          parameter, measured_value, unit, threshold, threshold_type, status,
+          timestamp."
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "lines 194-200, 204-215"
+          finding: "Alert.objects.create(...) then Alerte.objects.create(...) mirror;
+          both use auto-generated UUIDs."
+      gaps: []
+
+    - step: "4. The alert is persisted and delivered to the appropriate nurse"
+      status: "partial"
+      evidence:
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "lines 194-224"
+          finding: "Persisted to seances.Alert + monitoring.Alerte mirror. Critical
+          alerts dispatched to n8n webhook via dispatch_n8n_critical_risk()."
+        - file: "app/api/django/api/views.py"
+          location: "api_monitoring_live() lines 1470-1661"
+          finding: "Returns active alerts (NEW/ACK) with ai_guidance, patient, machine,
+          severity; consumed by live-surveillance.jsx."
+        - file: "app/web/components/live-surveillance.jsx"
+          location: "lines 311-430"
+          finding: "Active alerts card displays patient, machine, parameter, value,
+          threshold, message, and ai_guidance recommendations; ack/resolve buttons."
+        - file: "app/api/django/monitoring/templates/surveillance.html"
+          location: "lines 61-391"
+          finding: "Django surveillance page displays alerts with notifyAlert()
+          JavaScript and showPopup for critical."
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "dispatch_n8n_critical_risk() lines 22-54"
+          finding: "n8n webhook only for HIGH/critical alerts; failure logged, not
+          retried; no email/SMS/push to a named nurse."
+      gaps:
+        - "No direct delivery to a specific assigned nurse (no nurse alert assignment,
+          no email/SMS/push notification channel beyond optional n8n webhook)."
+        - "n8n webhook failure is logged only; no retry, dead-letter queue, or fallback
+          escalation path."
+
+    - step: "5. The AI agent is triggered by the alert"
+      status: "missing"
+      evidence:
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "lines 194-225"
+          finding: "After creating an alert, only dispatch_n8n_critical_risk() is
+          called for HIGH alerts. There is no call to monitoring/ai_service.py or any
+          AI agent."
+        - file: "app/api/django/monitoring/views.py"
+          location: "push_measurement() lines 271-273"
+          finding: "calls check_thresholds() only; no AI invocation."
+        - file: "app/api/mqtt/mqtt_listener.py"
+          location: "process_and_save_image() ~lines 100-130"
+          finding: "calls analyser_mesure() only; no AI agent invocation after alert."
+        - file: "app/api/django/api/views.py"
+          location: "measurement endpoint ~lines 1362-1378"
+          finding: "calls analyser_mesure() only; no AI agent invocation."
+      gaps:
+        - "No alert->AI-agent trigger exists anywhere in the codebase."
+        - "The /api/ai/analyze/ endpoint exists but is manual/on-demand, not alert-driven."
+
+    - step: "6. The agent receives the alert type, measured value, unit, timestamp,
+        applicable threshold, and relevant authorized clinical context"
+      status: "missing"
+      evidence:
+        - file: "app/api/django/monitoring/ai_service.py"
+          location: "analyze_measurement() lines 142-231"
+          finding: "Accepts a flat measurement dict with Qb/PA/PTM/PV/UF_rate/UF_volume/
+          Heparin only. No alert id, alert type, severity, threshold, threshold_type,
+          unit, patient context, seance context, or nurse context."
+        - file: "app/api/django/api/views.py"
+          location: "api_ai_analyze() lines 2021-2067"
+          finding: "Requires only the 7 measurement fields; no alert linkage, no
+          clinical context beyond raw values."
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "Alerte model lines 91-132"
+          finding: "Alert already stores parameter, measured_value, unit, threshold,
+          threshold_type, timestamp, niveau, message, source_alert — but nothing
+          consumes these to invoke an AI agent."
+      gaps:
+        - "No function or endpoint packages alert fields + clinical context for an AI
+          agent invocation."
+
+    - step: "7. The agent analyzes the alert using approved clinical guidance"
+      status: "partial"
+      evidence:
+        - file: "app/api/django/monitoring/ai_service.py"
+          location: "ALERT_GUIDANCE_RULES lines 11-19, ALERT_PARAMETER_UNITS lines 31-39,
+          build_alert_guidance() lines 56-139"
+          finding: "Internal rule-based guidance (not an AI model). Cross-checks unit,
+          severity vs threshold_type, measurement vs threshold. Docstring states these
+          checks 'are not generated by an AI model and are not a substitute for a
+          medically validated local protocol.'"
+        - file: "app/api/django/monitoring/ai_service.py"
+          location: "analyze_measurement() lines 152-184"
+          finding: "Ollama prompt instructs 'Do NOT diagnose', 'Identify potentially
+          abnormal values', 'concise recommendation'; no reference to versioned,
+          approved clinical protocols or knowledge sources."
+        - file: "app/api/django/seances/services.py"
+          location: "generate_session_summary_and_report() lines 53-76"
+          finding: "Ollama prompt for session summary references patient name and raw
+          stats only; no approved clinical knowledge source."
+      gaps:
+        - "No versioned, clinician-approved knowledge source or protocol is referenced
+          by any AI prompt."
+        - "build_alert_guidance is rule-based, not AI; its guidance is generic and
+          explicitly not medically validated."
+
+    - step: "8. The agent generates a contextual recommendation for the nurse"
+      status: "partial"
+      evidence:
+        - file: "app/api/django/monitoring/ai_service.py"
+          location: "build_alert_guidance() lines 124-128"
+          finding: "Returns a recommendations list (parameter-specific guidance,
+          compare-to-threshold warning, apply local protocol). Computed on the fly in
+          api_monitoring_live() and rendered in live-surveillance.jsx lines 326-388."
+        - file: "app/api/django/monitoring/ai_service.py"
+          location: "analyze_measurement() lines 213-219"
+          finding: "Returns analysis + recommendation strings from Ollama, but this is
+          not alert-triggered and not linked to any alert."
+        - file: "app/web/components/live-surveillance.jsx"
+          location: "lines 360-388"
+          finding: "Displays guidance.recommendations when guidance.status === 'ready',
+          plus an urgent escalation banner when guidance.urgent_escalation."
+      gaps:
+        - "Recommendations are not generated by an AI agent in response to an alert;
+          they come from the internal rule-based build_alert_guidance."
+        - "No AI-generated recommendation is ever stored or linked to an alert."
+
+    - step: "9. The recommendation is stored, linked to the original alert, and
+        displayed to the nurse"
+      status: "missing"
+      evidence:
+        - file: "app/api/django/monitoring/models.py"
+          location: "Alerte model lines 91-132; seances.models.Alert lines 158-178"
+          finding: "Neither Alert nor Alerte has a field to store an AI-generated
+          recommendation or link to an AI response. No Recommendation model exists."
+        - file: "app/api/django/api/views.py"
+          location: "api_monitoring_live() lines 1591-1621"
+          finding: "ai_guidance is computed per-request from build_alert_guidance and
+          placed in the JSON response; it is not persisted to the database."
+        - file: "app/web/components/live-surveillance.jsx"
+          location: "lines 326-388"
+          finding: "Displays ai_guidance from the API response; nothing is saved."
+      gaps:
+        - "No database model/table to persist AI recommendations linked to alerts."
+        - "No API endpoint to save or retrieve a stored AI recommendation per alert."
+
+    - step: "10. The system handles failures, duplicate events, delayed processing,
+        and escalation for urgent alerts"
+      status: "partial"
+      evidence:
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "lines 181-191"
+          finding: "15-minute cooldown per seance/parameter suppresses duplicate alerts
+          (status NEW/ACK)."
+        - file: "app/api/django/monitoring/views.py"
+          location: "push_measurement() lines 277-282"
+          finding: "Secondary 5-minute duplicate suppression by niveau+message on
+          Alerte mirror."
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "dispatch_n8n_critical_risk() lines 49-54"
+          finding: "Critical alerts sent to n8n webhook; failure logged only, no
+          retry/fallback."
+        - file: "app/api/django/monitoring/ai_service.py"
+          location: "analyze_measurement() lines 198-231"
+          finding: "Ollama call has 60s timeout; RequestException and JSON decode
+          errors caught and returned as success=False. No retry, no fallback
+          recommendation."
+        - file: "app/api/django/seances/services.py"
+          location: "lines 70-85"
+          finding: "Ollama session-summary call has 10s timeout; on failure a
+          deterministic fallback summary is used."
+        - file: "app/api/mqtt/edge_client.py"
+          location: "save_offline() / flush_offline()"
+          finding: "Edge client has an offline SQLite buffer (offline_buffer.db) for
+          delayed/delayed retry of messages."
+        - file: "app/api/django/monitoring/alerte.py"
+          location: "lines 140-178"
+          finding: "Critical alerts include action text telling staff to follow the
+          establishment's clinical escalation protocol immediately and not wait for
+          automated advice."
+      gaps:
+        - "No escalation route if the AI agent times out or errors (no fallback to a
+          clinician or secondary channel)."
+        - "No delayed/retried alert processing queue beyond the edge offline buffer."
+        - "No acknowledgment escalation (e.g., re-notify if unacknowledged after N
+          minutes)."
+
+  agent_capabilities:
+    implemented:
+      - "Rule-based alert guidance (build_alert_guidance) returns structured parameter,
+        severity, value, unit, threshold, threshold_type checks with recommendations
+        and urgent_escalation flag (monitoring/ai_service.py lines 56-139)."
+      - "Structured output schema from build_alert_guidance: {status, source, cause,
+        recommendations[], urgent_escalation} (monitoring/ai_service.py lines 112-139)."
+      - "Invalid/inconsistent structured alert data yields status='unavailable' rather
+        than fabricated guidance (monitoring/ai_service.py lines 102-118)."
+      - "Ollama invocation error handling (timeouts, connection errors, invalid JSON)
+        in analyze_measurement() (monitoring/ai_service.py lines 198-231) and in
+        generate_session_summary_and_report() (seances/services.py lines 70-85)."
+      - "Validation layer rejects non-numeric/out-of-range values and flags PA/PV
+        inversion (monitoring/validation.py)."
+      - "Disclaimers in prompts: 'Do NOT diagnose', 'Do NOT replace a doctor or
+        nurse', 'Do NOT invent measurements' (monitoring/ai_service.py lines 167-172;
+        seances/services.py lines 53-67)."
+    partially_implemented:
+      - "Structured alert data reception: analyze_measurement() accepts a flat dict of
+        the 7 measurements but NOT alert id/type/severity/threshold/clinical context;
+        invoked manually via /api/ai/analyze/, not by alerts."
+      - "Distinguishing alert facts from assumptions: build_alert_guidance validates
+        unit/threshold consistency and returns 'unavailable' on inconsistent data, but
+        the Ollama analyze_measurement prompt receives raw values with no fact-vs-
+        assumption separation."
+      - "Use of approved clinical protocols: build_alert_guidance uses internal hardcoded
+        thresholds and generic guidance explicitly labelled 'not a substitute for a
+        medically validated local protocol'; no versioned clinical knowledge source is
+        referenced."
+      - "Dialysis-nursing-relevant recommendations: build_alert_guidance returns
+        parameter-specific checks; analyze_measurement returns a generic recommendation.
+        Neither is clinician-authored or versioned."
+      - "Identifying missing/inconsistent information: validation.py and
+        build_alert_guidance handle missing/null/inconsistent values; Ollama path has
+        no such structured validation of its input."
+      - "Avoiding inventing patient data/thresholds/guidelines: validation.py clamps to
+        physical limits and nulls invalid values; build_alert_guidance returns
+        unavailable on invalid input; Ollama prompts say 'Do NOT invent measurements'
+        but there is no enforcement."
+      - "Escalation for critical situations: n8n webhook for HIGH alerts + urgent
+        escalation banner in UI + action text telling staff to follow local clinical
+        escalation protocol; no automated escalation if AI fails or alert unacknowledged."
+      - "Communicating uncertainty / human assessment required: UI disclaimer
+        'Aide à la vérification uniquement; elle ne remplace pas le jugement soignant';
+        build_alert_guidance states validation médicale requise."
+      - "Avoiding independently prescribing treatment: action text explicitly says
+        'ne pas modifier une prescription sur la seule base de cette alerte';
+        build_alert_guidance says 'ne pas modifier une prescription'."
+      - "Protected health information: Django session auth, role-based access
+        (Infirmier/Docteur/Admin), X-Edge-Api-Key for edge; however prompts include
+        patient names (seances/services.py line 55) and there is no prompt/PHI
+        sanitization or log redaction review."
+    missing:
+      - "Alert-triggered AI agent invocation (no code path calls an AI agent after an
+        alert is created)."
+      - "AI agent receiving structured alert context (alert id, type, severity,
+        measured value, unit, threshold, threshold_type, timestamp, patient/seance/
+        nurse context)."
+      - "Persistence of AI-generated recommendations linked to alerts (no
+        Recommendation model or alert.recommendation FK)."
+      - "Stored, linked, retrievable recommendation displayed to the nurse (ai_guidance
+        is computed per-request, not persisted)."
+      - "Versioned, clinician-approved clinical knowledge source referenced by any AI
+        prompt."
+      - "Automated escalation when AI agent times out/errors or when an alert remains
+        unacknowledged."
+      - "Direct nurse notification channel (SMS/email/push) beyond optional n8n
+        webhook and dashboard display."
+      - "Output-schema validation for AI-generated alert recommendations."
+
+  security_and_clinical_safety:
+    findings:
+      - "Authentication: Django session-based (app_user_id), api_login_required and
+        role_required decorators enforce role access on Django views; API endpoints use
+        api_login_required / agent_auth_required / edge_api_key_required
+        (api/views.py lines 107-178)."
+      - "Authorization: roles Admin/Docteur/Infirmier/Technicien; clinical views
+        restricted to Admin/Docteur/Infirmier (monitoring/views.py, seances/views.py,
+        patients/views.py). Technicien explicitly excluded from patient data
+        (accounts/models.py docstring)."
+      - "Edge authentication: X-Edge-Api-Key with constant-time compare
+        (secrets.compare_digest); placeholder keys refused (_edge_api_key_ok,
+        api/views.py lines 64-92)."
+      - "Audit trail: UserActivity model logs login/logout (accounts/signals.py);
+        User model tracks etat/last_seen; no dedicated audit log for alert creation,
+        AI recommendations, or clinical actions."
+      - "XSS prevention: recent commit 'Échapper les valeurs de la base écrites dans
+        innerHTML' (b886385) addresses innerHTML escaping in Django templates."
+      - "PHI in prompts: seances/services.py session-summary prompt embeds patient
+        first/last name (line 55); no PHI minimization or sanitization for AI prompts
+        or logs."
+      - "AI model: local Ollama qwen2.5:3b (and qwen2.5vl:3b for images); model is not
+        pinned by digest, no medical fine-tuning evidence, no clinical validation of
+        outputs."
+      - "Critical alert delivery depends on an external n8n webhook that may be absent;
+        failure is logged only with no fallback (monitoring/alerte.py lines 49-54)."
+      - "No PHI redaction in server/application logs; measurement values and alert
+        messages are logged in plain text (monitoring/alerte.py logger.info)."
+      - "ConversationLog model (monitoring/models.py) stores message/response but is
+        only written by api_agent_superadmin (a placeholder echo), not by any real AI
+        agent flow."
+    risks:
+      - "An AI-generated recommendation, if added without clinical validation, could be
+        mistaken for a medical order and lead to incorrect dialysis parameter changes."
+      - "No stored recommendation linked to an alert means advice cannot be audited,
+        reviewed, or reproduced after the fact."
+      - "Hardcoded thresholds (SEUILS_DEFAUT) and per-seance editable thresholds are
+        not shown to be clinician-approved or versioned."
+      - "Critical alerts rely on an optional n8n webhook; if n8n is down, no alternative
+        nurse notification occurs."
+      - "Patient names are embedded in LLM prompts (seances/services.py) without PHI
+        review."
+      - "No model-output schema validation: a malformed Ollama response in
+        analyze_measurement() is caught as an error, but a well-formed JSON with
+        clinically unsafe content passes through unchecked."
+      - "No duplicate-alert escalation (re-notification) if a critical alert remains
+        unacknowledged beyond the cooldown window."
+      - "Offline edge buffer (offline_buffer.db) can delay alert generation; no staleness
+        or delayed-processing alerting."
+    required_reviews:
+      - "Qualified dialysis clinician must review and approve all alert thresholds
+        (normal/critical min/max for the 7 parameters) before production use."
+      - "Qualified dialysis clinician must review and approve any AI prompt or rule
+        used to generate clinical recommendations; thresholds and guidance must be
+        versioned and sourced from trusted protocols."
+      - "Clinical safety review of the alert->AI agent->recommendation workflow,
+        including false-positive/false-negative harm analysis."
+      - "Privacy/data-protection review (e.g., GDPR/HIPAA-equivalent) of PHI embedded
+        in LLM prompts and logs."
+      - "Security review of n8n webhook integration, authentication, and fallback
+        behavior for critical alerts."
+      - "Penetration/review of role-based access control across Django API and React/
+        Flutter clients."
+
+  critical_gaps:
+    - issue: "No alert-triggered AI agent exists; step 5 of the workflow is entirely
+        missing."
+      evidence: "monitoring/alerte.py analyser_mesure() (lines 194-225) creates the
+      alert and only calls dispatch_n8n_critical_risk() for HIGH alerts. No call to
+      monitoring/ai_service.py or any AI agent exists anywhere after alert creation."
+      impact: "The alert-to-AI-agent workflow cannot function; nurses receive no
+      AI-generated contextual recommendation linked to an alert."
+      recommended_solution: "Add an alert->agent handler (synchronous or background
+      task) invoked after Alerte/seances.Alert creation, passing structured alert +
+      clinical context to an AI service with a validated output schema, then persist
+      the recommendation linked to the alert."
+      priority: "critical"
+    - issue: "No persistence of AI-generated recommendations linked to alerts."
+      evidence: "seances.models.Alert and monitoring.models.Alerte have no
+      recommendation field; no Recommendation model exists; api_monitoring_live()
+      computes ai_guidance per-request and does not persist it
+      (api/views.py lines 1591-1621)."
+      impact: "Recommendations cannot be audited, reviewed, or displayed consistently;
+      no clinical accountability trail."
+      recommended_solution: "Create a Recommendation model (alert FK, model/version,
+      generated content, status, created_at) and a save endpoint; link each AI
+      recommendation to its source alert."
+      priority: "critical"
+    - issue: "No versioned, clinician-approved clinical knowledge source is referenced
+        by any AI prompt or rule."
+      evidence: "monitoring/ai_service.py build_alert_guidance() docstring states the
+      rules 'are not generated by an AI model and are not a substitute for a medically
+      validated local protocol'; Ollama prompts reference no approved protocol
+      (monitoring/ai_service.py lines 152-184; seances/services.py lines 53-67)."
+      impact: "Any AI-generated clinical recommendation lacks an approved evidence base
+      and may be unsafe."
+      recommended_solution: "Define a versioned clinical knowledge source/protocol
+      reference and require clinician sign-off before any AI recommendation is shown
+      to nurses."
+      priority: "critical"
+    - issue: "Critical-alert delivery depends solely on an optional n8n webhook with no
+        fallback or retry."
+      evidence: "dispatch_n8n_critical_risk() (monitoring/alerte.py lines 49-54)
+      logs a warning on failure; no retry, dead-letter, email, SMS, or pager fallback."
+      impact: "Urgent alerts may never reach a nurse if n8n is unavailable."
+      recommended_solution: "Add a persisted outbox/notification table with retry and
+      fallback (email/dashboard in-app notification) for critical alerts."
+      priority: "high"
+    - issue: "No automated escalation for unacknowledged or AI-failed critical alerts."
+      evidence: "Cooldown suppresses duplicates (monitoring/alerte.py lines 181-191)
+      but no re-notification escalation exists; ai_service errors return success=False
+      with no fallback to a clinician (monitoring/ai_service.py lines 221-231)."
+      impact: "Critical alerts can sit unacknowledged; AI failures surface no
+      recommendation and no escalation."
+      recommended_solution: "Implement unacknowledged-alert escalation (re-notify after
+      N minutes) and an AI-failure fallback path that flags the alert for clinician
+      review."
+      priority: "high"
+
+  implementation_plan:
+    - step: 1
+      task: "Add a Recommendation model linked to seances.Alert / monitoring.Alerte
+        with fields: id (UUID), alert FK, source_alert FK, ai_model, model_version,
+        generated_recommendation (JSON/text), status (pending/delivered/ignored),
+        created_at, delivered_at; plus migration."
+      files_to_modify_or_create:
+        - "app/api/django/monitoring/models.py (new Recommendation model)"
+        - "app/api/django/monitoring/migrations/ (new migration)"
+      dependencies: []
+      acceptance_criteria:
+        - "Migration applies cleanly to db.sqlite3."
+        - "Recommendation can be created and linked to an existing alert via Django
+          shell/API."
+    - step: 2
+      task: "Create an alert->AI-agent service function that assembles structured
+        alert context (alert id, type/parameter, severity, measured value, unit,
+        threshold, threshold_type, timestamp, seance id, patient id, machine id,
+        assigned nurse if available) and calls the AI service; persist the result as
+        a Recommendation linked to the alert; handle timeouts/errors gracefully."
+      files_to_modify_or_create:
+        - "app/api/django/monitoring/ai_agent_service.py (new file: generate_alert_recommendation)"
+        - "app/api/django/monitoring/views.py (invoke after alert creation in
+          analyser_mesure call path, or via a signal)"
+        - "app/api/django/api/views.py (optional endpoint to trigger/refresh
+          recommendation for an alert)"
+      dependencies: ["Step 1 (Recommendation model)"]
+      acceptance_criteria:
+        - "Structured alert context is passed (not free-text only)."
+        - "Recommendation row is created and linked to the alert on success."
+        - "On AI timeout/error, recommendation status = failed/error and alert remains
+          visible to nurse without crashing the alert flow."
+    - step: 3
+      task: "Add a saved-recommendation read endpoint and display it in the active
+        alerts UI, falling back to build_alert_guidance when no AI recommendation
+        exists; show model source and a clinical-disclaimer banner."
+      files_to_modify_or_create:
+        - "app/api/django/api/views.py (GET /api/alerts/<id>/recommendation/ or
+          include in api_monitoring_live/alerts payload)"
+        - "app/web/components/live-surveillance.jsx (render stored recommendation)"
+        - "app/api/django/monitoring/urls.py (if new Django view route needed)"
+      dependencies: ["Step 2 (recommendation persistence)"]
+      acceptance_criteria:
+        - "Nurse UI displays the AI-generated recommendation when present."
+        - "Source banner indicates whether guidance is AI-generated or rule-based."
+        - "Disclaimer states recommendations do not replace clinical judgment."
+    - step: 4
+      task: "Add failure handling: retry queue / failed-recommendation flag, and
+        unacknowledged-critical-alert escalation (re-notify after configurable
+        minutes). Avoid n8n single-point-of-failure by adding a persisted
+        notification outbox with dashboard/email fallback."
+      files_to_modify_or_create:
+        - "app/api/django/monitoring/models.py (NotificationOutbox or extend Alerte
+          with escalation fields)"
+        - "app/api/django/monitoring/alerte.py (escalation logic)"
+        - "app/api/django/monitoring/views.py (management command or periodic check
+          for unacknowledged critical alerts)"
+      dependencies: ["Steps 1-3"]
+      acceptance_criteria:
+        - "Failed AI recommendations are retried or flagged, not silently dropped."
+        - "Critical alerts unacknowledged after threshold are escalated/re-notified."
+    - step: 5
+      task: "Add automated tests: unit tests for generate_alert_recommendation
+        (success, timeout, invalid response), integration test for alert->recommendation
+        persistence, and UI test for recommendation display. Define clinical
+        validation checklist requiring sign-off by a dialysis clinician before
+        enabling AI recommendations in production."
+      files_to_modify_or_create:
+        - "app/api/django/monitoring/tests.py (new AI agent tests)"
+        - "docs/ or a CLINICAL_VALIDATION.md checklist"
+      dependencies: ["Steps 1-4"]
+      acceptance_criteria:
+        - "Tests pass for success, timeout, and invalid-response paths."
+        - "Clinical validation checklist documented and acknowledged."
+
+  existing_features_to_preserve:
+    - "Rule-based threshold alert generation with per-seance configurable thresholds
+      and 15-minute cooldown (monitoring/alerte.py)."
+    - "seances.Alert and monitoring.Alerte models with UUID ids, status
+      (NEW/ACK/RESOLVED), ack/resolve endpoints."
+    - "n8n critical-risk webhook dispatch (monitoring/alerte.py)."
+    - "build_alert_guidance() internal rule-based guidance and its unit tests
+      (monitoring/ai_service.py, monitoring/tests.py)."
+    - "Ollama analyze_measurement() /api/ai/analyze/ endpoint and session-summary
+      AI (keep as-is; do not replace with agent)."
+    - "Role-based access control (Admin/Docteur/Infirmier) and edge API-key auth."
+    - "MQTT listener + edge offline buffer pipeline."
+    - "Validation layer (monitoring/validation.py) and physical-limit checks."
+    - "Django templates and React/Flutter dashboards currently in use."
+
+  questions_requiring_clarification:
+    - "Which LLM model/provider should be used for alert recommendations (Ollama
+      qwen2.5:3b already wired, or a different clinical model)?"
+    - "Should AI recommendation generation be synchronous (in the request/alert
+      creation path) or asynchronous (background task/Celery)?"
+    - "Which nurse is 'the appropriate nurse' for alert delivery? Is there a
+      nurse-to-seance/machine assignment, or should alerts go to all Infirmier
+      role users?"
+    - "What notification channel is required beyond the dashboard and optional n8n
+      webhook (email, SMS, in-app, mobile push)?"
+    - "Which dialysis clinical protocols/knowledge sources should be referenced, and
+      which qualified clinician will approve them?"
+    - "What is the acceptable SLA for AI recommendation generation after an alert
+      (seconds/minutes), and what fallback is required if exceeded?"
+    - "Should critical-alert escalation re-notify if unacknowledged, and after how
+      many minutes?"
+    - "Is PHI (patient name) permitted in LLM prompts, or should prompts use
+      pseudonymized identifiers only?"
+
+  final_assessment:
+    ready_for_integration: false
+    summary: >
+      The repository has a solid, verified alert generation and persistence pipeline
+      (measurement -> threshold rules -> Alert/Alerte -> dashboard/n8n), role-based
+      access control, edge authentication, validation, and an Ollama-based AI that is
+      currently used only for manual measurement analysis and end-of-session
+      summaries. However, there is no alert-triggered AI agent: no code path invokes
+      an AI agent after an alert is created, no structured alert context is packaged
+      for an agent, no AI-generated recommendation is persisted or linked to an alert,
+      and no versioned clinician-approved clinical knowledge source is referenced.
+      Critical-alert delivery relies on an optional n8n webhook with no fallback, and
+      there is no escalation for unacknowledged alerts or AI failures. The system is
+      NOT ready for integration of an alert-to-AI-agent workflow without the
+      implementation plan above and clinical sign-off.
+    next_best_action: >
+      Do not modify any code yet. Present this audit to the stakeholder and obtain
+      approval on the implementation plan, the chosen AI model/provider, the clinical
+      knowledge source, the nurse-assignment and notification-channel design, and the
+      clinical validation requirement before any implementation begins.

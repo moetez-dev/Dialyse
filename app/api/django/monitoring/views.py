@@ -2,6 +2,7 @@ import json
 
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.db import transaction
 from django.db.models import Q, Avg, Count
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -314,16 +315,25 @@ from django.views.decorators.http import require_POST
 @app_login_required
 @role_required("Admin", "Docteur", "Infirmier", redirect_to="accounts:error")
 def ack_alert(request, alert_id):
-
     alert = get_object_or_404(
-        Alerte,
-        id=alert_id
+        Alerte.objects.select_related("source_alert"),
+        id=alert_id,
     )
+    if alert.status == "RESOLVED":
+        return JsonResponse(
+            {"success": False, "error": "Alerte déjà résolue"},
+            status=409,
+        )
 
-
-    alert.status = "ACK"
-
-    alert.save()
+    with transaction.atomic():
+        alert.status = "ACK"
+        alert.save(update_fields=["status"])
+        if alert.source_alert_id:
+            alert.source_alert.status = "ACK"
+            alert.source_alert.save(update_fields=["status"])
+            Alerte.objects.filter(source_alert_id=alert.source_alert_id).exclude(
+                status="RESOLVED"
+            ).update(status="ACK")
 
 
     return JsonResponse({
@@ -366,12 +376,25 @@ def alerts_history(request):
 def resolve_alert(request, alert_id):
 
     alert = get_object_or_404(
-        Alerte,
+        Alerte.objects.select_related("source_alert"),
         id=alert_id
     )
 
-    alert.status = "RESOLVED"
-    alert.save()
+    if alert.status == "RESOLVED":
+        return JsonResponse({
+            "success": True,
+            "message": "Alerte déjà résolue"
+        })
+
+    with transaction.atomic():
+        alert.status = "RESOLVED"
+        alert.save(update_fields=["status"])
+        if alert.source_alert_id:
+            alert.source_alert.status = "RESOLVED"
+            alert.source_alert.save(update_fields=["status"])
+            Alerte.objects.filter(source_alert_id=alert.source_alert_id).update(
+                status="RESOLVED"
+            )
 
     return JsonResponse({
         "success": True,

@@ -101,6 +101,13 @@ class Alerte(models.Model):
         on_delete=models.CASCADE,
         related_name="alertes"
     )
+    source_alert = models.ForeignKey(
+        "seances.Alert",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="measurement_alerts",
+    )
 
     niveau = models.CharField(
         max_length=20
@@ -108,6 +115,11 @@ class Alerte(models.Model):
 
     message = models.TextField()
 
+    parameter = models.CharField(max_length=30, null=True, blank=True)
+    measured_value = models.FloatField(null=True, blank=True)
+    unit = models.CharField(max_length=20, null=True, blank=True)
+    threshold = models.FloatField(null=True, blank=True)
+    threshold_type = models.CharField(max_length=20, null=True, blank=True)
 
     status = models.CharField(
         max_length=10,

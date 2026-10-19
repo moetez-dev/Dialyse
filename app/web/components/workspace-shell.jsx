@@ -136,11 +136,11 @@ export function WorkspaceShell({ children }) {
             </button>
           )}
 
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-700 text-white">
               <Icon name="activity" />
             </span>
-            <span className="font-serif text-[17px] font-semibold tracking-tight text-body">
+            <span className="min-w-0 truncate font-serif text-[17px] font-semibold tracking-tight text-body">
               Dialyse&nbsp;Manager
             </span>
           </Link>

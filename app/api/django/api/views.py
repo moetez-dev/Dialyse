@@ -1,15 +1,16 @@
 """
 api/views.py — PFA-Dialyse Mobile REST API (Phase 1)
 """
-from django.views.decorators.csrf import csrf_exempt
 import json
-from django.http import JsonResponse
-from monitoring.ai_service import analyze_measurement
-import json
+import math
 from datetime import date, datetime, timedelta
+
+from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from monitoring.ai_service import analyze_measurement, build_alert_guidance
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Avg, Q
 
@@ -70,9 +71,12 @@ def _edge_api_key_ok(request):
     from django.conf import settings
 
     expected = (getattr(settings, "EDGE_API_KEY", None) or "").strip()
-    # Clé absente ou laissée à sa valeur d'exemple : on refuse plutôt que
-    # d'ouvrir l'accès à quiconque connaît la chaîne publiée.
-    if not expected or expected.lower() in PLACEHOLDER_EDGE_KEYS:
+    # Clé absente : on refuse. En développement (DEBUG=True), la valeur
+    # d'exemple est acceptée pour permettre les tests manuels sans vraie
+    # machine (simulateur). En production, elle est refusée.
+    if not expected:
+        return False
+    if not settings.DEBUG and expected.lower() in PLACEHOLDER_EDGE_KEYS:
         return False
 
     # Uniquement l'en-tête : passé en paramètre d'URL, le secret se retrouve
@@ -1144,6 +1148,8 @@ def api_alerts(request):
     date_filter = request.GET.get("date", "").strip()
     if level_filter in ("LOW", "MEDIUM", "HIGH"):
         seance_alerts = seance_alerts.filter(danger_level=level_filter)
+    if status_filter in ("NEW", "ACK", "RESOLVED"):
+        seance_alerts = seance_alerts.filter(status=status_filter)
     if session_id:
         seance_alerts = seance_alerts.filter(seance__id=session_id)
     if date_filter:
@@ -1164,7 +1170,7 @@ def api_alerts(request):
             "danger_level": a.danger_level,
             "severity": a.danger_level,
             "recommended_action": a.recommended_action,
-            "status": "NEW",
+            "status": a.status,
             "timestamp": a.timestamp.isoformat() if a.timestamp else None,
             "created_at": a.timestamp.isoformat() if a.timestamp else None,
         })
@@ -1208,14 +1214,29 @@ def api_alert_ack(request, alert_id):
     if request.method != "POST":
         return _json_err("POST required", status=405)
     try:
-        m_alert = Alerte.objects.get(id=alert_id)
-        m_alert.status = "ACK"
-        m_alert.save(update_fields=["status"])
+        with transaction.atomic():
+            m_alert = Alerte.objects.select_related("source_alert").get(id=alert_id)
+            if m_alert.status == "RESOLVED":
+                return _json_err("Alert is already resolved", status=409)
+            m_alert.status = "ACK"
+            m_alert.save(update_fields=["status"])
+            if m_alert.source_alert_id:
+                m_alert.source_alert.status = "ACK"
+                m_alert.source_alert.save(update_fields=["status"])
+                Alerte.objects.filter(source_alert_id=m_alert.source_alert_id).exclude(
+                    status="RESOLVED"
+                ).update(status="ACK")
         return _json_ok(message="Alert acknowledged")
-    except Alerte.DoesNotExist:
+    except (Alerte.DoesNotExist, ValidationError):
         try:
-            alert_int_id = int(alert_id)
-            s_alert = SeanceAlert.objects.get(id=alert_int_id)
+            with transaction.atomic():
+                alert_int_id = int(alert_id)
+                s_alert = SeanceAlert.objects.get(id=alert_int_id)
+                if s_alert.status == "RESOLVED":
+                    return _json_err("Alert is already resolved", status=409)
+                s_alert.status = "ACK"
+                s_alert.save(update_fields=["status"])
+                Alerte.objects.filter(source_alert=s_alert).exclude(status="RESOLVED").update(status="ACK")
             return _json_ok(message="Alert acknowledged")
         except (ValueError, SeanceAlert.DoesNotExist):
             return _json_err("Alert not found", status=404)
@@ -1226,12 +1247,32 @@ def api_alert_resolve(request, alert_id):
     if request.method != "POST":
         return _json_err("POST required", status=405)
     try:
-        m_alert = Alerte.objects.get(id=alert_id)
-        m_alert.status = "RESOLVED"
-        m_alert.save(update_fields=["status"])
+        with transaction.atomic():
+            m_alert = Alerte.objects.select_related("source_alert").get(id=alert_id)
+            if m_alert.status == "RESOLVED":
+                return _json_ok(message="Alert already resolved")
+            m_alert.status = "RESOLVED"
+            m_alert.save(update_fields=["status"])
+            if m_alert.source_alert_id:
+                m_alert.source_alert.status = "RESOLVED"
+                m_alert.source_alert.save(update_fields=["status"])
+                Alerte.objects.filter(source_alert_id=m_alert.source_alert_id).update(
+                    status="RESOLVED"
+                )
         return _json_ok(message="Alert resolved")
-    except Alerte.DoesNotExist:
-        return _json_err("Alert not found", status=404)
+    except (Alerte.DoesNotExist, ValidationError):
+        try:
+            with transaction.atomic():
+                alert_int_id = int(alert_id)
+                s_alert = SeanceAlert.objects.get(id=alert_int_id)
+                if s_alert.status == "RESOLVED":
+                    return _json_ok(message="Alert already resolved")
+                s_alert.status = "RESOLVED"
+                s_alert.save(update_fields=["status"])
+                Alerte.objects.filter(source_alert=s_alert).exclude(status="RESOLVED").update(status="RESOLVED")
+            return _json_ok(message="Alert resolved")
+        except (ValueError, SeanceAlert.DoesNotExist):
+            return _json_err("Alert not found", status=404)
 
 @api_login_required
 def api_dashboard(request):
@@ -1411,42 +1452,214 @@ def real_monitoring(request):
         {"success": True, "measurements": data, "alerts": flat_alerts}
     )
 
+def _as_monitoring_severity(level):
+    value = (level or "").upper()
+    if value in {"HIGH", "RED", "CRITIQUE", "CRITICAL", "SEVERE"}:
+        return "critical"
+    if value in {"MEDIUM", "YELLOW", "ATTENTION", "ALERTE", "WARNING", "WARN"}:
+        return "warning"
+    if value in {"LOW", "INFO"}:
+        return "information"
+    return "unknown"
+
+
+def _finite_measurement(value):
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+        return value
+    return None
+
+
 @api_login_required
 def api_monitoring_live(request):
     if request.method != "GET":
         return _json_err("GET required", status=405)
-    active_seances = Seance.objects.filter(status="en cours").select_related("patient", "machine")
+
+    active_seances = list(
+        Seance.objects.filter(status="en cours")
+        .select_related("patient", "machine")
+        .order_by("session_date", "start_hour")
+    )
+    active_alert_query = (
+        Alerte.objects.filter(status__in=["NEW", "ACK"])
+        .select_related("reading__seance__patient", "reading__seance__machine")
+        .order_by("-timestamp")
+    )
+    active_alerts = []
+    seen_alert_keys = set()
+    for alert in active_alert_query:
+        if alert.source_alert_id:
+            alert_key = ("source", alert.source_alert_id)
+        elif alert.parameter:
+            alert_key = ("reading_parameter", alert.reading_id, alert.parameter)
+        else:
+            alert_key = ("alert", alert.id)
+        if alert_key in seen_alert_keys:
+            continue
+        seen_alert_keys.add(alert_key)
+        active_alerts.append(alert)
+    alerts_by_seance = {}
+    for alert in active_alerts:
+        seance_id = alert.reading.seance_id if alert.reading_id else None
+        if seance_id is not None:
+            alerts_by_seance.setdefault(seance_id, []).append(alert)
+
     sessions_data = []
+    patient_session_statuses = {}
+    in_use_machine_ids = set()
+    severity_rank = {"critical": 3, "warning": 2, "information": 1, "unknown": 0}
+
     for seance in active_seances:
         last = LiveMeasurement.objects.filter(seance=seance).order_by("-timestamp").first()
-        if last:
-            sessions_data.append({
-                "seance_id": str(seance.id),
-                "patient": str(seance.patient) if seance.patient else None,
-                "machine": seance.machine.machine_id if seance.machine else None,
-                "debit": seance.debit,
-                "Debit_sang": last.Debit_sang,
-                "Taux_UF": last.Taux_UF,
-                "PA": last.PA,
-                "PTM": last.PTM,
-                "PV": last.PV,
-                "Volume_UF": last.Volume_UF,
-                "Heparine": last.Heparine,
-                "image_url": request.build_absolute_uri(last.image.url) if last.image else None,
-                "status_validation": last.status_validation or "VALIDATED",
-                "source": last.source or "AI_OCR",
-                "timestamp": last.timestamp.isoformat() if last.timestamp else None,
-            })
+        patient = seance.patient
+        if seance.machine_id:
+            in_use_machine_ids.add(seance.machine_id)
 
-    recent_alerts = list(Alerte.objects.filter(status="NEW").order_by("-timestamp")[:20].values("id", "niveau", "message", "status", "timestamp"))
-    for a in recent_alerts:
-        a["id"] = str(a["id"])
-        if a.get("timestamp"):
-            a["timestamp"] = a["timestamp"].isoformat()
+        metrics = {
+            "Debit_sang": _finite_measurement(last.Debit_sang) if last else None,
+            "Taux_UF": _finite_measurement(last.Taux_UF) if last else None,
+            "PA": _finite_measurement(last.PA) if last else None,
+            "PTM": _finite_measurement(last.PTM) if last else None,
+            "PV": _finite_measurement(last.PV) if last else None,
+            "Volume_UF": _finite_measurement(last.Volume_UF) if last else None,
+            "Heparine": _finite_measurement(last.Heparine) if last else None,
+        }
+        has_valid_measurement = any(value is not None for value in metrics.values())
+        session_alerts = alerts_by_seance.get(seance.id, [])
+        alert_levels = [_as_monitoring_severity(alert.niveau) for alert in session_alerts]
+        status = max(alert_levels, key=lambda level: severity_rank[level]) if alert_levels else (
+            "stable" if has_valid_measurement else "unknown"
+        )
+        alert_level = next(
+            (alert.niveau for alert in session_alerts if _as_monitoring_severity(alert.niveau) == status),
+            "normal" if status == "stable" else None,
+        )
+
+        now = timezone.localtime(timezone.now())
+        start_hour = seance.start_hour
+        duration_minutes = max(0, (seance.duration or 0) * 60)
+        elapsed_minutes = None
+        if start_hour and seance.session_date:
+            session_start = timezone.make_aware(
+                datetime.combine(seance.session_date, start_hour),
+                timezone.get_current_timezone(),
+            )
+            elapsed_minutes = max(0, int((now - session_start).total_seconds() / 60))
+
+        remaining_minutes = (
+            max(0, duration_minutes - elapsed_minutes)
+            if elapsed_minutes is not None
+            else None
+        )
+        progress = (
+            min(100, max(0, round((elapsed_minutes / duration_minutes) * 100)))
+            if elapsed_minutes is not None and duration_minutes
+            else None
+        )
+        if patient:
+            patient_session_statuses.setdefault(patient.id, []).append(
+                (has_valid_measurement, status)
+            )
+
+        sessions_data.append({
+            "seance_id": str(seance.id),
+            "patient": str(patient) if patient else None,
+            "age": patient.age if patient else None,
+            "room": seance.machine.location if seance.machine and seance.machine.location else "Salle non renseignée",
+            "machine": seance.machine.machine_id if seance.machine else "Machine non renseignée",
+            "machine_status": getattr(seance.machine, "status", None) if seance.machine else "inconnu",
+            "debit": seance.debit,
+            "status": status,
+            "alert_level": alert_level,
+            "has_measurement": last is not None,
+            "has_valid_measurement": has_valid_measurement,
+            "elapsed_minutes": elapsed_minutes,
+            "remaining_minutes": remaining_minutes,
+            "progress": progress,
+            "start_hour": start_hour.isoformat() if start_hour else None,
+            "duration_minutes": duration_minutes or None,
+            "metrics": metrics,
+            "source": last.source if last else None,
+            "timestamp": last.timestamp.isoformat() if last and last.timestamp else None,
+        })
+
+    recent_alerts = []
+    for alert in active_alerts[:20]:
+        seance = alert.reading.seance if alert.reading else None
+        patient = seance.patient if seance and seance.patient else None
+        parameter = alert.parameter if alert.parameter in {
+            "Debit_sang", "Taux_UF", "PA", "PTM", "PV", "Volume_UF", "Heparine"
+        } else None
+        measured_value = _finite_measurement(alert.measured_value)
+        threshold = _finite_measurement(alert.threshold)
+        ai_guidance = build_alert_guidance(
+            parameter=parameter,
+            severity=alert.niveau,
+            measured_value=measured_value,
+            unit=alert.unit,
+            threshold=threshold,
+            threshold_type=alert.threshold_type,
+        )
+        reference = None
+        if threshold is not None and alert.threshold_type in {
+            "normal_min", "normal_max", "critical_min", "critical_max"
+        }:
+            operator = "<" if alert.threshold_type.endswith("_min") else ">"
+            threshold_kind = "critique" if alert.threshold_type.startswith("critical_") else "avertissement"
+            reference = f"{operator} {threshold:g} {alert.unit or ''} ({threshold_kind})".strip()
+        recent_alerts.append({
+            "id": str(alert.id),
+            "niveau": alert.niveau,
+            "severity": _as_monitoring_severity(alert.niveau),
+            "status": alert.status,
+            "message": alert.message or "Alerte",
+            "parameter": parameter,
+            "value": measured_value,
+            "unit": alert.unit,
+            "reference": reference,
+            "patient": str(patient) if patient else None,
+            "machine": seance.machine.machine_id if seance and seance.machine else None,
+            "timestamp": alert.timestamp.isoformat() if alert.timestamp else None,
+            "ai_guidance": ai_guidance,
+            "session_id": str(seance.id) if seance else None,
+        })
+
+    total_machines = Machine.objects.count()
+    available_machines = Machine.objects.filter(status="Prete").exclude(
+        id__in=in_use_machine_ids
+    ).count()
+    critical_alerts = sum(
+        1 for alert in active_alerts
+        if _as_monitoring_severity(alert.niveau) == "critical"
+    )
+    warning_alerts = sum(
+        1 for alert in active_alerts
+        if _as_monitoring_severity(alert.niveau) == "warning"
+    )
+    active_patients_count = len({
+        seance.patient_id for seance in active_seances if seance.patient_id
+    })
+    stable_patients = sum(
+        1 for session_statuses in patient_session_statuses.values()
+        if all(
+            has_measurement and status in {"stable", "information"}
+            for has_measurement, status in session_statuses
+        )
+    )
+
     return JsonResponse({
         "success": True,
         "sessions": sessions_data,
         "alerts": recent_alerts,
+        "active_alerts_count": len(active_alerts),
+        "active_patients_count": active_patients_count,
+        "kpis": {
+            "active_sessions": len(active_seances),
+            "total_machines": total_machines,
+            "available_machines": available_machines,
+            "critical_alerts": critical_alerts,
+            "warning_alerts": warning_alerts,
+            "stable_patients": stable_patients,
+        },
         "last_update": timezone.now().isoformat(),
     })
 
@@ -1928,4 +2141,3 @@ def api_agent_superadmin(request):
         "final_answer": reponse,
         "_meta": {"iterations": 1, "is_dangerous": False}
     }, status=200)
-

@@ -1,6 +1,7 @@
 import logging
 import requests
 from datetime import timedelta
+from django.db import DatabaseError
 from django.utils import timezone
 from django.conf import settings
 
@@ -47,9 +48,10 @@ def dispatch_n8n_critical_risk(alert_obj, measurement, seance):
     
     try:
         response = requests.post(n8n_url, json=payload, timeout=5)
-        print(f"[N8N] Webhook dispatched to {n8n_url} | Status {response.status_code}")
-    except Exception as e:
-        print(f"[N8N] Webhook dispatch warning: {e}")
+        response.raise_for_status()
+        logger.info("Critical alert webhook sent (status=%s)", response.status_code)
+    except requests.RequestException as exc:
+        logger.warning("Critical alert webhook failed (%s)", type(exc).__name__)
 
 
 def analyser_mesure(mesure):
@@ -132,37 +134,60 @@ def analyser_mesure(mesure):
         niveau = None
         message = None
         action  = None
+        threshold = None
+        threshold_type = None
 
         # CRITIQUE (HIGH)
         if s["crit_min"] is not None and valeur < s["crit_min"]:
             niveau  = "HIGH"
+            threshold = s["crit_min"]
+            threshold_type = "critical_min"
             message = f"🔴 CRITIQUE — {label} très bas : {valeur} {unite} (seuil critique min: {s['crit_min']} {unite})"
-            action  = f"Vérifier immédiatement la ligne et alerter l'équipe soignante pour {label}."
+            action = (
+                "Suivre sans délai le protocole d'escalade clinique de l'établissement "
+                "et confirmer la mesure; ne pas attendre un conseil automatisé."
+            )
         elif s["crit_max"] is not None and valeur > s["crit_max"]:
             niveau  = "HIGH"
+            threshold = s["crit_max"]
+            threshold_type = "critical_max"
             message = f"🔴 CRITIQUE — {label} très élevé : {valeur} {unite} (seuil critique max: {s['crit_max']} {unite})"
-            action  = f"Ajuster d'urgence les paramètres de la machine pour {label}."
+            action = (
+                "Suivre sans délai le protocole d'escalade clinique de l'établissement "
+                "et confirmer la mesure; ne pas modifier la prescription sur la seule base de cette alerte."
+            )
 
         # ATTENTION (MEDIUM)
         elif s["min"] is not None and valeur < s["min"]:
             niveau  = "MEDIUM"
+            threshold = s["min"]
+            threshold_type = "normal_min"
             message = f"🟡 ATTENTION — {label} bas : {valeur} {unite} (min normal: {s['min']} {unite})"
-            action  = f"Surveiller {label} et vérifier la consigne machine."
+            action = (
+                f"Confirmer la mesure de {label} et appliquer le protocole local; "
+                "ne pas modifier une prescription sur la seule base de cette alerte."
+            )
         elif s["max"] is not None and valeur > s["max"]:
             niveau  = "MEDIUM"
+            threshold = s["max"]
+            threshold_type = "normal_max"
             message = f"🟡 ATTENTION — {label} élevé : {valeur} {unite} (max normal: {s['max']} {unite})"
-            action  = f"Surveiller {label} et adapter l'ultrafiltration/débit."
+            action = (
+                f"Confirmer la mesure de {label} et appliquer le protocole local; "
+                "ne pas modifier une prescription sur la seule base de cette alerte."
+            )
 
         if niveau:
             # Vérifier le Cooldown de 15 minutes sur la séance pour ce paramètre
             recent_alert = Alert.objects.filter(
                 seance=seance,
                 alert_type=label,
-                timestamp__gte=cooldown_cutoff
+                timestamp__gte=cooldown_cutoff,
+                status__in=["NEW", "ACK"],
             ).first()
 
             if recent_alert:
-                print(f"[COOLDOWN] Alert for '{label}' suppressed on session {seance.id} (last alert at {recent_alert.timestamp})")
+                logger.debug("Alert cooldown applied (parameter=%s)", champ)
                 continue
 
             # Créer l'alerte principale (seances.Alert)
@@ -178,15 +203,21 @@ def analyser_mesure(mesure):
             try:
                 Alerte.objects.create(
                     reading=mesure,
+                    source_alert=alert_obj,
                     niveau="RED" if niveau == "HIGH" else "YELLOW",
                     message=message,
-                    status="NEW"
+                    status="NEW",
+                    parameter=champ,
+                    measured_value=valeur,
+                    unit=unite,
+                    threshold=threshold,
+                    threshold_type=threshold_type,
                 )
-            except Exception as e:
-                logger.warning(f"Failed to create mirror Alerte: {e}")
+            except DatabaseError as exc:
+                logger.warning("Failed to persist measurement alert mirror (%s)", type(exc).__name__)
 
             created_alerts.append(alert_obj)
-            print(f"[ALERT CREATED] {niveau} - {label}: {valeur} {unite} | Seance {seance.id}")
+            logger.info("Alert created (severity=%s, parameter=%s)", niveau, champ)
 
             # Déclencher le webhook n8n pour les alertes critiques
             if niveau == "HIGH":

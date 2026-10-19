@@ -168,6 +168,11 @@ class Alert(models.Model):
     message          = models.TextField()
     danger_level     = models.CharField(max_length=10, choices=DANGER_LEVELS)
     recommended_action = models.TextField()
+    status           = models.CharField(
+        max_length=10,
+        choices=[('NEW', 'Nouvelle'), ('ACK', 'Acquittée'), ('RESOLVED', 'Résolue')],
+        default='NEW',
+    )
 
     class Meta:
         db_table = 'alerts'

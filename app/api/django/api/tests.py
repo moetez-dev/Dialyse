@@ -1,7 +1,9 @@
 import json
 from datetime import date
+from unittest.mock import patch
 from django.conf import settings
 from django.test import TestCase, Client
+from django.test.utils import override_settings
 from django.urls import reverse
 from accounts.models import User, Role
 from patients.models import Patient
@@ -253,6 +255,129 @@ class Phase1ApiTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.json()["success"])
 
+    def test_monitoring_live_kpis_and_structured_alert_data(self):
+        self._login(self.doctor_user)
+        self.machine.location = "Salle A"
+        self.machine.save(update_fields=["location"])
+        self.seance.status = "en cours"
+        self.seance.save(update_fields=["status"])
+        reading = LiveMeasurement.objects.create(
+            seance=self.seance,
+            PA=210,
+            PTM=-65,
+        )
+        Alerte.objects.create(
+            reading=reading,
+            niveau="RED",
+            message="Message legacy sans valeur exploitable",
+            status="NEW",
+            parameter="PA",
+            measured_value=210,
+            unit="mmHg",
+            threshold=200,
+            threshold_type="critical_max",
+        )
+        Alerte.objects.create(
+            reading=reading,
+            niveau="YELLOW",
+            message="Message legacy sans valeur exploitable",
+            status="ACK",
+            parameter="PTM",
+            measured_value=-65,
+            unit="mmHg",
+            threshold=-50,
+            threshold_type="normal_min",
+        )
+        resolved_alert = Alerte.objects.create(
+            reading=reading,
+            niveau="RED",
+            message="Resolved alert",
+            status="RESOLVED",
+            parameter="PA",
+            measured_value=210,
+            unit="mmHg",
+            threshold=200,
+            threshold_type="critical_max",
+        )
+
+        stable_patient = Patient.objects.create(
+            first_name="Leila",
+            last_name="Test",
+            date_of_birth=date(1990, 1, 1),
+            age=36,
+            groupe_sanguin="A+",
+            type_de_dialyse="Hémodialyse",
+        )
+        stable_machine = Machine.objects.create(
+            machine_id="M101",
+            model="Model-Y",
+            manufacturer="DialysisCorp",
+            status="Prete",
+            location="Salle B",
+        )
+        stable_session = Seance.objects.create(
+            patient=stable_patient,
+            machine=stable_machine,
+            session_date=date.today(),
+            duration=4,
+            status="en cours",
+        )
+        LiveMeasurement.objects.create(seance=stable_session, PA=120)
+
+        no_data_patient = Patient.objects.create(
+            first_name="Nour",
+            last_name="Test",
+            date_of_birth=date(1992, 2, 2),
+            age=34,
+            groupe_sanguin="B+",
+            type_de_dialyse="Hémodialyse",
+        )
+        Seance.objects.create(
+            patient=no_data_patient,
+            session_date=date.today(),
+            duration=4,
+            status="en cours",
+        )
+        Machine.objects.create(
+            machine_id="M102",
+            model="Model-Z",
+            manufacturer="DialysisCorp",
+            status="Prete",
+        )
+
+        response = self.client.get("/api/monitoring/live/")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+
+        self.assertEqual(payload["kpis"], {
+            "active_sessions": 3,
+            "total_machines": 3,
+            "available_machines": 1,
+            "critical_alerts": 1,
+            "warning_alerts": 1,
+            "stable_patients": 1,
+        })
+        self.assertEqual(payload["active_alerts_count"], 2)
+        self.assertEqual(payload["active_patients_count"], 3)
+        self.assertEqual(
+            {alert["status"] for alert in payload["alerts"]},
+            {"NEW", "ACK"},
+        )
+        self.assertNotIn(str(resolved_alert.id), {alert["id"] for alert in payload["alerts"]})
+
+        pa_alert = next(alert for alert in payload["alerts"] if alert["parameter"] == "PA")
+        self.assertEqual(pa_alert["value"], 210)
+        self.assertEqual(pa_alert["reference"], "> 200 mmHg (critique)")
+        self.assertEqual(pa_alert["ai_guidance"]["status"], "ready")
+        self.assertTrue(pa_alert["ai_guidance"]["urgent_escalation"])
+        self.assertIn("non générée par IA", pa_alert["ai_guidance"]["source"])
+
+        ptm_session = next(session for session in payload["sessions"] if session["seance_id"] == str(self.seance.id))
+        self.assertEqual(ptm_session["metrics"]["PTM"], -65)
+        no_data_session = next(session for session in payload["sessions"] if not session["has_measurement"])
+        self.assertIsNone(no_data_session["metrics"]["PA"])
+        self.assertEqual(no_data_session["status"], "unknown")
+
     def test_real_monitoring_requires_session(self):
         res = self.client.get("/api/real-monitoring/")
         self.assertEqual(res.status_code, 401)
@@ -261,7 +386,9 @@ class Phase1ApiTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.json()["success"])
 
+    @override_settings(EDGE_API_KEY="test-edge-api-key")
     def test_seance_debit_api(self):
+        self.edge_headers = {"HTTP_X_EDGE_API_KEY": "test-edge-api-key"}
         self.seance.status = "en cours"
         self.seance.debit = 30
         self.seance.save()
@@ -274,7 +401,10 @@ class Phase1ApiTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()["debit"], 30)
 
-    def test_push_measurement_pipeline(self):
+    @override_settings(EDGE_API_KEY="test-edge-api-key")
+    @patch("monitoring.alerte.dispatch_n8n_critical_risk")
+    def test_push_measurement_pipeline(self, dispatch_critical_risk):
+        self.edge_headers = {"HTTP_X_EDGE_API_KEY": "test-edge-api-key"}
         self.seance.status = "en cours"
         self.seance.save()
         payload = {
@@ -304,21 +434,42 @@ class Phase1ApiTests(TestCase):
         self.assertTrue(data.get("success"))
         self.assertGreater(data.get("monitoring_alerts_created", 0), 0)
         self.assertGreater(data.get("seance_alerts_created", 0), 0)
+        dispatch_critical_risk.assert_called_once()
+        blood_flow_alert = Alerte.objects.get(
+            reading__seance=self.seance,
+            parameter="Debit_sang",
+        )
+        self.assertEqual(blood_flow_alert.measured_value, 80)
+        self.assertEqual(blood_flow_alert.unit, "mL/min")
+        self.assertEqual(blood_flow_alert.threshold, 100)
+        self.assertEqual(blood_flow_alert.threshold_type, "critical_min")
+        self.assertIsNotNone(blood_flow_alert.source_alert_id)
 
     def test_alerts_api_and_ack_resolve(self):
         self._login(self.doctor_user)
         self.seance.status = "en cours"
         self.seance.save()
         meas = LiveMeasurement.objects.create(seance=self.seance, PA=210)
-        m_alert = Alerte.objects.create(
-            reading=meas, niveau="RED", message="PA trop élevée", status="NEW"
-        )
-        SeanceAlert.objects.create(
+        seance_alert = SeanceAlert.objects.create(
             seance=self.seance,
             alert_type="PA",
             message="PA très élevée",
             danger_level="HIGH",
             recommended_action="Réduire débit",
+        )
+        m_alert = Alerte.objects.create(
+            reading=meas,
+            source_alert=seance_alert,
+            niveau="RED",
+            message="PA trop élevée",
+            status="NEW",
+        )
+        duplicate_alert = Alerte.objects.create(
+            reading=meas,
+            source_alert=seance_alert,
+            niveau="RED",
+            message="PA trop élevée",
+            status="NEW",
         )
         res = self.client.get("/api/alerts/")
         self.assertEqual(res.status_code, 200)
@@ -328,11 +479,27 @@ class Phase1ApiTests(TestCase):
         self.assertEqual(res_ack.status_code, 200)
         m_alert.refresh_from_db()
         self.assertEqual(m_alert.status, "ACK")
+        duplicate_alert.refresh_from_db()
+        self.assertEqual(duplicate_alert.status, "ACK")
+        seance_alert.refresh_from_db()
+        self.assertEqual(seance_alert.status, "ACK")
+        live_after_ack = self.client.get("/api/monitoring/live/").json()
+        self.assertEqual(live_after_ack["active_alerts_count"], 1)
+        self.assertEqual(live_after_ack["alerts"][0]["status"], "ACK")
+        self.assertEqual(live_after_ack["kpis"]["critical_alerts"], 1)
 
         res_res = self.client.post(f"/api/alerts/{m_alert.id}/resolve/")
         self.assertEqual(res_res.status_code, 200)
         m_alert.refresh_from_db()
         self.assertEqual(m_alert.status, "RESOLVED")
+        duplicate_alert.refresh_from_db()
+        self.assertEqual(duplicate_alert.status, "RESOLVED")
+        seance_alert.refresh_from_db()
+        self.assertEqual(seance_alert.status, "RESOLVED")
+        live_after_resolve = self.client.get("/api/monitoring/live/").json()
+        self.assertEqual(live_after_resolve["alerts"], [])
+        self.assertEqual(live_after_resolve["kpis"]["critical_alerts"], 0)
+        self.assertEqual(self.client.post(f"/api/alerts/{seance_alert.id}/ack/").status_code, 409)
 
 
     def test_patient_create_api(self):
