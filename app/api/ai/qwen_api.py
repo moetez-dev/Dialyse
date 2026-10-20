@@ -9,13 +9,18 @@ app = FastAPI(title="PFA Dialyse AI Server (Qwen)")
 
 import os
 
+#: Les sept paramètres de dialyse, tels que attendus par la validation.
+_MEASURE_KEYS = frozenset({
+    "qb", "pa", "pv", "ptm", "uf_volume", "uf_rate", "heparin",
+})
+
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
+OLLAMA_TAGS_URL = os.environ.get("OLLAMA_TAGS_URL", "http://127.0.0.1:11434/api/tags")
 MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5vl:3b")
 
 def sanitize_extracted_dict(data: dict) -> dict:
     """Ensure output keys match standard format with float values or null."""
-    standard_keys = {
-        "qb": ["qb", "debit_sang", "blood_flow"],
+    standard_keys = {        "qb": ["qb", "debit_sang", "blood_flow"],
         "pa": ["pa", "pression_arterielle", "arterial_pressure"],
         "pv": ["pv", "pression_veineuse", "venous_pressure"],
         "ptm": ["ptm", "tmp", "pression_transmembranaire"],
@@ -62,9 +67,37 @@ def sanitize_extracted_dict(data: dict) -> dict:
 
 @app.get("/health")
 def health():
+    """État du service, et du modèle réellement joignable.
+
+    `status` décrit le service HTTP. `model_available` décrit le modèle :
+    il vaut False si Ollama est absent, et le service répond alors 200
+    sans aucune valeur lisible. Confondre les deux revenait à annoncer un
+    modèle « ok » alors qu'aucune image n'a jamais été analysée.
+    """
+    model_available = False
+    detail = "Ollama injoignable"
+    try:
+        response = requests.get(OLLAMA_TAGS_URL, timeout=3)
+        if response.status_code == 200:
+            names = [
+                m.get("name")
+                for m in (response.json().get("models") or [])
+                if isinstance(m, dict)
+            ]
+            model_available = MODEL in names
+            detail = (
+                f"modèle {MODEL} disponible"
+                if model_available
+                else f"modèle {MODEL} absent (disponibles : {names or 'aucun'})"
+            )
+    except Exception as exc:
+        detail = f"Ollama injoignable ({type(exc).__name__})"
+
     return {
         "status": "ok",
-        "model": MODEL
+        "model": MODEL,
+        "model_available": model_available,
+        "model_detail": detail,
     }
 
 
@@ -119,35 +152,48 @@ IMPORTANT RULES:
             if response.status_code == 200:
                 result_json = response.json()
                 raw_response = result_json.get("response", "")
-                
+
                 start = raw_response.find("{")
                 end = raw_response.rfind("}") + 1
                 if start != -1 and end != 0:
                     raw_data = json.loads(raw_response[start:end])
                     extracted = sanitize_extracted_dict(raw_data)
                     extracted["_source"] = "qwen_ollama"
+                    extracted["status"] = "ok"
+                    extracted["model"] = MODEL
+                    extracted["extracted"] = sum(
+                        1 for k, v in extracted.items() if k in _MEASURE_KEYS and v is not None
+                    )
                     return JSONResponse(content=extracted)
         except Exception as err:
-            print(f"[QWEN_API] Ollama call error: {err}")
+            print(f"[QWEN_API] Ollama call error: {err}", flush=True)
 
-        # Fallback response if Ollama fails or is unreachable
+        # Échec de lecture : aucune valeur n'est produite. Le consommateur
+        # (listener MQTT) doit enregistrer cet état, pas une mesure.
         return JSONResponse(
             status_code=200,
             content={
                 "qb": None, "pa": None, "pv": None, "ptm": None,
                 "uf_volume": None, "uf_rate": None, "heparin": None,
                 "_source": "ollama_fallback",
+                "status": "unavailable",
+                "model": MODEL,
+                "extracted": 0,
                 "warning": "Ollama service unavailable or failed to parse image"
             }
         )
 
     except Exception as e:
-        print(f"[QWEN_API] Exception: {e}")
+        print(f"[QWEN_API] Exception: {e}", flush=True)
         return JSONResponse(
             status_code=200,
             content={
                 "error": str(e),
                 "qb": None, "pa": None, "pv": None, "ptm": None,
-                "uf_volume": None, "uf_rate": None, "heparin": None
+                "uf_volume": None, "uf_rate": None, "heparin": None,
+                "_source": "ollama_fallback",
+                "status": "error",
+                "model": MODEL,
+                "extracted": 0,
             }
         )

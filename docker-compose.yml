@@ -29,7 +29,9 @@ services:
     working_dir: /workspace/app/api/django
     command: python manage.py runserver 0.0.0.0:8000
     environment:
-      RUN_MIGRATIONS: "1"
+      # Applique les migrations au démarrage. Mettre RUN_MIGRATIONS=0 pour
+      # démarrer sans toucher au schéma (base de développement figée).
+      RUN_MIGRATIONS: "${RUN_MIGRATIONS:-1}"
       DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,api,web,0.0.0.0"
       DJANGO_CSRF_TRUSTED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
       MQTT_BROKER: mqtt

@@ -1,0 +1,36 @@
+# Profil de production — surcharge de docker-compose.yml.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Ce fichier n'active que des réglages de configuration : il ne touche ni au
+# code, ni à la base, ni aux volumes. Le service `api` refuse de démarrer si
+# DJANGO_SECRET_KEY ou EDGE_API_KEY sont restés sur leur valeur de
+# développement (A-12).
+#
+# Les secrets sont attendus dans l'environnement ou dans un fichier `.env`
+# de production, jamais dans ce fichier.
+
+services:
+  api:
+    environment:
+      DJANGO_ENV: "production"
+      # Le mode debug est désactivé : les pages d'erreur Django n'exposent
+      # plus la liste des URL ni la trace d'exécution.
+      DJANGO_DEBUG: "False"
+      # À renseigner : les hôtes réellement servis.
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "${DJANGO_CSRF_TRUSTED_ORIGINS:-https://localhost}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:?définir DJANGO_SECRET_KEY pour la production}"
+      EDGE_API_KEY: "${EDGE_API_KEY:?définir EDGE_API_KEY pour la production}"
+      # Le client Flutter Web est cross-origin : cookies SameSite=None+Secure.
+      DJANGO_CROSS_SITE_COOKIES: "${DJANGO_CROSS_SITE_COOKIES:-True}"
+      DJANGO_SSL_REDIRECT: "${DJANGO_SSL_REDIRECT:-False}"
+    command: python manage.py runserver 0.0.0.0:8000
+
+  listener:
+    environment:
+      DJANGO_ENV: "production"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:?définir DJANGO_SECRET_KEY pour la production}"
+      EDGE_API_KEY: "${EDGE_API_KEY:?définir EDGE_API_KEY pour la production}"
+      MQTT_BROKER: "mqtt"
+      MQTT_PORT: "1883"

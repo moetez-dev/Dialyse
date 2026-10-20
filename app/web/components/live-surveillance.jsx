@@ -1,12 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { apiRequest } from './api';
 import { Icon } from './icons';
 import { Badge, Card, EmptyState, PageHeader, StatCard, StatusBadge } from './ui';
 
+// Cadence d'interrogation du flux de surveillance.
+//
+// Elle suit la cadence d'acquisition réelle : le délai d'envoi d'image
+// configuré sur la séance (`debit`, 20/30/60 s). Interroger toutes les
+// 10 s alors que le générateur n'émet que toutes les 60 s ne produisait
+// qu'un rafraîchissement d'écran sans nouvelle donnée (A-13).
 const REFRESH_MS = 10000;
+const MIN_REFRESH_MS = 5000;
+const MAX_REFRESH_MS = 60000;
+
+/** Une source est-elle synthétique ? (miroir de monitoring/provenance.py) */
+function isSimulatedSource(source) {
+  if (!source) return false;
+  const norm = String(source).trim().toLowerCase();
+  if (norm === 'simulation' || norm === 'telemetry_sim' || norm === 'simulateur') return true;
+  return norm.includes('simul') || norm.includes('_sim') || norm.includes('sim_');
+}
 
 function formatMetricValue(value, unit) {
   if (value == null || value === '') return 'Non disponible';
@@ -92,9 +108,11 @@ export function LiveSurveillance() {
   const [stale, setStale] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
+  const refreshMsRef = useRef(REFRESH_MS);
 
   useEffect(() => {
     let alive = true;
+    let timer = null;
 
     async function refresh() {
       try {
@@ -103,6 +121,15 @@ export function LiveSurveillance() {
         setSnapshot(data);
         setError('');
         setStale(false);
+
+        // La cadence suit l'intervalle d'acquisition le plus court des
+        // séances actives : interroger plus vite n'apporterait aucune
+        // donnée supplémentaire.
+        const debits = (data.sessions || [])
+          .map((session) => Number(session.debit))
+          .filter((value) => Number.isFinite(value) && value > 0);
+        const cadence = debits.length ? Math.min(...debits) * 1000 : REFRESH_MS;
+        refreshMsRef.current = Math.max(MIN_REFRESH_MS, Math.min(MAX_REFRESH_MS, cadence));
       } catch (cause) {
         if (!alive) return;
         setStale(true);
@@ -111,14 +138,17 @@ export function LiveSurveillance() {
             ? "Votre rôle n'a pas accès à la surveillance."
             : cause.message || 'Le flux de mesures est interrompu.',
         );
+      } finally {
+        if (alive) {
+          timer = window.setTimeout(refresh, refreshMsRef.current);
+        }
       }
     }
 
     refresh();
-    const timer = window.setInterval(refresh, REFRESH_MS);
     return () => {
       alive = false;
-      window.clearInterval(timer);
+      if (timer) window.clearTimeout(timer);
     };
   }, [refreshVersion]);
 
@@ -163,7 +193,7 @@ export function LiveSurveillance() {
             }`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${stale ? 'bg-critical' : 'animate-pulse bg-stable'}`} />
-            {stale ? 'Flux interrompu' : `Temps réel · ${REFRESH_MS / 1000}s`}
+            {stale ? 'Flux interrompu' : `Temps réel · ${Math.round(refreshMsRef.current / 1000)}s`}
           </span>
         }
       />
@@ -241,8 +271,26 @@ export function LiveSurveillance() {
                           {session.room || 'Salle non renseignée'} · {session.machine || 'Machine non renseignée'}
                         </p>
                         <p className="mt-1 text-xs font-medium text-body-soft">Séance en cours</p>
+                        {session.is_stale && (
+                          <p className="mt-1 text-xs font-medium text-warning">
+                            Séance hors délai : la durée prévue est dépassée et la séance n'a pas été close.
+                          </p>
+                        )}
+                        {session.source && (
+                          <p className="mt-1 text-xs text-body-faint">
+                            Source des relevés :{' '}
+                            {isSimulatedSource(session.source)
+                              ? 'simulateur (données synthétiques)'
+                              : session.source}
+                          </p>
+                        )}
                       </div>
-                      <Badge label={sessionStatusLabel(session.status)} tone={sessionStatusTone(session.status)} dot />
+                      <div className="flex flex-col items-end gap-1.5">
+                        <Badge label={sessionStatusLabel(session.status)} tone={sessionStatusTone(session.status)} dot />
+                        {isSimulatedSource(session.source) && (
+                          <Badge label="Données simulées" tone="warn" />
+                        )}
+                      </div>
                     </header>
 
                     <div className="px-5 py-4">
@@ -333,6 +381,10 @@ export function LiveSurveillance() {
                             <p className="text-xs text-body-faint">{alert.machine || 'Machine non renseignée'}</p>
                           </div>
                           <div className="flex shrink-0 flex-col items-end gap-1.5">
+                            {alert.is_simulated && <Badge label="Simulation" tone="warn" />}
+                            {!alert.is_clinical && !alert.is_simulated && (
+                              <Badge label="Origine inconnue" tone="warn" />
+                            )}
                             <StatusBadge value={severityBadgeValue(alert.niveau)} kind="alerte" dot />
                             <Badge
                               label={alert.status === 'ACK' ? 'Acquittée' : 'Active'}
@@ -357,10 +409,12 @@ export function LiveSurveillance() {
                           {alert.message || 'Alerte sans message détaillé.'}
                         </p>
 
-                        <div className="mt-3 rounded-lg border border-line bg-brand-50 p-3">
+                        <div className="mt-3 rounded-lg border border-line bg-surface-sunken p-3">
                           <div className="mb-2 flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-body-faint">Aide contextuelle</p>
-                            <span className="text-right text-[10px] text-body-faint">{guidance.source || 'Source non disponible'}</span>
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-700 dark:text-brand-200">
+                              Aide contextuelle
+                            </p>
+                            <span className="text-right text-[10px] text-body-soft">{guidance.source || 'Source non disponible'}</span>
                           </div>
                           {guidance.urgent_escalation && (
                             <p className="mb-2 rounded-md bg-critical-soft px-2.5 py-2 text-xs font-semibold text-critical">
@@ -377,13 +431,15 @@ export function LiveSurveillance() {
                                   ))}
                                 </ul>
                               )}
-                              <p className="mt-2 text-xs text-body-faint">
+                              <p className="mt-2 text-xs text-body-soft">
                                 Aide à la vérification uniquement; elle ne remplace pas le jugement soignant ni le protocole validé.
                               </p>
                             </>
                           ) : (
                             <p className="text-sm text-body-soft">
-                              Aucun conseil fiable n'est disponible pour cette alerte. Vérifiez la mesure et le protocole clinique local.
+                              Données de mesure indisponibles pour cette alerte : aucun conseil
+                              automatique ne peut lui être rattaché. Vérifiez la mesure et le
+                              protocole clinique local.
                             </p>
                           )}
                         </div>

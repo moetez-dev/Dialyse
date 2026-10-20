@@ -94,7 +94,10 @@ def test_3_4_6_7_mqtt_real_image_loop():
             first_name="Eya", last_name="Ben Chahla", date_of_birth="1995-02-10", age=29, telephone="55123456"
         )
 
-    machine, _ = Machine.objects.get_or_create(machine_id="M001", defaults={"nom": "Dialyse-M001", "status": "en cours"})
+    # Le modèle Machine n'a pas de champ « nom », et ses statuts valides sont
+    # Prete / Reserve / Maintenance / Hors Service : « nom » et « en cours »
+    # faisaient échouer la création sur une base où M001 n'existe pas.
+    machine, _ = Machine.objects.get_or_create(machine_id="M001", defaults={"model": "Dialyse-M001", "status": "Prete"})
 
     seance, _ = Seance.objects.get_or_create(
         patient=patient, machine=machine, status="en cours",

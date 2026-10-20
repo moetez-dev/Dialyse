@@ -2,15 +2,26 @@
 """
 edge_client.py
 --------------
-Nouveau client Edge pour le systÃ¨me de dialyse.
-- Ne touche PAS Ã  producer.py (code existant protÃ©gÃ©)
+Nouveau client Edge pour le système de dialyse.
+- Ne touche PAS à producer.py (code existant protégé)
 - Support MQTT (principal) + Offline buffer + HTTP fallback
-- Mode SIMULATION (sans Raspberry / sans camÃ©ra) pour tester maintenant
+- Mode SIMULATION (sans Raspberry / sans caméra) pour tester maintenant
 
 Usage:
-  python edge_client.py                  # mode simulation
-  python edge_client.py --real           # mode rÃ©el (quand le matÃ©riel arrive)
+  python edge_client.py                  # mode simulation, broker local
+  python edge_client.py --broker mqtt    # broker d'un réseau Docker (compose)
+  python edge_client.py --port 18830     # broker de test isolé
+  python edge_client.py --machine-id M900
+  python edge_client.py --self-test      # vérifie que le broker renvoie les messages
+  python edge_client.py --real           # mode réel (quand le matériel arrive)
   python edge_client.py --mqtt-only      # force MQTT seulement
+
+Configuration (A-02) : le broker n'est plus codé en dur. `localhost` ne
+désigne pas le même broker depuis l'hôte et depuis un conteneur : sur un poste
+de développement portant un Mosquitto natif, le client publishait vers un
+broker que le listener n'écoutait pas, sans la moindre erreur visible.
+L'adresse effective est donc affichée au démarrage, et `--self-test` vérifie
+que le broker reçoit et redelivre réellement les messages.
 """
 
 import argparse
@@ -22,28 +33,43 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-# ===================== CONFIG =====================
-RASPI_ID = "RASPI-02"
-MACHINE_ID_SIM = "M001"          # utilisÃ© in simulation
+try:
+    import requests
+except ImportError:      # le repli HTTP n'est alors pas disponible
+    requests = None
 
-# MQTT
-MQTT_BROKER = "localhost"
-MQTT_PORT = 1883
-MQTT_TOPIC_PREFIX = "dialysis/machine"
+# ====================== CONFIG =====================
+RASPI_ID = os.environ.get("RASPI_ID", "RASPI-02")
+MACHINE_ID_SIM = os.environ.get("MACHINE_ID_SIM", "M001")
+
+# MQTT — surchargeable par l'environnement ou la ligne de commande.
+MQTT_BROKER = os.environ.get("MQTT_BROKER", "localhost")
+MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
+MQTT_TOPIC_PREFIX = os.environ.get("MQTT_TOPIC_PREFIX", "dialysis/machine")
+#: Identifiant **stable** : une session persistante (clean_session=False)
+#: n'a de sens qu'avec un identifiant qui survit au redémarrage. Sinon le
+#: broker ne retrouve pas la session et les messages QoS 1 en vol sont perdus.
+MQTT_CLIENT_ID = os.environ.get("MQTT_CLIENT_ID", f"edge-{RASPI_ID}")
+#: Délai d'attente de l'acquittement (PUBACK) d'un message QoS 1.
+PUBLISH_TIMEOUT = float(os.environ.get("MQTT_PUBLISH_TIMEOUT", "10"))
+#: Topic de sonde, hors de l'abonnement du listener : il sert uniquement à
+#: vérifier que le broker choisi est bien celui qui redelivre les messages.
+MQTT_PROBE_TOPIC = os.environ.get("MQTT_PROBE_TOPIC", "dialysis/edge/_probe")
 
 # HTTP fallback (Django)
-DJANGO_PUSH_URL = "http://127.0.0.1:8000/api/push/"
-HEARTBEAT_URL = "http://127.0.0.1:8000/machines/raspi/heartbeat/"
+DJANGO_PUSH_URL = os.environ.get("DJANGO_PUSH_URL", "http://127.0.0.1:8000/api/push/")
+HEARTBEAT_URL = os.environ.get("HEARTBEAT_URL", "http://127.0.0.1:8000/machines/raspi/heartbeat/")
 EDGE_API_KEY = os.environ.get('EDGE_API_KEY', 'dev-edge-key-change-me')
 EDGE_HEADERS = {'X-Edge-Api-Key': EDGE_API_KEY}
-DEBIT_API = "http://127.0.0.1:8000/api/seance/debit/"
-LOCAL_AI_API = "http://127.0.0.1:8001/analyze/"
+DEBIT_API = os.environ.get("DEBIT_API", "http://127.0.0.1:8000/api/seance/debit/")
+LOCAL_AI_API = os.environ.get("LOCAL_AI_API", "http://127.0.0.1:8001/analyze/")
 
 # Offline
 REPO_ROOT = Path(__file__).resolve().parents[3]
-OFFLINE_DB = REPO_ROOT / "offline_buffer.db"
-DEFAULT_INTERVAL = 15            # seconds between readings in sim mode
+OFFLINE_DB = os.environ.get("OFFLINE_DB", str(REPO_ROOT / "offline_buffer.db"))
+DEFAULT_INTERVAL = int(os.environ.get("EDGE_INTERVAL", "15"))   # seconds between readings in sim mode
 IMAGE_PATH = "frame.jpg"
+
 
 # ==================================================
 
@@ -51,13 +77,13 @@ def init_offline_db():
     """Create the offline queue table if it does not exist."""
     conn = sqlite3.connect(OFFLINE_DB)
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS pending (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            payload TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            attempts INTEGER DEFAULT 0
-        )
-    """)
+            CREATE TABLE IF NOT EXISTS pending (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                payload TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                attempts INTEGER DEFAULT 0
+            )
+        """)
     conn.commit()
     conn.close()
     print(f"[OFFLINE] Buffer ready â†’ {OFFLINE_DB}")
@@ -113,29 +139,99 @@ def flush_offline(mqtt_client=None, use_http=False):
 def create_mqtt_client():
     try:
         import paho.mqtt.client as mqtt
-        client = mqtt.Client(client_id=f"edge-{RASPI_ID}-{int(time.time())}")
+        try:
+            # paho >= 2 : l'API de rappel des versions doit être déclarée.
+            client = mqtt.Client(
+                mqtt.CallbackAPIVersion.VERSION2,
+                client_id=MQTT_CLIENT_ID,
+                clean_session=False,
+            )
+        except AttributeError:
+            # paho 1.x
+            client = mqtt.Client(client_id=MQTT_CLIENT_ID, clean_session=False)
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
         client.loop_start()
-        print(f"[MQTT] Connected to {MQTT_BROKER}:{MQTT_PORT}")
+        print(f"[MQTT] Connected to {MQTT_BROKER}:{MQTT_PORT} (client_id={MQTT_CLIENT_ID})")
         return client
     except Exception as e:
-        print(f"[MQTT] Cannot connect: {e}")
+        print(f"[MQTT] Cannot connect to {MQTT_BROKER}:{MQTT_PORT}: {e}")
         return None
 
 
+def verify_broker(client, timeout=5.0):
+    """Vérifie que le broker reçoit et redelivre les messages.
+
+    Publie une sonde sur un topic dédié (hors de l'abonnement du listener)
+    et l'attend en retour. Un broker qui n'est pas celui du listener — ou un
+    pare-feu qui avale les messages — se manifeste ici, au lieu de produire
+    des publications silencieuses.
+    """
+    received = {"ok": False}
+
+    def on_probe(c, u, m):
+        received["ok"] = True
+
+    try:
+        client.message_callback_add(MQTT_PROBE_TOPIC, on_probe)
+        client.subscribe(MQTT_PROBE_TOPIC)
+        client.publish(
+            MQTT_PROBE_TOPIC,
+            json.dumps({"probe": RASPI_ID, "ts": time.time()}),
+            qos=1,
+        )
+        deadline = time.time() + timeout
+        while time.time() < deadline and not received["ok"]:
+            time.sleep(0.1)
+        client.unsubscribe(MQTT_PROBE_TOPIC)
+        client.message_callback_remove(MQTT_PROBE_TOPIC)
+    except Exception as e:
+        print(f"[MQTT] Self-test impossible : {e}")
+        return False
+
+    if received["ok"]:
+        print(f"[MQTT] Self-test OK : le broker {MQTT_BROKER}:{MQTT_PORT} redelivre les messages")
+    else:
+        print(
+            f"[MQTT] AVERTISSEMENT : le broker {MQTT_BROKER}:{MQTT_PORT} n'a pas redelivré la sonde.\n"
+            f"          Les messages publiés ici peuvent ne jamais être traités par le listener.\n"
+            f"          Vérifiez MQTT_BROKER / MQTT_PORT (un broker Mosquitto natif peut\n"
+            f"          occupies le port 1883 sur l'hôte, alors que Docker publie le sien)."
+        )
+    return received["ok"]
+
+
 def publish_mqtt(client, payload: dict) -> bool:
+    """Publie un message et **attend son acquittement** (PUBACK, QoS 1).
+
+    `publish()` ne renvoie qu'un accusement local (« mis dans le tampon ») :
+    sans attente du PUBACK, un message peut être perdu au moment de la
+    coupure — et le tampon hors ligne n'en saurait rien, puisqu'il n'a vu
+    aucun échec. En cas d'échec ou de résultat incertain, on renvoie False :
+    l'appelant conserve alors le message dans le tampon hors ligne (pas de
+    perte). Un doublon reste possible si le PUBACK a été perdu alors que le
+    broker a bien reçu le message : c'est le prix de la livraison « au
+    moins une fois », pas un doublon évitable.
+    """
     if client is None:
         return False
     try:
         machine_id = payload.get("machine_id", MACHINE_ID_SIM)
         topic = f"{MQTT_TOPIC_PREFIX}/{machine_id}"
         msg = json.dumps(payload)
-        result = client.publish(topic, msg, qos=1)
-        if result.rc == 0:
-            print(f"[MQTT] Published â†’ {topic}")
-            return True
-        print(f"[MQTT] Publish failed rc={result.rc}")
-        return False
+        info = client.publish(topic, msg, qos=1)
+        if info.rc != 0:
+            print(f"[MQTT] Publish failed rc={info.rc}")
+            return False
+        try:
+            info.wait_for_publish(timeout=PUBLISH_TIMEOUT)
+        except Exception as exc:
+            print(f"[MQTT] PUBACK absent ({type(exc).__name__}) : message conservé en tampon")
+            return False
+        if not info.is_published():
+            print("[MQTT] Message non acquitté : message conservé en tampon")
+            return False
+        print(f"[MQTT] Published â†’ {topic} (acquitté)")
+        return True
     except Exception as e:
         print(f"[MQTT] Error: {e}")
         return False
@@ -143,8 +239,10 @@ def publish_mqtt(client, payload: dict) -> bool:
 
 # ===================== HTTP fallback =====================
 def send_http(payload: dict) -> bool:
+    if requests is None:
+        print("[HTTP] Indisponible : le module 'requests' n'est pas installé")
+        return False
     try:
-        import requests
         r = requests.post(
             DJANGO_PUSH_URL,
             json=payload,
@@ -160,7 +258,6 @@ def send_http(payload: dict) -> bool:
 
 def send_heartbeat() -> str | None:
     try:
-        import requests
         r = requests.post(HEARTBEAT_URL, json={"raspi_id": RASPI_ID}, timeout=5)
         if r.status_code == 200:
             data = r.json()
@@ -172,7 +269,12 @@ def send_heartbeat() -> str | None:
 
 # ===================== DATA GENERATION =====================
 def generate_simulated_reading(machine_id: str) -> dict:
-    """Realistic fake values for testing without hardware."""
+    """Realistic fake values for testing without hardware.
+
+    Les valeurs sont marquées `_source: "simulation"` : elles sont
+    identifiables comme synthétiques dans la base, l'API et l'interface, et
+    ne déclenchent aucune notification externe.
+    """
     return {
         "machine_id": machine_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -193,7 +295,7 @@ def analyze_image_real(image_path: str) -> dict | None:
     try:
         import requests
         with open(image_path, "rb") as f:
-            r = requests.post(LOCAL_AI_API, files={"file": f}, timeout=60)
+            r = requests.post(LOCAL_AI_API, files={'file': f}, timeout=60)
         if r.status_code == 200:
             return r.json()
         print(f"[AI] Error {r.status_code}: {r.text[:200]}")
@@ -203,39 +305,47 @@ def analyze_image_real(image_path: str) -> dict | None:
 
 
 # ===================== MAIN LOOP =====================
-def run(simulation: bool = True, mqtt_only: bool = False):
+def run(simulation: bool = True, mqtt_only: bool = False, self_test: bool = False,
+        machine_id: str | None = None, interval: int | None = None):
     init_offline_db()
+    interval = interval or DEFAULT_INTERVAL
     mqtt_client = create_mqtt_client()
 
     print("=" * 50)
     print(f"  Edge Client started")
     print(f"  Mode        : {'SIMULATION' if simulation else 'REAL HARDWARE'}")
+    print(f"  Broker      : {MQTT_BROKER}:{MQTT_PORT}")
+    print(f"  Topic       : {MQTT_TOPIC_PREFIX}/<machine_id>")
     print(f"  MQTT only   : {mqtt_only}")
     print(f"  Raspi ID    : {RASPI_ID}")
+    print(f"  Interval    : {interval}s")
     print("=" * 50)
+
+    if mqtt_client is not None and self_test:
+        verify_broker(mqtt_client)
 
     while True:
         # 1. Determine machine_id
         if simulation:
-            machine_id = MACHINE_ID_SIM
+            current_machine = machine_id or MACHINE_ID_SIM
         else:
-            machine_id = send_heartbeat()
-            if not machine_id:
+            current_machine = send_heartbeat()
+            if not current_machine:
                 print("[HEARTBEAT] No machine assigned â€“ wait 20s")
                 time.sleep(20)
                 continue
 
         # 2. Get data
         if simulation:
-            payload = generate_simulated_reading(machine_id)
+            payload = generate_simulated_reading(current_machine)
             print(f"[SIM] Generated â†’ Qb={payload['Qb']} PA={payload['PA']} PTM={payload['PTM']}")
         else:
             ai_data = analyze_image_real(IMAGE_PATH)
             if not ai_data or "error" in ai_data:
                 print("[AI] No valid data â€“ skip this cycle")
-                time.sleep(DEFAULT_INTERVAL)
+                time.sleep(interval)
                 continue
-            payload = {"machine_id": machine_id, **ai_data, "raspi_id": RASPI_ID}
+            payload = {"machine_id": current_machine, **ai_data, "raspi_id": RASPI_ID}
 
         # 3. Try MQTT first
         sent = publish_mqtt(mqtt_client, payload)
@@ -252,14 +362,26 @@ def run(simulation: bool = True, mqtt_only: bool = False):
             flush_offline(mqtt_client, use_http=not mqtt_only)
 
         # 6. Wait
-        print(f"--- next reading in {DEFAULT_INTERVAL}s ---\n")
-        time.sleep(DEFAULT_INTERVAL)
+        print(f"--- next reading in {interval}s ---\n")
+        time.sleep(interval)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Edge client for dialysis monitoring")
     parser.add_argument("--real", action="store_true", help="Use real camera + AI (when hardware is ready)")
     parser.add_argument("--mqtt-only", action="store_true", help="Do not fallback to HTTP")
+    parser.add_argument("--broker", default=None, help="Broker MQTT (défaut : variable MQTT_BROKER)")
+    parser.add_argument("--port", type=int, default=None, help="Port MQTT (défaut : variable MQTT_PORT)")
+    parser.add_argument("--machine-id", default=None, help="Identifiant de machine à alimenter")
+    parser.add_argument("--interval", type=int, default=None, help="Secondes entre deux relevés")
+    parser.add_argument("--self-test", action="store_true",
+                        help="Vérifier que le broker redelivre les messages")
     args = parser.parse_args()
 
-    run(simulation=not args.real, mqtt_only=args.mqtt_only)
+    if args.broker:
+        MQTT_BROKER = args.broker
+    if args.port:
+        MQTT_PORT = args.port
+
+    run(simulation=not args.real, mqtt_only=args.mqtt_only, self_test=args.self_test,
+        machine_id=args.machine_id, interval=args.interval)

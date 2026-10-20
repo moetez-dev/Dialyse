@@ -1,0 +1,5 @@
+# Les scripts shell sont exécutés par le runtime Docker : un shebang terminé
+# par CRLF (« #!/bin/sh\r ») rend le fichier inexécutable (« no such file or
+# directory »). Le Core.autocrlf de Windows transformait entrypoint.sh en
+# CRLF au checkout, et le conteneur ne démarrait plus.
+*.sh text eol=lf

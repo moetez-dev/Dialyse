@@ -6,7 +6,6 @@ import time
 EDGE_API_KEY = os.environ.get('EDGE_API_KEY', 'dev-edge-key-change-me')
 EDGE_HEADERS = {'X-Edge-Api-Key': EDGE_API_KEY}
 LOCAL_AI_API  = "http://127.0.0.1:8001/analyze/"
-DJANGO_SAVE_API = "http://127.0.0.1:8000/api/monitoring/save/"
 
 DJANGO_API = "http://127.0.0.1:8000/api/push/"
 DEBIT_API     = "http://127.0.0.1:8000/api/seance/debit/"
