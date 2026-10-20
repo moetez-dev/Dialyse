@@ -1,0 +1,10 @@
+{% comment %}
+Erreurs d'un champ précis, affichées sous l'entrée correspondante.
+
+Usage : {% include "partials/field_errors.html" with field=bound_field %}
+{% endcomment %}
+{% if field.errors %}
+  <ul class="mt-1 space-y-0.5 text-xs font-medium text-critical" role="alert">
+    {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+  </ul>
+{% endif %}

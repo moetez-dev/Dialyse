@@ -5,6 +5,15 @@ from django.db import DatabaseError
 from django.utils import timezone
 from django.conf import settings
 
+from monitoring.provenance import (
+    est_alerte_clinique,
+    has_usable_values,
+    is_simulated,
+    marqueur_source,
+    normalise_source_declaree,
+    provenance_kwargs,
+)
+
 logger = logging.getLogger(__name__)
 
 SEUILS_DEFAUT = {
@@ -124,6 +133,23 @@ def analyser_mesure(mesure):
     now = timezone.now()
     cooldown_cutoff = now - timedelta(minutes=COOLDOWN_MINUTES)
 
+    # Une mesure dont aucune valeur n'a pu être lue (source illisible, image
+    # non lisible) ne peut déclencher aucune alerte : on ne fabrique pas de
+    # signalement à partir d'un échec de lecture.
+    valeurs = {champ: getattr(mesure, champ, None) for champ in seuils}
+    if not has_usable_values(valeurs):
+        logger.info(
+            "Alert analysis skipped (no usable value, source=%s)", mesure.source
+        )
+        return created_alerts
+
+    # Provenance du relevé. La source est assainie : une origine déclarée
+    # par le client que le code ne reconnaît pas devient « source inconnue »,
+    # et l'alerte correspondante est marquée comme non clinique.
+    source_retenue, _ = normalise_source_declaree(mesure.source, defaut="")
+    simule = is_simulated(mesure.source) or is_simulated(source_retenue)
+    marqueur = marqueur_source(source_retenue, simule)
+
     for champ, s in seuils.items():
         valeur = getattr(mesure, champ, None)
         if valeur is None:
@@ -178,6 +204,10 @@ def analyser_mesure(mesure):
             )
 
         if niveau:
+            if marqueur:
+                # Le marqueur précède le message : l'alerte ne peut pas être
+                # lue comme un événement clinique.
+                message = f"{marqueur} {message}"
             # Vérifier le Cooldown de 15 minutes sur la séance pour ce paramètre
             recent_alert = Alert.objects.filter(
                 seance=seance,
@@ -197,6 +227,7 @@ def analyser_mesure(mesure):
                 message=message,
                 danger_level=niveau,
                 recommended_action=action or "Surveillance clinique requise.",
+                **provenance_kwargs(Alert, source_retenue, simule),
             )
 
             # Créer l'alerte miroir (monitoring.Alerte) pour rétrocompatibilité
@@ -212,15 +243,29 @@ def analyser_mesure(mesure):
                     unit=unite,
                     threshold=threshold,
                     threshold_type=threshold_type,
+                    **provenance_kwargs(Alerte, source_retenue, simule),
                 )
             except DatabaseError as exc:
                 logger.warning("Failed to persist measurement alert mirror (%s)", type(exc).__name__)
 
             created_alerts.append(alert_obj)
-            logger.info("Alert created (severity=%s, parameter=%s)", niveau, champ)
+            logger.info(
+                "Alert created (severity=%s, parameter=%s, source=%s, simulated=%s)",
+                niveau, champ, source_retenue, simule,
+            )
 
-            # Déclencher le webhook n8n pour les alertes critiques
+            # Déclencher le webhook n8n pour les alertes critiques.
+            # Seule une alerte d'un relevé réel et attesté est un
+            # signalement de terrain : une mesure simulée, ou d'origine non
+            # identifiée, ne déclenche aucune notification externe.
             if niveau == "HIGH":
-                dispatch_n8n_critical_risk(alert_obj, mesure, seance)
+                if not est_alerte_clinique(source_retenue, simule):
+                    logger.info(
+                        "External critical-risk notification skipped "
+                        "(non-clinical source=%s, simulated=%s)",
+                        source_retenue, simule,
+                    )
+                else:
+                    dispatch_n8n_critical_risk(alert_obj, mesure, seance)
 
     return created_alerts

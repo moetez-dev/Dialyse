@@ -109,10 +109,18 @@ def build_alert_guidance(parameter, severity, measured_value, unit, threshold, t
         or not severity_matches_threshold
         or not measurement_crosses_threshold
     ):
+        # Aucune valeur mesurée exploitable : on ne rattache aucun conseil.
+        # Une alerte antérieure à l'enregistrement des valeurs structurées
+        # (donc sans paramètre, ni valeur, ni seuil) reste consultable, mais
+        # n'affiche pas de recommandation inventée.
         return {
             "status": "unavailable",
             "source": "Règle interne non générée par IA",
-            "cause": "Les données structurées de l'alerte sont absentes ou incohérentes.",
+            "cause": (
+                "Cette alerte ne contient aucune valeur mesurée exploitable "
+                "(paramètre, valeur ou seuil absent ou incohérent) : aucun "
+                "conseil ne peut lui être rattaché."
+            ),
             "recommendations": [],
             "urgent_escalation": severity_label == "critique",
         }

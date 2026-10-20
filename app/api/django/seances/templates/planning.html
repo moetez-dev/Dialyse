@@ -178,6 +178,11 @@
     <!-- Schedule container -->
     <div id="scheduleContainer" class="p-3 md:p-6 overflow-x-auto min-h-[360px] bg-surface"></div>
 
+    {# Séances du jour dont l'heure de début est hors des créneaux de la grille
+       (création par l'API, ou reprise d'un créneau fermé) : elles ne peuvent
+       pas être placées dans la grille, mais doivent rester consultables. #}
+    <div id="horsCreneaux" class="mt-4"></div>
+
     {{ sessions_json|json_script:"sessions-data" }}
     {{ stations_json|json_script:"stations-data" }}
     {{ machines_data|json_script:"machines-data" }}
@@ -611,6 +616,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
     html += `</div></div>`;
     scheduleContainer.innerHTML = html;
+
+    renderHorsCreneaux();
+  }
+
+  // Séances du jour hors des créneaux de la grille : elles existent, elles
+  // doivent être consultables même si la grille ne sait pas les placer.
+  function renderHorsCreneaux() {
+    const conteneur = document.getElementById('horsCreneaux');
+    if (!conteneur) return;
+
+    const hors = (sessionsData || []).filter(
+      s => s && s.status !== 'annulée' && !allTimeSlots.includes(s.start_hour)
+    );
+
+    if (!hors.length) { conteneur.innerHTML = ''; return; }
+
+    const lignes = hors.map(s => {
+      const statut = s.status === 'en cours' ? 'En cours'
+        : s.status === 'terminée' ? 'Terminée'
+        : s.status === 'annulée' ? 'Annulée'
+        : 'Planifiée';
+      return `
+        <li class="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm border-t border-line first:border-t-0">
+          <span class="font-medium text-body">${esc(s.start_hour || '—')}</span>
+          <span class="text-body">${esc(s.patient__first_name || '')} ${esc(s.patient__last_name || '')}</span>
+          <span class="text-body-soft">${esc(s.machine__machine_id || '')}</span>
+          <span class="text-xs text-body-faint">${esc(statut)}</span>
+          <span class="text-xs text-body-faint">${esc(String(s.duration || ''))} h</span>
+        </li>`;
+    }).join('');
+
+    conteneur.innerHTML = `
+      <div class="rounded-card border border-line bg-surface">
+        <p class="px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-body-faint border-b border-line">
+          Séances hors créneaux de planification
+        </p>
+        <ul>${lignes}</ul>
+      </div>`;
   }
 
   // Navigation temporelle

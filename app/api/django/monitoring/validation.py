@@ -89,10 +89,19 @@ def validate_dialysis_data(data: dict) -> dict:
 
     # Déterminer le statut global
     valid_count = sum(1 for v in validated_data.values() if v is not None)
+    total = len(validated_data)
     if valid_count == 0:
         status = "INVALID"
     elif is_uncertain or errors:
         status = "UNCERTAIN"
+    elif valid_count < total:
+        # Lecture partielle : certains paramètres n'ont pas été lus (absents
+        # de la source, ou rejettés par les bornes physiques). La mesure
+        # reste exploitable pour les paramètres lus, mais elle ne vaut pas
+        # relevé complet : `PARTIEL` le dit explicitement.
+        # `VALIDATED` / `UNCERTAIN` / `INVALID` gardent leur sens pour une
+        # lecture complète : la compatibilité est préservée.
+        status = "PARTIEL"
     else:
         status = "VALIDATED"
 

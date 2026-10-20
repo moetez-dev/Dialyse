@@ -9,11 +9,11 @@
   <!-- HEADER -->
   <div class="flex items-center gap-4">
     <button onclick="history.back()"
-      class="flex items-center gap-2 border px-4 py-2 rounded-md hover:bg-gray-50 text-sm">
+      class="flex items-center gap-2 border border-gray-300 bg-white px-4 py-2 rounded-md hover:bg-gray-50 text-sm text-gray-700">
       ← Retour
     </button>
     <div class="flex-1">
-      <h2 class="text-2xl">Rapport de séance</h2>
+      <h2 class="text-2xl text-gray-900">Rapport de séance</h2>
       <p class="text-sm text-gray-600 mt-1">
         {{ seance.patient.first_name }} {{ seance.patient.last_name }}
         &nbsp;·&nbsp;
@@ -30,8 +30,11 @@
     </button>
   </div>
 
-  <!-- CONTENU DU RAPPORT injecté directement -->
-  <div id="rapport-content">
+  <!-- CONTENU DU RAPPORT injecté directement.
+       Le rapport est un document clair : le conteneur force la charte du
+       rapport, pour qu'il reste lisible quel que soit le thème de
+       l'application (les classes de thème étaient claires sur fond clair). -->
+  <div id="rapport-content" class="rapport-document rounded-xl overflow-hidden">
     {{ contenu_html|safe }}
   </div>
 

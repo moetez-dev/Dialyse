@@ -215,3 +215,33 @@ def sans_prefixe_gravite(message):
     """Retire la gravité répétée en tête d'un message d'alerte."""
     texte = (message or "").strip()
     return _PREFIXE_GRAVITE.sub("", texte).strip() or texte
+
+
+@register.filter
+def form_field(form, name):
+    """Renvoie le BoundField d'un formulaire, désigné par son nom.
+
+    Les seuils de machine portent des noms calculés (`blood_flow_min`,
+    `tmp_critical_high`, …) : sans ce filtre, le gabarit ne peut pas
+    afficher l'erreur du champ correspondant sans lister 24 fois le même
+    bloc. Renvoie None si le champ n'existe pas.
+    """
+    if form is None or not name:
+        return None
+    try:
+        return form[name]
+    except Exception:
+        return None
+
+
+@register.filter
+def provenance(alerte):
+    """Provenance d'une alerte : (source, is_simulated).
+
+    Sert à distinguer, dans l'historique comme dans les rapports, une alerte
+    issue d'un relevé réel d'une alerte issue d'une simulation ou d'une
+    origine non identifiée.
+    """
+    from monitoring.provenance import provenance_alerte
+
+    return provenance_alerte(alerte)

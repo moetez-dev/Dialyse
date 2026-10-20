@@ -23,6 +23,7 @@
         <th scope="col" class="px-4 py-3 font-medium">Patient</th>
         <th scope="col" class="px-4 py-3 font-medium">Machine</th>
         <th scope="col" class="px-4 py-3 font-medium">Niveau</th>
+        <th scope="col" class="px-4 py-3 font-medium">Provenance</th>
         <th scope="col" class="px-4 py-3 font-medium">Message</th>
         <th scope="col" class="px-4 py-3 font-medium">Statut</th>
         <th scope="col" class="px-4 py-3 font-medium">Action</th>
@@ -41,6 +42,26 @@
           RED/YELLOW) : la tonalité est résolue en Python, plus en cascade ici.
           {% endcomment %}
           <td class="px-4 py-3">{% ui_status alert.niveau kind="alerte" %}</td>
+
+          {% comment %}
+          Provenance du relevé : une alerte issue d'une simulation ou d'une
+          origine non identifiée ne doit pas se lire comme un événement
+          clinique. Les alertes antérieures à la traçabilité n'ont pas de
+          provenance : elles sont affichées comme « non renseignée ».
+          {% endcomment %}
+          {% with prov=alert|provenance %}
+            <td class="px-4 py-3">
+              {% if prov.1 %}
+                <span class="inline-block rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning">Simulation</span>
+              {% elif prov.0 == "source_inconnue" %}
+                <span class="inline-block rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning">Origine inconnue</span>
+              {% elif prov.0 %}
+                <span class="text-xs text-body-soft">{{ prov.0 }}</span>
+              {% else %}
+                <span class="text-xs text-body-faint">Non renseignée</span>
+              {% endif %}
+            </td>
+          {% endwith %}
 
           <td class="px-4 py-3 text-body-soft">{{ alert.message|sans_prefixe_gravite }}</td>
           <td class="px-4 py-3">{% ui_status alert.status kind="alerte" %}</td>

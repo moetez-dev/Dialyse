@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from seances.models import Seance, RapportSeance
 from monitoring.models import LiveMeasurement
+from monitoring.provenance import est_alerte_clinique, provenance_alerte
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +69,7 @@ Retournez UNIQUEMENT un JSON valide avec ce format exact:
 """
 
     summary_ai = None
+    summary_source = "repli_automatique"
     try:
         res = requests.post(
             "http://127.0.0.1:11434/api/generate",
@@ -77,11 +79,16 @@ Retournez UNIQUEMENT un JSON valide avec ce format exact:
         if res.status_code == 200:
             resp_data = res.json().get("response", "")
             summary_ai = json.loads(resp_data)
+            summary_source = "modele_ia"
     except Exception as e:
-        logger.warning(f"Ollama call for session summary failed/timed out: {e}")
+        logger.warning(
+            "Ollama indisponible pour le résumé de séance (%s) : "
+            "repli sur le résumé automatique", type(e).__name__
+        )
 
     # Fallback si l'IA n'a pas répondu
     if not summary_ai or not isinstance(summary_ai, dict) or "resume_court" not in summary_ai:
+        summary_source = "repli_automatique"
         qualite_default = "difficile" if nb_critiques > 0 else "normale"
         attention_points = [a.message for a in alerts[:5]]
         if not attention_points:
@@ -102,6 +109,15 @@ Retournez UNIQUEMENT un JSON valide avec ce format exact:
     pre = getattr(seance, "pre_measurements", None)
     post = getattr(seance, "post_measurements", None)
 
+    # Perte de poids : différence entre les deux poids réellement saisis.
+    # Aucune valeur n'est déduite quand une des deux mesures manque.
+    poids_perdu = None
+    if pre is not None and post is not None:
+        poids_avant = getattr(pre, "weight", None)
+        poids_apres = getattr(post, "weight", None)
+        if poids_avant is not None and poids_apres is not None:
+            poids_perdu = round(float(poids_avant) - float(poids_apres), 2)
+
     chart_data = []
     for r in readings:
         chart_data.append({
@@ -115,14 +131,17 @@ Retournez UNIQUEMENT un JSON valide avec ce format exact:
             "heparin": r.Heparine,
         })
 
-    alerts_list = [
-        {
+    alerts_list = []
+    for a in alerts:
+        prov_source, prov_simule = provenance_alerte(a)
+        alerts_list.append({
             "message": a.message,
             "danger_level": a.danger_level,
             "timestamp": a.timestamp.strftime("%H:%M") if a.timestamp else "",
-        }
-        for a in alerts
-    ]
+            "source": prov_source,
+            "is_simulated": prov_simule,
+            "is_clinical": est_alerte_clinique(prov_source, prov_simule),
+        })
 
     context = {
         "seance": seance,
@@ -130,6 +149,7 @@ Retournez UNIQUEMENT un JSON valide avec ce format exact:
         "machine": seance.machine,
         "pre": pre,
         "post": post,
+        "poids_perdu": poids_perdu,
         "chart_data": json.dumps(chart_data),
         "alerts_json": json.dumps(alerts_list),
         "readings_count": readings_count,
@@ -137,6 +157,7 @@ Retournez UNIQUEMENT un JSON valide avec ce format exact:
         "nb_critiques": nb_critiques,
         "qualite": qualite_final,
         "summary_ai": summary_ai,
+        "summary_source": summary_source,
         "stats": stats,
     }
 
@@ -156,7 +177,9 @@ Retournez UNIQUEMENT un JSON valide avec ce format exact:
 
     return {
         "summary": summary_ai,
+        "summary_source": summary_source,
         "stats": stats,
+        "poids_perdu": poids_perdu,
         "rapport_id": str(rapport.id),
         "filename": filename,
     }

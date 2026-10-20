@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
 {% load icons %}
+{% load l10n %}
+{% load ui %}
 
 {% block title %}Démarrer une séance{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+
+  {% include "partials/form_errors.html" with form=form %}
 
   <!-- Header -->
   <div>
@@ -97,18 +101,26 @@
             <input type="number" step="{{ param.step }}"
                    name="{{ param.name }}_min"
                    form="pre-session-form"
-                   value="{{ param.val_min|default_if_none:'' }}"
+                   required
+                   value="{{ param.val_min|default_if_none:''|unlocalize }}"
                    class="w-full p-2 text-sm border border-2 rounded-xl
                       border-line bg-surface border-l-green-600">
+            {% with bf=form|form_field:param.name|add:"_min" %}
+              {% include "partials/field_errors.html" with field=bf %}
+            {% endwith %}
           </div>
           <div>
             <label class="block text-sm text-body-soft mb-1">Max</label>
             <input type="number" step="{{ param.step }}"
                    name="{{ param.name }}_max"
                    form="pre-session-form"
-                   value="{{ param.val_max|default_if_none:'' }}"
+                   required
+                   value="{{ param.val_max|default_if_none:''|unlocalize }}"
                    class="w-full p-2 text-sm border border-2 rounded-xl
                       border-line bg-surface border-l-green-600">
+            {% with bf=form|form_field:param.name|add:"_max" %}
+              {% include "partials/field_errors.html" with field=bf %}
+            {% endwith %}
           </div>
         </div>
       </div>
@@ -125,9 +137,13 @@
             <input type="number" step="{{ param.step }}"
                    name="{{ param.name }}_critical_low"
                    form="pre-session-form"
-                   value="{{ param.val_crit_low|default_if_none:'' }}"
+                   required
+                   value="{{ param.val_crit_low|default_if_none:''|unlocalize }}"
                    class="w-full p-2 text-sm border border-2 rounded-xl
                       border-line bg-surface border-l-amber-600">
+            {% with bf=form|form_field:param.name|add:"_critical_low" %}
+              {% include "partials/field_errors.html" with field=bf %}
+            {% endwith %}
           </div>
           {% endif %}
           <div>
@@ -135,9 +151,13 @@
             <input type="number" step="{{ param.step }}"
                    name="{{ param.name }}_critical_high"
                    form="pre-session-form"
-                   value="{{ param.val_crit_high|default_if_none:'' }}"
+                   required
+                   value="{{ param.val_crit_high|default_if_none:''|unlocalize }}"
                    class="w-full p-2 text-sm border border-2 rounded-xl
                       border-line bg-surface border-l-red-600">
+            {% with bf=form|form_field:param.name|add:"_critical_high" %}
+              {% include "partials/field_errors.html" with field=bf %}
+            {% endwith %}
           </div>
         </div>
       </div>
@@ -258,9 +278,10 @@
         <div>
           <label class="block text-sm font-medium text-body-soft mb-2">Poids (kg) *</label>
           <input type="number" step="0.1" name="weight"
-                 value="{{ form.weight.value|default_if_none:'' }}"
+                 value="{{ form.weight.value|default_if_none:''|unlocalize }}"
                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                  required>
+          {% include "partials/field_errors.html" with field=form.weight %}
         </div>
 
         <div>
@@ -270,14 +291,16 @@
                  placeholder="120/80"
                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                  required>
+          {% include "partials/field_errors.html" with field=form.blood_pressure %}
         </div>
 
         <div>
           <label class="block text-sm font-medium text-body-soft mb-2">Température (°C) *</label>
           <input type="number" step="0.1" name="temperature"
-                 value="{{ form.temperature.value|default_if_none:'' }}"
+                 value="{{ form.temperature.value|default_if_none:''|unlocalize }}"
                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                  required>
+          {% include "partials/field_errors.html" with field=form.temperature %}
         </div>
 
         <div>
@@ -286,14 +309,16 @@
                  value="{{ form.heart_rate.value|default_if_none:'' }}"
                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                  required>
+          {% include "partials/field_errors.html" with field=form.heart_rate %}
         </div>
 
         <div>
           <label class="block text-sm font-medium text-body-soft mb-2">Saturation (%) *</label>
           <input type="number" step="0.1" name="saturation"
-                 value="{{ form.saturation.value|default_if_none:'' }}"
+                 value="{{ form.saturation.value|default_if_none:''|unlocalize }}"
                  class="w-full p-3 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                  required>
+          {% include "partials/field_errors.html" with field=form.saturation %}
         </div>
       </div>
 

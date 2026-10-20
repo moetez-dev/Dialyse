@@ -41,11 +41,17 @@ def planning(request):
     stations_list = [str(m.machine_id) for m in stations]
     machines_data = list(Machine.objects.filter(machine_id__in=stations_list).values('machine_id', 'status'))
 
-    # Séances du jour
-    seances = Seance.objects.filter(
-        session_date=selected_date,
-        start_hour__in=time_slots
-    ).select_related('patient', 'machine').order_by('start_hour')
+    # Séances du jour.
+    # Le créneau 08:00-18:00 reste la grille de *planification* (les créneaux
+    # proposés à la création), mais il ne doit plus masquer les séances :
+    # une séance créée hors créneau était invisible du planning alors
+    # qu'elle existait bel et bien (A-13).
+    seances = (
+        Seance.objects
+        .filter(session_date=selected_date)
+        .select_related('patient', 'machine')
+        .order_by('start_hour')
+    )
  
 
     # Stats
@@ -215,6 +221,24 @@ class PostSessionForm(forms.ModelForm):
         }
 
 
+def _posted_threshold(request, name, fallback):
+    """Valeur d'un seuil saisie dans la requête courante, ou celle du modèle.
+
+    Utilisé pour réafficher la saisie de l'utilisateur après une erreur de
+    validation : sans cela, un seuil erroné était replaced par la valeur
+    d'origine, et l'utilisateur ne pouvait pas voir ce qu'il avait tapé.
+    """
+    if request.method != "POST":
+        return fallback
+    raw = request.POST.get(name)
+    if raw is None or raw == "":
+        return fallback
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return fallback
+
+
 @app_login_required
 @role_required("Admin", "Infirmier", "Docteur", redirect_to="accounts:error")
 def pre_session_page(request, session_id):
@@ -308,40 +332,52 @@ def pre_session_page(request, session_id):
         })
 
     seuils_config = [
-        {"name": "blood_flow", "label": "Débit sanguin", "unit": "mL/min", "step": "1",
+        {"name": "blood_flow", "label": "Débit sanguin", "unit": "mL/min", "step": "any",
          "has_crit_low": True, "crit_cols": "2", "full_width": False,
          "val_min": seance.blood_flow_min, "val_max": seance.blood_flow_max,
          "val_crit_low": seance.blood_flow_critical_low, "val_crit_high": seance.blood_flow_critical_high},
 
-        {"name": "arterial_pressure", "label": "Pression artérielle", "unit": "mmHg", "step": "1",
+        {"name": "arterial_pressure", "label": "Pression artérielle", "unit": "mmHg", "step": "any",
          "has_crit_low": True, "crit_cols": "2", "full_width": False,
          "val_min": seance.arterial_pressure_min, "val_max": seance.arterial_pressure_max,
          "val_crit_low": seance.arterial_pressure_critical_low, "val_crit_high": seance.arterial_pressure_critical_high},
 
-        {"name": "venous_pressure", "label": "Pression veineuse", "unit": "mmHg", "step": "1",
+        {"name": "venous_pressure", "label": "Pression veineuse", "unit": "mmHg", "step": "any",
          "has_crit_low": True, "crit_cols": "2", "full_width": False,
          "val_min": seance.venous_pressure_min, "val_max": seance.venous_pressure_max,
          "val_crit_low": seance.venous_pressure_critical_low, "val_crit_high": seance.venous_pressure_critical_high},
 
-        {"name": "tmp", "label": "PTM", "unit": "mmHg", "step": "1",
+        {"name": "tmp", "label": "PTM", "unit": "mmHg", "step": "any",
          "has_crit_low": True, "crit_cols": "2", "full_width": False,
          "val_min": seance.tmp_min, "val_max": seance.tmp_max,
          "val_crit_low": seance.tmp_critical_low, "val_crit_high": seance.tmp_critical_high},
 
-        {"name": "uf_rate", "label": "Taux UF", "unit": "mL/h", "step": "1",
+        {"name": "uf_rate", "label": "Taux UF", "unit": "mL/h", "step": "any",
          "has_crit_low": False, "crit_cols": "1", "full_width": False,
          "val_min": seance.uf_rate_min, "val_max": seance.uf_rate_max,
          "val_crit_low": None, "val_crit_high": seance.uf_rate_critical_high},
 
-        {"name": "uf_volume", "label": "Volume UF", "unit": "mL", "step": "1",
+        {"name": "uf_volume", "label": "Volume UF", "unit": "mL", "step": "any",
          "has_crit_low": False, "crit_cols": "1", "full_width": False,
          "val_min": seance.uf_volume_min, "val_max": seance.uf_volume_max,
          "val_crit_low": None, "val_crit_high": seance.uf_volume_critical_high},
 
-        {"name": "heparin", "label": "Héparine", "unit": "UI/h", "step": "1",
+        {"name": "heparin", "label": "Héparine", "unit": "UI/h", "step": "any",
          "has_crit_low": False, "crit_cols": "1", "full_width": True,
          "val_min": seance.heparin_min, "val_max": seance.heparin_max,
          "val_crit_low": None, "val_crit_high": seance.heparin_critical_high},
+    ]
+
+    # Après une erreur de validation, on réaffiche ce que l'utilisateur a
+    # saisi : sans cela, la saisie des seuils était perdue au premier rejet.
+    seuils_config = [
+        {**param,
+         "val_min": _posted_threshold(request, f"{param['name']}_min", param["val_min"]),
+         "val_max": _posted_threshold(request, f"{param['name']}_max", param["val_max"]),
+         "val_crit_low": _posted_threshold(request, f"{param['name']}_critical_low", param["val_crit_low"]),
+         "val_crit_high": _posted_threshold(request, f"{param['name']}_critical_high", param["val_crit_high"]),
+         }
+        for param in seuils_config
     ]
 
     return render(request, "pre_session.html", {

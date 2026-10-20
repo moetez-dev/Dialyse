@@ -910,3 +910,177 @@ class StaffCreatePermissionTests(TestCase):
         )
         self.assertEqual(res.status_code, 302)
         self.assertTrue(User.objects.filter(email="nurseallowed@test.com").exists())
+
+class LiveMonitoringScopeTests(TestCase):
+    """A-05 / A-06 — statut des séances et périmètre des alertes actives.
+
+    A-05 : les statuts de séance sont normalisés (« En cours » → « en cours »)
+    et une séance dont la durée prévue est dépassée est signalée, sans être
+    fermée automatiquement.
+
+    A-06 : les alertes d'une séance clôturée ne sont plus listées comme
+    « actives », mais restent consultables et inchangées.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.admin_role = Role.objects.create(name="Admin")
+        self.admin_user = User.objects.create(
+            username="scope_admin",
+            password="password123",
+            role=self.admin_role,
+            email="scope@test.com",
+            first_login=False,
+        )
+        self.patient = Patient.objects.create(
+            first_name="Nora",
+            last_name="Perim",
+            date_of_birth=date(1985, 3, 3),
+            age=40,
+            groupe_sanguin="O+",
+            type_de_dialyse="Hémodialyse",
+        )
+        self.machine = Machine.objects.create(machine_id="M-SCOPE", status="Prete")
+        self.edge_headers = {"HTTP_X_EDGE_API_KEY": settings.EDGE_API_KEY}
+        self._login(self.admin_user)
+
+    def _login(self, user):
+        session = self.client.session
+        session["app_user_id"] = user.id
+        session.save()
+
+    def test_alerte_dune_seance_cloturee_nest_pas_active_mais_reste_conservee(self):
+        cloturee = Seance.objects.create(
+            patient=self.patient, machine=self.machine, status="terminée",
+            session_date=date.today(), start_hour="08:00:00", duration=4,
+        )
+        mesure = LiveMeasurement.objects.create(seance=cloturee, PA=250)
+        alerte = Alerte.objects.create(
+            reading=mesure, niveau="RED", status="NEW", parameter="PA",
+            measured_value=250, unit="mmHg", threshold=200,
+            threshold_type="critical_max", message="Pression trop élevée",
+        )
+
+        payload = self.client.get("/api/monitoring/live/").json()
+
+        self.assertNotIn(str(alerte.id), {a["id"] for a in payload["alerts"]})
+        # L'alerte n'est ni supprimée, ni marquée acquittée ou résolue.
+        alerte.refresh_from_db()
+        self.assertEqual(alerte.status, "NEW")
+        self.assertTrue(Alerte.objects.filter(id=alerte.id).exists())
+
+    def test_seance_hors_delai_est_signalee_sans_etre_cloturee(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        now = timezone.localtime()
+        # Une séance qui a commencé il y a 6 h pour 4 h prévues : hors délai.
+        seance = Seance.objects.create(
+            patient=self.patient, machine=self.machine, status="en cours",
+            session_date=(now - timedelta(hours=6)).date(),
+            start_hour=(now - timedelta(hours=6)).time().replace(second=0, microsecond=0),
+            duration=4,
+        )
+        # Une séance qui vient de commencer : dans les temps.
+        recente = Seance.objects.create(
+            patient=self.patient, machine=self.machine, status="en cours",
+            session_date=now.date(), start_hour=now.time().replace(second=0, microsecond=0),
+            duration=4,
+        )
+
+        payload = self.client.get("/api/monitoring/live/").json()
+        par_id = {s["seance_id"]: s for s in payload["sessions"]}
+
+        self.assertTrue(par_id[str(seance.id)]["is_stale"])
+        self.assertFalse(par_id[str(recente.id)]["is_stale"])
+        # La séance hors délai n'est pas fermée pour autant.
+        seance.refresh_from_db()
+        self.assertEqual(seance.status, "en cours")
+
+    def test_derniere_mesure_ignore_les_tentatives_sans_valeur(self):
+        seance = Seance.objects.create(
+            patient=self.patient, machine=self.machine, status="en cours",
+            session_date=date.today(), start_hour="08:00:00", duration=4,
+        )
+        LiveMeasurement.objects.create(seance=seance, PA=120, source="telemetry")
+        # Une tentative de lecture restée infructueuse, sans valeur.
+        LiveMeasurement.objects.create(
+            seance=seance, source="ai_unavailable", status_validation="AI_UNAVAILABLE",
+        )
+
+        payload = self.client.get("/api/monitoring/live/").json()
+        session = next(s for s in payload["sessions"] if s["seance_id"] == str(seance.id))
+
+        self.assertEqual(session["metrics"]["PA"], 120)
+        self.assertTrue(session["has_valid_measurement"])
+
+    @override_settings(EDGE_API_KEY="test-edge-api-key")
+    def test_push_sans_valeur_exploitable_nenregistre_pas_de_mesure(self):        # La clé de développement est refusée hors mode debug (le runner de
+        # tests force DEBUG=False) : on utilise une clé de test explicite.
+        seance = Seance.objects.create(
+            patient=self.patient, machine=self.machine, status="en cours",
+            session_date=date.today(), start_hour="08:00:00", duration=4,
+        )
+        avant = LiveMeasurement.objects.count()
+
+        response = self.client.post(
+            "/api/push/",
+            data=json.dumps({"machine_id": "M-SCOPE", "Qb": "abc", "PA": None}),
+            content_type="application/json",
+            HTTP_X_EDGE_API_KEY="test-edge-api-key",
+        )
+
+        self.assertEqual(response.status_code, 422, response.content[:300])
+        payload = response.json()
+        self.assertFalse(payload["success"])
+        # Aucune mesure n'est enregistrée avec des valeurs inventées.
+        self.assertEqual(LiveMeasurement.objects.count(), avant)
+        self.assertEqual(SeanceAlert.objects.filter(seance=seance).count(), 0)
+
+    def test_alerte_simulee_exposee_et_hors_du_kpi_clinique(self):
+        """Une alerte de simulation est exposee comme telle et exclue des KPI."""
+        from monitoring.alerte import analyser_mesure
+
+        seance = Seance.objects.create(
+            patient=self.patient, machine=self.machine, status="en cours",
+            session_date=date.today(), start_hour="08:00:00", duration=4,
+        )
+        mesure = LiveMeasurement.objects.create(
+            seance=seance, Debit_sang=50.0, PA=120.0, PV=100.0, PTM=60.0,
+            source="simulation", status_validation="VALIDATED",
+        )
+        analyser_mesure(mesure)
+
+        payload = self.client.get("/api/monitoring/live/").json()
+        alertes = payload["alerts"]
+        self.assertTrue(alertes, "l'alerte doit rester consultable")
+        alerte = alertes[0]
+        self.assertTrue(alerte["is_simulated"])
+        self.assertFalse(alerte["is_clinical"])
+        self.assertEqual(alerte["source"], "simulation")
+        # Les compteurs cliniques ne comptent pas une alerte de simulation.
+        self.assertEqual(payload["kpis"]["critical_alerts"], 0)
+        self.assertEqual(payload["kpis"]["warning_alerts"], 0)
+
+    @override_settings(EDGE_API_KEY="test-edge-api-key")
+    def test_source_inconnue_assainie_au_push(self):
+        """Une source declaree inconnue n'est jamais stockee telle quelle."""
+        seance = Seance.objects.create(
+            patient=self.patient, machine=self.machine, status="en cours",
+            session_date=date.today(), start_hour="08:00:00", duration=4,
+        )
+        reponse = self.client.post(
+            "/api/push/",
+            data=json.dumps({
+                "machine_id": "M-SCOPE", "Qb": 200, "PA": 120, "PV": 100,
+                "PTM": 60, "UF_rate": 300, "UF_volume": 800, "Heparin": 500,
+                "_source": "mon-generateur-2026",
+            }),
+            content_type="application/json",
+            HTTP_X_EDGE_API_KEY="test-edge-api-key",
+        )
+        self.assertEqual(reponse.status_code, 200, reponse.content[:200])
+        mesure = LiveMeasurement.objects.filter(seance=seance).order_by("-timestamp").first()
+        self.assertIsNotNone(mesure)
+        self.assertEqual(mesure.source, "source_inconnue")

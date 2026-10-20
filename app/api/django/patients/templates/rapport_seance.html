@@ -6,12 +6,55 @@
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .page-break { page-break-before: always; }
     }
-    body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); border: 1px solid #e5e7eb; }
+    /* Le rapport est un document : il garde sa charte claire, quel que soit
+       le thème de l'application. Les règles sont donc portées par une classe
+       dédiée et non par `body`, qui repeignait toute la page (y compris la
+       barre de navigation) en clair dans le thème sombre. */
+    .rapport-document {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #111827;
+    }
+    .rapport-document .card {
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08); border: 1px solid #e5e7eb;
+    }
+
+    /* Le rapport est un document : sa charte claire ne doit pas être
+       réécrite par les règles de thème de l'application (qui visent les
+       pages Django historiques). Sans cette neutralisation, le thème sombre
+       transformait le titre en gris clair et le fond des encarts en noir :
+       texte clair sur fond clair, donc illisible. */
+    .dark .legacy-theme .rapport-document .text-gray-900 { color: #111827; }
+    .dark .legacy-theme .rapport-document .text-gray-800 { color: #1f2937; }
+    .dark .legacy-theme .rapport-document .text-gray-700 { color: #374151; }
+    .dark .legacy-theme .rapport-document .text-gray-600 { color: #4b5563; }
+    .dark .legacy-theme .rapport-document .text-gray-500 { color: #6b7280; }
+    .dark .legacy-theme .rapport-document .text-gray-400 { color: #9ca3af; }
+    .dark .legacy-theme .rapport-document .bg-gray-50 { background-color: #f9fafb; }
+    .dark .legacy-theme .rapport-document .bg-gray-100 { background-color: #f3f4f6; }
+    .dark .legacy-theme .rapport-document .border-gray-100,
+    .dark .legacy-theme .rapport-document .border-gray-200,
+    .dark .legacy-theme .rapport-document .border-gray-300 { border-color: #e5e7eb; }
+
+    /* Alertes du rapport : fond rouge/jaune clair et texte foncé, comme
+       dans un document imprimé. Sans cela, le thème sombre produisait un
+       texte rouge foncé sur un fond rouge foncé : illisible. */
+    .dark .legacy-theme .rapport-document .bg-red-50 { background-color: #fef2f2; }
+    .dark .legacy-theme .rapport-document .bg-red-100 { background-color: #fee2e2; }
+    .dark .legacy-theme .rapport-document .text-red-700 { color: #b91c1c; }
+    .dark .legacy-theme .rapport-document .text-red-500 { color: #dc2626; }
+    .dark .legacy-theme .rapport-document .border-red-100,
+    .dark .legacy-theme .rapport-document .border-red-200 { border-color: #fecaca; }
+    .dark .legacy-theme .rapport-document .bg-yellow-50 { background-color: #fefce8; }
+    .dark .legacy-theme .rapport-document .bg-yellow-100 { background-color: #fef9c3; }
+    .dark .legacy-theme .rapport-document .text-yellow-700 { color: #a16207; }
+    .dark .legacy-theme .rapport-document .text-yellow-500 { color: #ca8a04; }
+    .dark .legacy-theme .rapport-document .border-yellow-200 { border-color: #fde68a; }
   </style>
 
 
-<div class=" space-y-6">
+<div class="rapport-document space-y-6">
 
 
   <!-- ══════════════════════════════════════════
@@ -74,8 +117,52 @@
       <p class="text-2xl font-semibold {% if qualite == 'difficile' %}text-red-600{% else %}text-green-600{% endif %}">
         {{ qualite|capfirst }}
       </p>
-      <p class="text-xs text-gray-400 mt-1">Évaluation automatique</p>
+      <p class="text-xs text-gray-500 mt-1">
+        {% if summary_source == "modele_ia" %}
+          Évaluation par modèle IA
+        {% else %}
+          Évaluation automatique (modèle IA indisponible)
+        {% endif %}
+      </p>
     </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       RÉSUMÉ DE SÉANCE
+       ══════════════════════════════════════════ -->
+  <div class="card p-6">
+    <h3 class="font-medium text-gray-700 mb-3 flex items-center gap-2">
+      <svg class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 011.414l3.586 3.586A2 2 0 0121 7.586V19a2 2 0 01-2 2z"/>
+      </svg>
+      Résumé de séance
+    </h3>
+
+    <p class="text-sm text-gray-700 leading-relaxed">{{ summary_ai.resume_court }}</p>
+
+    {% if summary_ai.points_attention %}
+    <div class="mt-4">
+      <p class="text-xs text-gray-500 mb-1">Points d'attention</p>
+      <ul class="list-disc space-y-1 pl-5 text-sm text-gray-700">
+        {% for point in summary_ai.points_attention %}
+          <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <p class="mt-4 text-xs text-gray-500 border-t border-gray-200 pt-3">
+      {% if summary_source == "modele_ia" %}
+        Résumé produit par un modèle de langage. Il ne remplace ni le jugement
+        soignant, ni un protocole clinique validé.
+      {% else %}
+        Résumé produit automatiquement à partir des données enregistrées de la
+        séance : le modèle de langage était indisponible au moment de la
+        génération. Il ne remplace ni le jugement soignant, ni un protocole
+        clinique validé.
+      {% endif %}
+    </p>
   </div>
 
   <!-- ══════════════════════════════════════════
@@ -154,11 +241,15 @@
             <p class="text-lg font-medium">{{ post.temperature|floatformat:1 }}°C</p>
           </div>
           {% if pre and post %}
-          <div class="col-span-2 mt-2 p-3 bg-gray-50 rounded-lg border">
-            <p class="text-xs text-gray-500 mb-1">Poids perdu (UF)</p>
-            <p class="text-xl font-semibold text-indigo-600">
-              {{ pre.weight|add:"-"|add:post.weight|floatformat:2 }} kg
-            </p>
+          <div class="col-span-2 mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p class="text-xs text-gray-500 mb-1">Perte de poids (différence pré/post)</p>
+            {% if poids_perdu is not None %}
+              <p class="text-xl font-semibold text-indigo-700">{{ poids_perdu|floatformat:2 }} kg</p>
+            {% else %}
+              <p class="text-sm text-gray-500">
+                Non calculable : poids pré-séance ou post-séance non renseigné.
+              </p>
+            {% endif %}
           </div>
           {% endif %}
         {% else %}
@@ -374,6 +465,13 @@
     } else {
       section.innerHTML = alertsData.map(a => {
         const isCrit = a.danger_level === 'HIGH';
+        // Provenance : une alerte simulée ou d'origine non identifiée ne doit
+        // pas se lire comme un événement clinique.
+        const provenance = a.is_simulated
+          ? '<span class="inline-block rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5 text-xs font-medium">Simulation</span>'
+          : (a.source === 'source_inconnue'
+              ? '<span class="inline-block rounded-full bg-yellow-100 text-yellow-800 px-2 py-0.5 text-xs font-medium">Origine inconnue</span>'
+              : (a.source ? `<span class="text-xs text-gray-500">${esc(a.source)}</span>` : ''));
         return `
         <div class="flex items-start gap-3 p-3 rounded-lg border mb-2 ${isCrit ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}">
           <svg class="h-5 w-5 flex-shrink-0 mt-0.5 ${isCrit ? 'text-red-500' : 'text-yellow-500'}"
@@ -383,7 +481,7 @@
           </svg>
           <div class="flex-1">
             <p class="text-sm">${esc(a.message)}</p>
-            <p class="text-xs text-gray-400 mt-0.5">${esc(a.timestamp)}</p>
+            <p class="text-xs text-gray-400 mt-0.5">${esc(a.timestamp)} ${provenance}</p>
           </div>
           <span class="text-xs px-2 py-0.5 rounded-full ${isCrit ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}">
             ${isCrit ? 'Critique' : 'Avertissement'}

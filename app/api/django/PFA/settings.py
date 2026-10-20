@@ -14,6 +14,8 @@ import importlib.util
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BASE_DIR.parents[2]
 
@@ -24,6 +26,16 @@ try:
 except ImportError:
     pass
 
+# ── Profils d'exécution ────────────────────────────────────────────────────
+# `DJANGO_ENV` vaut "development" par défaut (comportement historique) ou
+# "production". En production :
+#   * le mode debug est désactivé sauf demande explicite — les pages
+#     d'erreur Django n'exposent plus la liste des URL ni la trace ;
+#   * une clé secrète de développement est refusée au démarrage ;
+#   * les hôtes autorisés doivent être fournis explicitement.
+DJANGO_ENV = os.environ.get("DJANGO_ENV", "development").strip().lower()
+IS_PRODUCTION = DJANGO_ENV == "production"
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
@@ -31,10 +43,33 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
+DEBUG = os.environ.get("DJANGO_DEBUG", "False" if IS_PRODUCTION else "True").lower() in (
+    "1", "true", "yes",
+)
+
+if IS_PRODUCTION:
+    _SECRETS_DEVELOPPEMENT = {
+        "django-insecure-dev-only-change-me",
+        "dev-edge-key-change-me",
+        "change-me",
+        "changeme",
+    }
+    if SECRET_KEY in _SECRETS_DEVELOPPEMENT:
+        raise ImproperlyConfigured(
+            "DJANGO_ENV=production exige une DJANGO_SECRET_KEY propre : "
+            "la clé de développement par défaut est refusée."
+        )
 
 # Shared secret for Raspberry Pi / edge clients (header X-Edge-Api-Key).
 EDGE_API_KEY = os.environ.get("EDGE_API_KEY", "dev-edge-key-change-me")
+
+if IS_PRODUCTION and EDGE_API_KEY in {
+    "dev-edge-key-change-me", "change-me", "changeme", "secret",
+}:
+    raise ImproperlyConfigured(
+        "DJANGO_ENV=production exige une EDGE_API_KEY propre : "
+        "la clé de développement par défaut est refusée."
+    )
 
 # n8n automation webhook for critical-risk alerts (monitoring.alerte).
 N8N_CRITICAL_RISK_WEBHOOK_URL = os.environ.get(
@@ -136,7 +171,17 @@ WSGI_APPLICATION = 'PFA.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(REPO_ROOT / 'db.sqlite3'),
+        # `DJANGO_DB_PATH` permet de pointer une base isolée (tests
+        # d'intégration, environnement de recette) sans toucher la base du
+        # dépôt. Sans cette variable, le comportement est inchangé.
+        'NAME': os.environ.get("DJANGO_DB_PATH", str(REPO_ROOT / 'db.sqlite3')),
+        # Délai d'attente sur base verrouillée. SQLite n'accepte qu'un
+        # écrivain à la fois : plusieurs processus (API, listener MQTT) qui
+        # écrivent en même fois seSerialize. 5 s suffisent en local ; une
+        # base isolée partagée par plusieurs services demande davantage.
+        'OPTIONS': {
+            'timeout': float(os.environ.get("DJANGO_DB_TIMEOUT", "5")),
+        },
     },
 }
 
@@ -152,7 +197,7 @@ if importlib.util.find_spec('djongo') is not None:
 else:
     DATABASES['mongodb'] = {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(REPO_ROOT / 'db.sqlite3'),
+        'NAME': os.environ.get("DJANGO_DB_PATH", str(REPO_ROOT / 'db.sqlite3')),
     }
     DATABASE_ROUTERS = []
 
@@ -213,7 +258,10 @@ MESSAGE_TAGS = {
     messages.ERROR: 'error',
 }
 MEDIA_URL = "/media/"
-MEDIA_ROOT = REPO_ROOT / "media"
+# `DJANGO_MEDIA_ROOT` permet d'écrire les images (captures de générateur)
+# dans un répertoire isolé — tests d'intégration, environnement de recette —
+# sans toucher au dépôt. Sans cette variable, le comportement est inchangé.
+MEDIA_ROOT = os.environ.get("DJANGO_MEDIA_ROOT", str(REPO_ROOT / "media"))
 
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND",
@@ -268,3 +316,31 @@ SESSION_COOKIE_SECURE = CROSS_SITE_COOKIES or not DEBUG
 CSRF_COOKIE_SECURE = CROSS_SITE_COOKIES or not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
+
+
+# ── Durcissement du profil production ─────────────────────────────────────
+# En développement, rien de tout cela n'est activé : le poste de travail
+# doit rester utilisable en HTTP sur localhost.
+if IS_PRODUCTION:
+    SECURE_SSL_REDIRECT = os.environ.get("DJANGO_SSL_REDIRECT", "True").lower() in (
+        "1", "true", "yes",
+    )
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_HSTS_SECONDS", "31536000"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "same-origin"
+    X_FRAME_OPTIONS = "DENY"
+    # Un backend d'erreur JSON pour l'API, sans trace technique.
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "simple": {"format": "[{levelname}] {name}: {message}", "style": "{"},
+        },
+        "handlers": {
+            "console": {"class": "logging.StreamHandler", "formatter": "simple"},
+        },
+        "root": {"handlers": ["console"], "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO")},
+    }

@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 {% load icons %}
+{% load l10n %}
 
 {% block title %}Fin de séance{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+
+  {% include "partials/form_errors.html" with form=form %}
 
   <!-- Header -->
   <div>
@@ -67,10 +70,11 @@
         <div>
           <label class="block text-sm font-medium text-body-soft mb-2">Poids post-dialyse (kg) *</label>
           <input type="number" step="0.1" name="weight"
-                 value="{{ form.weight.value|default_if_none:'' }}"
+                 value="{{ form.weight.value|default_if_none:''|unlocalize }}"
                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                  required>
           <p class="text-xs text-body-faint mt-1">Le poids après la séance permet de calculer la perte de poids</p>
+          {% include "partials/field_errors.html" with field=form.weight %}
         </div>
 
         <div>
@@ -79,6 +83,7 @@
                  value="{{ form.heart_rate.value|default_if_none:'' }}"
                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                  required>
+          {% include "partials/field_errors.html" with field=form.heart_rate %}
         </div>
 
         <!-- Systolique / Diastolique (UI TSX) -->
@@ -99,17 +104,19 @@
         <div>
           <label class="block text-sm font-medium text-body-soft mb-2">Température (°C) *</label>
           <input type="number" step="0.1" name="temperature"
-                 value="{{ form.temperature.value|default_if_none:'' }}"
+                 value="{{ form.temperature.value|default_if_none:''|unlocalize }}"
                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                  required>
+          {% include "partials/field_errors.html" with field=form.temperature %}
         </div>
 
         <div>
           <label class="block text-sm font-medium text-body-soft mb-2">Saturation (%) *</label>
           <input type="number" step="0.1" name="saturation"
-                 value="{{ form.saturation.value|default_if_none:'' }}"
+                 value="{{ form.saturation.value|default_if_none:''|unlocalize }}"
                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                  required>
+          {% include "partials/field_errors.html" with field=form.saturation %}
         </div>
 
         <!-- Champ réel stocké dans ton model PostSessionMeasurements -->

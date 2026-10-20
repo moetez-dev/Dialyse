@@ -11,6 +11,13 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 from monitoring.ai_service import analyze_measurement, build_alert_guidance
+from monitoring.provenance import (
+    est_alerte_clinique,
+    has_usable_values,
+    is_simulated,
+    normalise_source_declaree,
+    provenance_alerte,
+)
 from django.contrib.auth.hashers import check_password, make_password
 from django.db.models import Avg, Q
 
@@ -1159,9 +1166,13 @@ def api_alerts(request):
             return _json_err("Invalid date format — use YYYY-MM-DD")
     data = []
     for a in seance_alerts[:150]:
+        prov_source, prov_simule = provenance_alerte(a)
         data.append({
             "id": a.id,
             "source": "seances.Alert",
+            "provenance_source": prov_source,
+            "is_simulated": prov_simule,
+            "is_clinical": est_alerte_clinique(prov_source, prov_simule),
             "session_id": str(a.seance.id),
             "patient": str(a.seance.patient) if a.seance.patient else None,
             "machine": a.seance.machine.machine_id if a.seance.machine else None,
@@ -1191,9 +1202,13 @@ def api_alerts(request):
             sev = "HIGH"
         elif sev == "YELLOW":
             sev = "MEDIUM"
+        prov_source, prov_simule = provenance_alerte(ma)
         data.append({
             "id": str(ma.id),
             "source": "monitoring.Alerte",
+            "provenance_source": prov_source,
+            "is_simulated": prov_simule,
+            "is_clinical": est_alerte_clinique(prov_source, prov_simule),
             "session_id": str(seance.id) if seance else None,
             "patient": str(seance.patient) if seance and seance.patient else None,
             "machine": seance.machine.machine_id if seance and seance.machine else None,
@@ -1348,6 +1363,20 @@ def push_measurement(request):
         val_res = validate_dialysis_data(data)
         vd = val_res["validated_data"]
 
+        # La source déclarée par le client est assainie : une valeur inconnue
+        # devient « source_inconnue » et ne sera pas présentée comme un
+        # relevé clinique.
+        source, _declaree = normalise_source_declaree(data.get("_source"))
+        if not has_usable_values(vd):
+            # Le client a poussé des valeurs, mais aucune n'est exploitable.
+            # C'est une erreur de client : rien n'est enregistré, et on ne
+            # remplace jamais la valeur manquante par une constante.
+            return _json_err(
+                "Aucune valeur exploitable dans la charge utile : "
+                "la mesure n'a pas été enregistrée.",
+                status=422,
+            )
+
         measurement = LiveMeasurement.objects.create(
             seance=seance,
             Debit_sang=vd.get("qb"),
@@ -1357,7 +1386,7 @@ def push_measurement(request):
             Volume_UF=vd.get("uf_volume"),
             Taux_UF=vd.get("uf_rate"),
             Heparine=vd.get("heparin"),
-            source=data.get("_source", "HTTP_PUSH"),
+            source=source,
             status_validation=val_res["status"],
             image=image_file if image_file else None,
         )
@@ -1384,6 +1413,28 @@ def push_measurement(request):
 
 CRITICAL_LEVELS = {"HIGH", "RED", "CRITIQUE"}
 WARNING_LEVELS = {"MEDIUM", "YELLOW", "ALERTE"}
+
+#: Une mesure « non nulle » : au moins un paramètre a été relevé.
+MESURE_NON_NULLE = (
+    Q(Debit_sang__isnull=False) | Q(PA__isnull=False) | Q(PV__isnull=False)
+    | Q(PTM__isnull=False) | Q(Volume_UF__isnull=False) | Q(Taux_UF__isnull=False)
+    | Q(Heparine__isnull=False)
+)
+
+
+def _derniere_mesure(seance):
+    """Dernière mesure réellement disponible pour une séance.
+
+    Une tentative de lecture restée infructueuse (source illisible) est
+    conservée pour la traçabilité, mais ses valeurs sont nulles : elle ne
+    doit pas masquer le dernier relevé exploitable.
+    """
+    return (
+        LiveMeasurement.objects.filter(seance=seance)
+        .filter(MESURE_NON_NULLE)
+        .order_by("-timestamp")
+        .first()
+    )
 
 
 def _measurement_status(alerts):
@@ -1481,6 +1532,7 @@ def api_monitoring_live(request):
     )
     active_alert_query = (
         Alerte.objects.filter(status__in=["NEW", "ACK"])
+        .filter(reading__seance__status="en cours")
         .select_related("reading__seance__patient", "reading__seance__machine")
         .order_by("-timestamp")
     )
@@ -1509,7 +1561,7 @@ def api_monitoring_live(request):
     severity_rank = {"critical": 3, "warning": 2, "information": 1, "unknown": 0}
 
     for seance in active_seances:
-        last = LiveMeasurement.objects.filter(seance=seance).order_by("-timestamp").first()
+        last = _derniere_mesure(seance)
         patient = seance.patient
         if seance.machine_id:
             in_use_machine_ids.add(seance.machine_id)
@@ -1555,6 +1607,20 @@ def api_monitoring_live(request):
             if elapsed_minutes is not None and duration_minutes
             else None
         )
+
+        # Séance « hors délai » : la durée prévue est dépassée alors que la
+        # séance est toujours en cours. Elle n'est PAS fermée automatiquement
+        # (une fin de séance est une décision de soin) : elle est signalée,
+        # pour qu'une reprise humaine décide.
+        expected_end = None
+        is_stale = False
+        if start_hour and seance.session_date and duration_minutes:
+            expected_end = session_start + timedelta(minutes=duration_minutes)
+            is_stale = now > expected_end
+        else:
+            # Séance « en cours » sans planning : impossible de vérifier
+            # qu'elle est encore dans les temps, donc signalée comme telle.
+            is_stale = True
         if patient:
             patient_session_statuses.setdefault(patient.id, []).append(
                 (has_valid_measurement, status)
@@ -1575,10 +1641,13 @@ def api_monitoring_live(request):
             "elapsed_minutes": elapsed_minutes,
             "remaining_minutes": remaining_minutes,
             "progress": progress,
+            "expected_end": expected_end.isoformat() if expected_end else None,
+            "is_stale": is_stale,
             "start_hour": start_hour.isoformat() if start_hour else None,
             "duration_minutes": duration_minutes or None,
             "metrics": metrics,
             "source": last.source if last else None,
+            "is_simulated": is_simulated(last.source) if last else False,
             "timestamp": last.timestamp.isoformat() if last and last.timestamp else None,
         })
 
@@ -1606,6 +1675,7 @@ def api_monitoring_live(request):
             operator = "<" if alert.threshold_type.endswith("_min") else ">"
             threshold_kind = "critique" if alert.threshold_type.startswith("critical_") else "avertissement"
             reference = f"{operator} {threshold:g} {alert.unit or ''} ({threshold_kind})".strip()
+        source_alerte, simule_alerte = provenance_alerte(alert)
         recent_alerts.append({
             "id": str(alert.id),
             "niveau": alert.niveau,
@@ -1621,19 +1691,26 @@ def api_monitoring_live(request):
             "timestamp": alert.timestamp.isoformat() if alert.timestamp else None,
             "ai_guidance": ai_guidance,
             "session_id": str(seance.id) if seance else None,
+            "source": source_alerte,
+            "is_simulated": simule_alerte,
+            "is_clinical": est_alerte_clinique(source_alerte, simule_alerte),
         })
 
     total_machines = Machine.objects.count()
     available_machines = Machine.objects.filter(status="Prete").exclude(
         id__in=in_use_machine_ids
     ).count()
+    # Compteurs cliniques : une alerte issue d'une mesure simulée ou d'une
+    # origine non identifiée ne compte pas comme un événement clinique.
     critical_alerts = sum(
         1 for alert in active_alerts
         if _as_monitoring_severity(alert.niveau) == "critical"
+        and est_alerte_clinique(*provenance_alerte(alert))
     )
     warning_alerts = sum(
         1 for alert in active_alerts
         if _as_monitoring_severity(alert.niveau) == "warning"
+        and est_alerte_clinique(*provenance_alerte(alert))
     )
     active_patients_count = len({
         seance.patient_id for seance in active_seances if seance.patient_id

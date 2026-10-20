@@ -173,6 +173,12 @@ class Alert(models.Model):
         choices=[('NEW', 'Nouvelle'), ('ACK', 'Acquittée'), ('RESOLVED', 'Résolue')],
         default='NEW',
     )
+    # Provenance du relevé qui a déclenché l'alerte.
+    # Elle est portée par le message (marqueur « ⚠ SIMULATION » /
+    # « ⚠ ORIGINE NON IDENTIFIÉE ») : aucun changement de schéma n'est
+    # nécessaire, donc aucune migration n'est à appliquer sur une base
+    # existante. Un modèle `source` dédié n'apporterait que de la
+    # duplicité d'information.
 
     class Meta:
         db_table = 'alerts'

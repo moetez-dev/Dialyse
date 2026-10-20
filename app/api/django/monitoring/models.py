@@ -4,6 +4,27 @@ from seances.models import Seance
 
 
 class VitalReading(models.Model):
+    """Relevé « vital » de séance — modèle historique, non alimenté.
+
+    Rôle dans le projet (A-13) :
+      * `LiveMeasurement` est le modèle **makeur** des relevés de dialyse.
+        C'est le seul alimenté par le listener MQTT, par le push HTTP et par
+        l'API : alertes, tableaux de bord, historiques et rapports de séance
+        s'appuient tous dessus.
+      * `VitalReading` est un modèle de la même forme, jamais écrit par le
+        pipeline actuel (0 ligne). Il a été conservé : le supprimer aurait
+        fait disparaître un modèle public sans décision explicite, et un
+        usage externe (application mobile, exports) pourrait encore le
+        consulter.
+
+    Risque de synchronisation à garder en tête : les deux modèles portent les
+    mêmes colonnes. Si un jour `VitalReading` est alimenté, il faudra
+    décider explicitement lequel fait foi, sous peine de deux séries de
+    données divergentes pour une même séance. Tant qu'il reste vide, il n'y a
+    pas de doublon possible : une mesure entrante ne crée qu'une ligne,
+    dans `LiveMeasurement`.
+    """
+
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -125,6 +146,9 @@ class Alerte(models.Model):
         max_length=10,
         default="NEW"
     )
+
+    # Provenance : portée par le message (voir seances.Alert). Aucun champ
+    # supplémentaire : le miroir ne duplique que ce qui est nécessaire.
 
 
     timestamp = models.DateTimeField(
